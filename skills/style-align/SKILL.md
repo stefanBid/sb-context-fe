@@ -88,7 +88,11 @@ Then read the flagged source files: the script finds the values; you work out th
 
 The inventory prints a **Structure** section with `Already aligned: yes/no` (four files, imports, `@theme inline`, closed namespaces, `data-theme`, reduced motion, prefixed utilities, no tokens outside `@theme`).
 
-If it says **yes**, do not write a report or rewrite anything. Tell the user the style is already in the fixed structure and ask what they want:
+If it says **yes**, do not write a report or rewrite anything. Tell the user the style is already in the fixed structure.
+
+If you noticed a value that departs from the usual pattern (e.g. a mobile size written as a literal in a utility instead of a token), do not call it "probably intentional". Open the file and look for the justification: a header or inline comment, or a rule the structure already allows (mobile steps for `display`, `h1`, `h2` live in the utilities, `typography.md` §3 and §5). Report each one in one line: where, what departs, and **the exact comment or rule that explains it, quoted**. If nothing explains it, say so and leave the decision to the user. Never change it on your own.
+
+Then ask what they want:
 
 - **nothing** → stop;
 - **change the token prefix** (e.g. `sb` → `ps`) → prefix rename below.
