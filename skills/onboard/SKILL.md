@@ -31,6 +31,8 @@ Read `CLAUDE.md` if present and follow its rules (install policy, commit rules) 
 
 ## 2. Align the global style
 
+If the user has a design made in Claude desktop and there is no `DESIGN.md`, ask for the artifact link and run `/sb-context-nuxt:design-import` first.
+
 Run `/sb-context-nuxt:style-align`. Follow its flow, including its questions (prefix), its report and its confirmation stop.
 
 ## 3. Migrate the templates

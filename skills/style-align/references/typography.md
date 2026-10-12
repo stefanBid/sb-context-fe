@@ -20,7 +20,7 @@ The set of roles is closed:
 | `body-strong` | body | emphasis, values, button text |
 | `label` | body | field labels, chips |
 | `small` | body | help, errors, notes, footer, metadata |
-| `overline` | body | badges, tags, counters, table headers, metadata. **Never a kicker above a heading** |
+| `overline` | body | badges, tags, counters, table headers, metadata. **Never a kicker above a heading, even if `DESIGN.md` says so** |
 | `hero` (optional) | display | text larger than `display`, with `clamp()` (§4) |
 
 Token shape, one block per role, inside `@theme`:

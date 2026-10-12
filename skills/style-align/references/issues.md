@@ -26,6 +26,7 @@ The "Source" column says where the issue is found: `inv` = `inventory.mjs`, `con
 | P8 | `<style>` without `scoped` in `.vue` files (global state outside `assets`) | To decide | inv | Move their rules into the four files and remove the block |
 | P9 | More than one CSS entry point in `nuxt.config` | Applied | inv | Only `~/assets/css/main.css` |
 | P10 | `DESIGN.md` conflicts with the current CSS | Follows DESIGN.md | read | `DESIGN.md` wins; list each conflict |
+| P11 | Eyebrow or kicker usage (`overline` above a heading) in the CSS, `DESIGN.md` or the brand book | Applied | read | Removed, always: it wins over `DESIGN.md`. List it in the report |
 
 ## Structure (files, sections, tokens, naming)
 

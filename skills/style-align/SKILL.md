@@ -18,6 +18,8 @@ The skill fixes the **structure**. It does not judge or improve the design: valu
 | **Structure**: the four files and their sections, token naming, the `{p}` prefix, the role names, closed Tailwind namespaces, `@theme` vs `@theme inline`, utilities `{p}-<role>`, base layer for `h1`–`h4`, light/dark mechanics with `data-theme`, `@nuxtjs/color-mode` and `@nuxt/fonts`, breakpoints, `clamp()` only above `display` | **this plugin** | fixed, always enforced |
 | **Values and taste**: palette, font families and pairing, type ratios, line heights, letter spacing, weights, radii and shadow values, motion timings and character, how roles are used on a page (composition) | **`DESIGN.md` / Impeccable** | if `DESIGN.md` exists, its values win; otherwise keep the project's current values, normalized; never impose the example's |
 
+**One exception to "`DESIGN.md` wins": no eyebrows, ever.** `overline` is for badges, tags, counters, table headers and metadata, never a kicker above a heading, even if `DESIGN.md` documents one. The same goes for the fixed breakpoints and the 16px floor for running text and inputs.
+
 `references/example/` is the `sb` template (prefix `sb`): it is the **structural** reference. Its values are never copied into another project.
 
 ## Scope
@@ -41,7 +43,7 @@ Run the inventory first (Flow step 1: it is read only). If the project is **alre
 
 ### 1. Prefix (required)
 
-Propose a default derived from the project name. The prefix becomes:
+Always ask. Propose a default: the `suggestedPrefix` of `DESIGN.md` when it has one (initials of the design's name, e.g. `PraticaSicura` → `ps`), otherwise one derived from the project name. It is only a proposal: **whatever the user answers is the prefix** (`pippo` → `pippo`, within the rules below). Never fall back to a fixed prefix, and `sb` in `references/example/` is just the example's. The prefix becomes:
 
 - the prefix of the raw variables: `--{p}-bg`, `--{p}-primary`, `--{p}-duration-state`;
 - the prefix of the skill's utilities: `{p}-h1`, `{p}-body`, `{p}-overline`, `{p}-transition`.
@@ -58,7 +60,9 @@ Ask whether they want to know which component classes will stop working once the
 
 ### 0. Values source
 
-If `DESIGN.md` exists at the project root, **read it first** and take palette, families, type values, radii, shadows and motion from it. Report any conflict between `DESIGN.md` and the current CSS (P10); `DESIGN.md` wins.
+If `DESIGN.md` exists at the project root, **read it first** and take palette, families, type values, radii, shadows and motion from it. When it comes from `/sb-context-nuxt:design-import` (header with `source`, a `tokens` JSON block), read that block: it is the normalized values contract (`design-import/references/design-md.md`). Its "Gaps" list becomes the **provisional** items of the report. Report any conflict between `DESIGN.md` and the current CSS (P10); `DESIGN.md` wins, except for the eyebrow, breakpoint and 16px rules.
+
+No `DESIGN.md` but the user has a design made in Claude desktop (an artifact link)? Run `/sb-context-nuxt:design-import` first.
 
 If it does not exist, keep the project's values and **normalize** them:
 

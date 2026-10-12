@@ -28,6 +28,7 @@ The plugin's modus operandi for a project in progress. It checks the stack (Nuxt
 
 ## 3. Align
 
+0. Optional, for a design made in Claude desktop: `/sb-context-nuxt:design-import <artifact link>` turns the design system artifact into a `DESIGN.md` (the values contract).
 1. `/sb-context-nuxt:style-align` normalizes the global style into the four-file structure under `assets/css`, keeping the project's own values.
 2. `/sb-context-nuxt:style-migrate` then migrates the templates (summary first, then the areas you pick).
 
@@ -63,6 +64,7 @@ Bring in a component from elsewhere:
 | Skill | Command | Invocation | Purpose |
 | --- | --- | --- | --- |
 | `onboard` | `/sb-context-nuxt:onboard` | command only | Join a project in progress: check the stack, align, migrate, build, next steps |
+| `design-import` | `/sb-context-nuxt:design-import` | model or command | Import a Claude desktop design system artifact (by link) into `DESIGN.md` |
 | `style-align` | `/sb-context-nuxt:style-align` | model or command | Normalize the global style into `main.css`, `theme.css`, `typography.css`, `animation.css`; or just change the token prefix on an aligned project |
 | `style-migrate` | `/sb-context-nuxt:style-migrate` | command only | Migrate Vue templates after the global style changed |
 | `component-adapt` | `/sb-context-nuxt:component-adapt` | model or command | Rewrite one foreign component with the project's style |
@@ -81,3 +83,5 @@ Bring in a component from elsewhere:
 | --- | --- | --- |
 | **Structure**: the four files and their sections, token naming, the `{p}` prefix, the role names, closed Tailwind namespaces, `@theme` vs `@theme inline`, utilities `{p}-<role>`, base layer for `h1`–`h4`, light/dark mechanics with `data-theme`, `@nuxtjs/color-mode` and `@nuxt/fonts`, breakpoints, `clamp()` only above `display` | **this plugin** | fixed, always enforced |
 | **Values and taste**: palette, font families and pairing, type ratios, line heights, letter spacing, weights, radii and shadow values, motion timings and character, how roles are used on a page | **`DESIGN.md` / Impeccable** | if `DESIGN.md` exists, its values win; otherwise the project's current values are kept, normalized |
+
+One exception: **no eyebrows, ever**. `overline` is for badges, tags, counters, table headers and metadata, never a kicker above a heading, even if `DESIGN.md` documents one. Breakpoints and the 16px floor for running text and inputs are also fixed.
