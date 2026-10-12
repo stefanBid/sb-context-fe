@@ -44,17 +44,36 @@ Optional, and **not connected** to this plugin: no dependency, no shared files. 
 
 ## 5. Maintain
 
-- `/sb-context-nuxt:gh-admin`: repository settings, rulesets, PRs, release checks.
-- Planned, **not yet available**: `lint`, `build`, `seo`.
+Checks, run on demand (each also triggers from natural phrases, English or Italian):
+
+- `/sb-context-nuxt:lint-check`, `/sb-context-nuxt:build-check`, `/sb-context-nuxt:seo-check`, `/sb-context-nuxt:dependency-check`, `/sb-context-nuxt:docs-update`;
+- `/sb-context-nuxt:full-checkup` runs them in order and aggregates the result.
+
+GitHub:
+
+- `/sb-context-nuxt:gh-admin`: connect to the repo (init and audit), repo settings, rulesets and security, labels, PRs, release checks.
+- `/sb-context-nuxt:gh-checks`: base CI checks, starting with the PR title lint that blocks the merge when the title does not match the conventional-commit format used by release-please.
+
+Bring in a component from elsewhere:
+
+- `/sb-context-nuxt:component-adapt`: rewrites a pasted or exported `.vue` component with the project's tokens and utilities.
 
 ## Skills
 
 | Skill | Command | Invocation | Purpose |
 | --- | --- | --- | --- |
 | `onboard` | `/sb-context-nuxt:onboard` | command only | Join a project in progress: check the stack, align, migrate, build, next steps |
-| `style-align` | `/sb-context-nuxt:style-align` | model or command | Normalize the global style into `main.css`, `theme.css`, `typography.css`, `animation.css` |
+| `style-align` | `/sb-context-nuxt:style-align` | model or command | Normalize the global style into `main.css`, `theme.css`, `typography.css`, `animation.css`; or just change the token prefix on an aligned project |
 | `style-migrate` | `/sb-context-nuxt:style-migrate` | command only | Migrate Vue templates after the global style changed |
-| `gh-admin` | `/sb-context-nuxt:gh-admin` | model or command | `gh` CLI: rulesets, repo settings, PRs, release checks |
+| `component-adapt` | `/sb-context-nuxt:component-adapt` | model or command | Rewrite one foreign component with the project's style |
+| `gh-admin` | `/sb-context-nuxt:gh-admin` | model or command | Connect to the repo, audit it, settings, rulesets, security, labels, PRs |
+| `gh-checks` | `/sb-context-nuxt:gh-checks` | model or command | PR title lint and required checks, aligned with release-please |
+| `lint-check` | `/sb-context-nuxt:lint-check` | model or command | ESLint fix and report |
+| `build-check` | `/sb-context-nuxt:build-check` | model or command | Type check and production build, errors categorized |
+| `seo-check` | `/sb-context-nuxt:seo-check` | model or command | robots, sitemap, per-page meta |
+| `dependency-check` | `/sb-context-nuxt:dependency-check` | model or command | Outdated and vulnerable dependencies, safe updates |
+| `docs-update` | `/sb-context-nuxt:docs-update` | model or command | Align `README.md` with the code |
+| `full-checkup` | `/sb-context-nuxt:full-checkup` | command only | All the checks above, aggregated |
 
 ## What is fixed / what follows `DESIGN.md`
 

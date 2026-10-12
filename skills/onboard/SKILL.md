@@ -47,6 +47,8 @@ Run the project's `build` script with the detected package manager. Report error
   - `/plugin marketplace add https://github.com/pbakaus/impeccable.git`
   - `/plugin install impeccable@impeccable`
 - **`DESIGN.md` exists**: suggest `/impeccable critique` on the migrated pages.
-- **Repository settings and rulesets not set yet**: suggest `/sb-context-nuxt:gh-admin`.
+- **Repository not connected or not set up yet** (settings, rulesets, labels, security): suggest `/sb-context-nuxt:gh-admin`, which starts with a read-only audit.
+- **No PR title lint** (`.github/workflows` has none): suggest `/sb-context-nuxt:gh-checks`.
+- Day-to-day checks: `/sb-context-nuxt:full-checkup`.
 
 The two plugins are not connected: nothing here installs, requires or reads Impeccable's files.
