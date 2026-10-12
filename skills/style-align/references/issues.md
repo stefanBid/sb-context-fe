@@ -90,7 +90,7 @@ The "Source" column says where the issue is found: `inv` = `inventory.mjs`, `con
 
 | Code | Issue | Severity | Source | Correction |
 | --- | --- | --- | --- | --- |
-| F1 | Scattered radii, not reducible to a few steps | To decide | inv | Four steps from the project's values or `DESIGN.md` |
+| F1 | Scattered radii, not reducible to a few steps | To decide | inv | Three or four steps from the project's values or `DESIGN.md` |
 | F2 | Scattered shadows, or identical in both themes | To decide | inv | Three levels per theme |
 | F3 | `--radius-*`, `--shadow-*`, `--inset-shadow-*`, `--drop-shadow-*`, `--text-shadow-*` namespaces not closed | Applied | inv | Resets from the example |
 

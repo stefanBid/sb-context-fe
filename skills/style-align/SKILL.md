@@ -16,9 +16,9 @@ The skill fixes the **structure**. It does not judge or improve the design: valu
 | Concern | Owner | Rule |
 | --- | --- | --- |
 | **Structure**: the four files and their sections, token naming, the `{p}` prefix, the role names, closed Tailwind namespaces, `@theme` vs `@theme inline`, utilities `{p}-<role>`, base layer for `h1`–`h4`, light/dark mechanics with `data-theme`, `@nuxtjs/color-mode` and `@nuxt/fonts`, breakpoints, `clamp()` only above `display` | **this plugin** | fixed, always enforced |
-| **Values and taste**: palette, font families and pairing, type ratios, line heights, letter spacing, weights, radii and shadow values, motion timings and character, how roles are used on a page (composition) | **`DESIGN.md` / Impeccable** | if `DESIGN.md` exists, its values win; otherwise keep the project's current values, normalized; never impose PraticaSicura's |
+| **Values and taste**: palette, font families and pairing, type ratios, line heights, letter spacing, weights, radii and shadow values, motion timings and character, how roles are used on a page (composition) | **`DESIGN.md` / Impeccable** | if `DESIGN.md` exists, its values win; otherwise keep the project's current values, normalized; never impose the example's |
 
-`references/example/` is PraticaSicura's: it is the **structural** reference. Its values are never copied into another project.
+`references/example/` is the `sb` template (prefix `sb`): it is the **structural** reference. Its values are never copied into another project.
 
 ## Scope
 
@@ -28,7 +28,7 @@ It covers **only and exclusively the global state**:
 - it changes `nuxt.config.ts` only in the `modules`, `css`, `colorMode`, `fonts` keys and, if missing, `vite.plugins` for `@tailwindcss/vite`;
 - it installs `@nuxtjs/color-mode` and `@nuxt/fonts` if they are missing.
 
-It **does not touch** components, pages, layouts, `<style scoped>` or `<style module>`.
+It **does not touch** components, pages, layouts, `<style scoped>` or `<style module>`. The one exception is the optional prefix rename, which only replaces the old prefix.
 
 ## Requirements (blocking)
 
@@ -37,7 +37,7 @@ It **does not touch** components, pages, layouts, `<style scoped>` or `<style mo
 
 ## Questions at startup
 
-Before any analysis, **always** ask these two questions together (with the question tool if available, otherwise in text).
+Run the inventory first (Flow step 1: it is read only). If the project is **already aligned** (step 1b), skip these questions. Otherwise, before the report, ask these two questions together (with the question tool if available, otherwise in text).
 
 ### 1. Prefix (required)
 
@@ -79,6 +79,33 @@ It prints: versions and modules, global style sources (including orphan files an
 If the inventory reports a blocking issue (Tailwind or Nuxt not at version 4), **stop here** and report it.
 
 Then read the flagged source files: the script finds the values; you work out the **role** of each rule from its selector and context.
+
+### 1b. Already aligned?
+
+The inventory prints a **Structure** section with `Already aligned: yes/no` (four files, imports, `@theme inline`, closed namespaces, `data-theme`, reduced motion, prefixed utilities, no tokens outside `@theme`).
+
+If it says **yes**, do not write a report or rewrite anything. Tell the user the style is already in the fixed structure and ask what they want:
+
+- **nothing** → stop;
+- **change the token prefix** (e.g. `sb` → `ps`) → prefix rename below.
+
+If it says **no**, the failing checks are the S/P/M codes of the report: continue with the flow.
+
+#### Prefix rename (aligned projects only)
+
+Ask for the new prefix (same rules as the startup question). Then:
+
+```bash
+node "${CLAUDE_SKILL_DIR}/scripts/rename-prefix.mjs" --to <new>           # dry run, writes nothing
+```
+
+Show the table (files, replacements) and the identifiers that start with the old prefix but were not renamed (they are not part of the style; the user decides). **Stop and wait.** After confirmation:
+
+```bash
+node "${CLAUDE_SKILL_DIR}/scripts/rename-prefix.mjs" --to <new> --apply
+```
+
+It renames raw variables (`--sb-primary` → `--ps-primary`), the style's own utilities (`sb-h1` → `ps-h1`, also with variants) and the `Prefix` comments, in the four CSS files and in `.vue`/`.ts`/`.js`/`.html`/`.md` under the source dir. Then verify: rerun the inventory (still aligned, new prefix), `contrast.mjs --prefix <new>`, and the project build. This is the only case where the skill touches files outside the four CSS files, and only for the prefix.
 
 ### 2. Existing contrast
 
@@ -140,7 +167,7 @@ Remind the user that components were not modified, and that `/sb-context-nuxt:st
 - **derives** missing roles minimally, marked **provisional**;
 - **measures** contrast (4.5:1 text, 3:1 large text, controls, focus) and reports it. Pairs below the minimum come with a lightness-only correction proposal; the choice is the user's.
 
-The PraticaSicura lightness table in `method.md` is an *example*, never a rule.
+The lightness table in `method.md` is an *example*, never a rule.
 
 **Radii, shadows, motion.** Closed sets with the project's values (or `DESIGN.md`'s), merged into the fixed number of steps.
 
@@ -211,6 +238,7 @@ List of everything derived, with the Impeccable command that refines it.
 | `references/method.md` | before the Color, Shapes and Breakpoints parts |
 | `references/motion.md` | before the Motion part |
 | `references/issues.md` | for the code and severity of each item |
-| `references/example/*` | before writing the files: it is the structure to replicate (values are PraticaSicura's) |
+| `references/example/*` | before writing the files: it is the structure to replicate (values are the `sb` template's) |
 | `scripts/inventory.mjs` | global style inventory (+ impact with `--classes`) |
 | `scripts/contrast.mjs` | contrast and OKLCH lightness, light and dark |
+| `scripts/rename-prefix.mjs` | prefix rename on an aligned project (dry run, then `--apply`) |

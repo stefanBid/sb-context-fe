@@ -47,9 +47,9 @@ Two colors that must be told apart (for example success and error) differ in lig
 - Tailwind token names are the roles without a prefix (`--color-primary` → `bg-primary`); the prefix goes on the raw variables (`--{p}-primary`) and on the skill's utilities (`{p}-h1`).
 - The dark theme is **not** an inversion by definition of the structure: each role has its own dark value. A project without a dark theme gets a derived one, provisional.
 
-## 4. Example calibration (PraticaSicura)
+## 4. Example calibration
 
-**Non-normative.** OKLCH lightness (L from 0 to 1) measured on PraticaSicura. Use it only as a starting point to derive a *missing* value, then check contrast. Never use it to correct an existing color.
+**Non-normative.** OKLCH lightness (L from 0 to 1) measured on a reference project (not the `example/` files). Use it only as a starting point to derive a *missing* value, then check contrast. Never use it to correct an existing color.
 
 ### Light theme
 
@@ -89,13 +89,13 @@ Two colors that must be told apart (for example success and error) differ in lig
 
 | Family | Closed set | Note |
 | --- | --- | --- |
-| Radii | `sm`, `md`, `lg`, `xl` (+ `none` and `full`, always available) | values from `DESIGN.md` or the project, merged into four steps |
+| Radii | `sm`, `md`, `lg` (+ `xl` if the project needs a fourth step; `none` and `full` are always available) | values from `DESIGN.md` or the project, merged into three or four steps |
 | Shadows | `sm`, `md`, `lg`, a value per theme | values from `DESIGN.md` or the project, merged into three levels |
 | Spacing | Tailwind default (`--spacing: 0.25rem`) | 4px grid |
 | Breakpoints | `sm` 640, `md` 768, `lg` 1024, `xl` 1280 | **fixed**: no others, no different values |
 
 Radii and shadows are closed (no Tailwind defaults, reset in the example) but the values are the project's. Scattered values (eight different shadows) are reduced to the three levels by nearest value; the report lists what was merged.
 
-PraticaSicura's values, as a non-normative example: radii 6 / 10 / 16 / 24px; shadows tinted with the ink in light and black in dark.
+The `example/` files are a non-normative illustration: three radii (10 / 14 / 22px), three shadow levels per theme.
 
 Content max widths are component layout rules, not global style; the skill mentions them only if it finds scattered max widths in the global CSS.

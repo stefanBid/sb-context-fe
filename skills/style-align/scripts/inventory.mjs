@@ -445,6 +445,40 @@ const NAMESPACES = ['color', 'font', 'text', 'shadow', 'radius', 'font-weight', 
 const resets = NAMESPACES.filter((n) => inv.customProperties.some((c) => c.prop === `--${n}-*` && /initial/.test(c.value)));
 // postcss reads "--color-*: initial" as a declaration whose prop is "--color-*"
 
+
+// ---------------------------------------------------------------------------
+// Structure check: is the global style already in the fixed four-file shape?
+// ---------------------------------------------------------------------------
+const structure = { prefix: null, checks: [], aligned: false };
+{
+  const utilNames = inv.atRules.filter((a) => a.name === 'utility').map((a) => a.params.trim());
+  structure.prefix = utilNames.map((u) => u.match(/^([a-z][a-z0-9]{1,3})-(?:h1|body)$/)?.[1]).find(Boolean) ?? null;
+  const base = (f) => f.split('/').pop();
+  const names = new Set(out_sources_names());
+  function out_sources_names() {
+    return [...sources.entries()].filter(([, s]) => !s.vue).map(([k]) => base(k));
+  }
+  const add = (code, ok, what) => structure.checks.push({ code, ok, what });
+  const four = ['main.css', 'theme.css', 'typography.css', 'animation.css'];
+  add('S1', four.every((f) => names.has(f)), `four files present (${four.filter((f) => !names.has(f)).join(', ') || 'all'}${four.every((f) => names.has(f)) ? '' : ' missing'})`);
+  const mainTxt = [...sources.entries()].find(([k]) => base(k) === 'main.css')?.[1].css ?? '';
+  add('S1', ['theme', 'typography', 'animation'].every((n) => new RegExp(`@import\\s+["']\\./${n}\\.css["']`).test(mainTxt)), 'main.css imports theme, typography, animation');
+  add('P9', cssEntries.length === 1 && /assets\/css\/main\.css$/.test(cssEntries[0] ?? ''), 'nuxt.config css lists only ~/assets/css/main.css');
+  add('S2', /@theme\s+inline/.test(allText), '@theme inline present');
+  add('F3/C2/T15', NAMESPACES.every((n) => resets.includes(n)), `all namespaces closed${resets.length === NAMESPACES.length ? '' : ` (open: ${NAMESPACES.filter((n) => !resets.includes(n)).join(', ')})`}`);
+  add('C11/C12', darkTheme.dataTheme && darkTheme.colorScheme && darkTheme.customVariantDark, 'data-theme dark, color-scheme, @custom-variant dark');
+  add('M1', reducedMotion, 'prefers-reduced-motion handled');
+  add('S4', Boolean(structure.prefix), `prefixed utilities detected${structure.prefix ? ` (prefix "${structure.prefix}")` : ''}`);
+  const themeNs = /^--(color|text|font|radius|shadow|ease|animate|breakpoint)-(?!\*)/;
+  const outside = inv.customProperties.filter((c) => themeNs.test(c.prop) && !c.prop.includes('--', 2) && !c.context.some((a) => a.startsWith('@theme')));
+  add('S3', outside.length === 0, `no design tokens outside @theme${outside.length ? ` (${outside.length}, e.g. ${outside[0].prop} at ${outside[0].file}:${outside[0].line})` : ''}`);
+  if (structure.prefix) {
+    const raw = inv.customProperties.filter((c) => /:root|\[data-theme/.test(c.selector ?? '') && !c.context.some((a) => a.startsWith('@theme')) && !c.prop.startsWith(`--${structure.prefix}-`));
+    add('S4', raw.length === 0, `raw variables all use --${structure.prefix}-${raw.length ? ` (${raw.length} do not, e.g. ${raw[0].prop})` : ''}`);
+  }
+  structure.aligned = structure.checks.every((c) => c.ok);
+}
+
 // ---------------------------------------------------------------------------
 // 5. Classes in components (read only: impact of closing the namespaces)
 // ---------------------------------------------------------------------------
@@ -489,6 +523,7 @@ const out = {
   darkTheme,
   reducedMotion,
   resets,
+  structure,
   scale: { source: scaleSource, steps: SCALE.map(([px, role]) => ({ px, role })), clusters },
   sizes,
   distinctColors: Object.fromEntries([...distinct.entries()].sort((a, b) => b[1] - a[1])),
@@ -529,6 +564,10 @@ p(`- prefers-reduced-motion: ${yn(reducedMotion)}`);
 p(`- Tailwind namespaces already closed: ${resets.length ? resets.join(', ') : 'none'}`);
 p();
 
+p('## Structure\n');
+for (const c of structure.checks) p(`- ${c.ok ? 'ok' : '**NO**'} [${c.code}] ${c.what}`);
+p(`\n**Already aligned: ${structure.aligned ? `yes${structure.prefix ? ` (prefix "${structure.prefix}")` : ''}` : 'no'}**`);
+p();
 p('## Text sizes\n');
 p(`Scale source: **${scaleSource}**${SCALE.length ? ` — steps: ${SCALE.map(([px, role]) => `${px}px (${role})`).join(', ')}` : ''}`);
 if (clusters.length) {

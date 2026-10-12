@@ -75,7 +75,7 @@ base  = min − slope × 40           in rem
 font-size: clamp(min, base + vw, max)
 ```
 
-Example with `max` 80px and a `display` ratio of 0.643 (PraticaSicura's 36 → 56): min = 51.4 → 52px (3.25rem); slope = (5 − 3.25) / 40 = 0.04375; vw = 4.375; base = 3.25 − 1.75 = 1.5rem.
+Example with `max` 80px and a `display` ratio of 0.643 (the example's 36 → 56): min = 51.4 → 52px (3.25rem); slope = (5 − 3.25) / 40 = 0.04375; vw = 4.375; base = 3.25 − 1.75 = 1.5rem.
 
 ```css
 @theme {
@@ -96,7 +96,7 @@ In `typography.css`, with the `{p}` prefix chosen at startup:
 - one utility per role: `{p}-display`, `{p}-h1` … `{p}-overline`. Each carries the family and the complete style (`@apply font-… text-…`), never the color;
 - `{p}-display`, `{p}-h1`, `{p}-h2` have the mobile size and an `@variant lg` block with the desktop size;
 - `{p}-overline` adds `uppercase`;
-- in `@layer base`: `h1`…`h4` apply their role's utility; `body` applies `{p}-body` (in `main.css`).
+- in `@layer base`: `h1`…`h4` apply their role's utility; `body` applies `{p}-body` (in `main.css`). These are required. The example also styles `p`, `label`, `small`, `code`, inputs (never below 16px) and prose margins: optional, kept when the project already has them.
 
 The tag level follows the page structure; the look is corrected with the class (`<h3 class="{p}-h4">`). An element that must look like a heading without being one uses the class (`<span class="{p}-h4">`).
 
@@ -113,7 +113,7 @@ The scale is **the project's**: the `--text-<role>` tokens when they exist, othe
 7. **Inverted hierarchy** (an `h4` larger than an `h3`, a `small` larger than `body`): always corrected.
 8. **No `--text-*` tokens yet**: cluster the distinct sizes (the inventory proposes clusters), map each cluster to a role by element, and mark the resulting values **provisional** until the user approves them or `DESIGN.md` exists.
 
-Never introduce a value from the PraticaSicura example.
+Never introduce a value from the `example/` files.
 
 ## 7. Typical roles for component text
 
@@ -130,9 +130,9 @@ Useful for assigning off-scale values found in global CSS:
 | card title, summary section title | `h4` (or `h3` if the card is the main choice) |
 | text inside an icon or thumbnail (e.g. file extension) | `overline` |
 
-## 8. Example: PraticaSicura
+## 8. Example values (`example/typography.css`)
 
-**Non-normative.** These are PraticaSicura's values, tuned to Bricolage Grotesque + Figtree. They show the shape of a filled-in scale; they are never imposed on another project.
+**Non-normative.** These are the `sb` template's values, tuned to Poppins + Inter. They show the shape of a filled-in scale; they are never imposed on another project.
 
 | Role | Desktop (size / line height) | Mobile | Weight | Letter spacing |
 | --- | --- | --- | --- | --- |
@@ -148,4 +148,4 @@ Useful for assigning off-scale values found in global CSS:
 | `small` | 14 / 20 | same | 400 | — |
 | `overline` | 12 / 16 | same | 700 | +0.08em, uppercase |
 
-Its mobile reduction ratio is `display` × 0.643, which is where the `hero` example above comes from.
+Its mobile reduction ratio is `display` × 0.643, which is where the `hero` example above comes from. Another project, with other faces, has other numbers.

@@ -23,8 +23,8 @@ export default defineNuxtConfig({
     // Families listed explicitly: names inside @theme are not always
     // detected automatically. Weights = those used by the text tokens.
     families: [
-      { name: 'Bricolage Grotesque', provider: 'google', weights: ['600 700'] },
-      { name: 'Figtree', provider: 'google', weights: ['400 700'] },
+      { name: 'Poppins', provider: 'google', weights: ['600', '700'] },
+      { name: 'Inter', provider: 'google', weights: ['400 700'] },
     ],
   },
 })

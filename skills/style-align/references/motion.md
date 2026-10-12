@@ -23,7 +23,9 @@ Easings are Tailwind tokens, with `--ease-*: initial` first:
 
 Animations are Tailwind tokens with `--animate-*: initial`. Defined by default: `fade-in`, `fade-out`, `rise-in`, `slide-in-right`, `spin` (loading indicators). Others only if the project uses them, with the same durations and easings. The spatial keyframes translate by `var(--{p}-motion-distance)` (§3).
 
-The `{p}-transition` utility: explicit properties (color, background, border, outline, shadow, opacity, transform), `feedback` duration, `ease-in-out` easing. It is the default transition for controls.
+The `{p}-transition` utility (the example also has `{p}-focus`, `{p}-focus-within` and `{p}-no-focus`, kept when the project uses them): explicit properties (color, background, border, outline, shadow, opacity, transform), `feedback` duration, `ease-in-out` easing. It is the default transition for controls.
+
+Vue `<Transition>` classes (`fade`, `slide-down`, `scale-fade`, `page` in the example) use the same tokens: arrival `ease-out` with the `layout` or `state` duration, exit `ease-in` with `feedback`, translate through `--{p}-motion-distance`.
 
 ## 2. Rules
 
