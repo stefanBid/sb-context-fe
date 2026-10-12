@@ -1,14 +1,14 @@
 /* ==========================================================================
    theme.css — colors, shadows, radii, breakpoints
    Reference example: PraticaSicura, prefix "ps".
-   Replicate the structure; the values belong to the project being analyzed.
+   Replicate the structure; the values belong to the project (or DESIGN.md).
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
    1. Raw values per theme
    The only place where literal colors appear. Light on :root (it also applies
    before color-mode writes data-theme), dark on [data-theme="dark"].
-   The palette belongs to the project: these are PraticaSicura's roles. A
+   The palette belongs to the project: these are PraticaSicura's values. A
    project may have fewer or more (e.g. --xx-brand-secondary), as long as
    each one has a light and a dark value and its line in @theme inline.
    -------------------------------------------------------------------------- */
@@ -16,8 +16,8 @@
 [data-theme="light"] {
   color-scheme: light;
 
-  /* Surfaces: depth comes from lightness, not from shadows */
-  --ps-bg: #F5F3EE;            /* page: warm white, never #fff */
+  /* Surfaces */
+  --ps-bg: #F5F3EE;            /* page */
   --ps-surface: #FFFFFF;       /* cards, forms, panels */
   --ps-surface-2: #EDEAE2;     /* section headers, summaries */
 
@@ -25,7 +25,7 @@
   --ps-border: #D9D4C8;        /* dividers, card borders (no contrast requirement) */
   --ps-border-strong: #8A929A; /* input and control borders: 3:1 on surface */
 
-  /* Text: tinted ink, never #000 */
+  /* Text */
   --ps-ink: #15212B;
   --ps-ink-muted: #56626C;
 
@@ -35,7 +35,7 @@
   --ps-on-primary: #FFFFFF;
   --ps-primary-soft: #E2EDEF;
 
-  /* Accent: only one, used sparingly */
+  /* Accent */
   --ps-accent: #E4A23F;
   --ps-accent-hover: #D18F2E;
   --ps-on-accent: #1E1406;
@@ -53,7 +53,7 @@
 
   --ps-focus-ring: var(--ps-primary);
 
-  /* Shadows: low, tinted with the ink */
+  /* Shadows */
   --ps-shadow-sm: 0 1px 2px rgba(21,33,43,0.06), 0 1px 1px rgba(21,33,43,0.04);
   --ps-shadow-md: 0 6px 16px -4px rgba(21,33,43,0.10), 0 2px 4px rgba(21,33,43,0.05);
   --ps-shadow-lg: 0 18px 40px -12px rgba(21,33,43,0.18);
@@ -62,7 +62,7 @@
 [data-theme="dark"] {
   color-scheme: dark;
 
-  /* In dark mode surfaces get lighter as they come toward the viewer */
+  /* Dark values are rebuilt per role, not inverted */
   --ps-bg: #0E151A;
   --ps-surface: #151F26;
   --ps-surface-2: #1C2830;
@@ -73,7 +73,7 @@
   --ps-ink: #E9EDF0;
   --ps-ink-muted: #9DAAB3;
 
-  /* The brand gets lighter; the text on top becomes ink, not white */
+  /* Primary and the text on top */
   --ps-primary: #6BBCCB;
   --ps-primary-hover: #86CAD6;
   --ps-on-primary: #062229;
@@ -84,7 +84,7 @@
   --ps-on-accent: #1E1406;
   --ps-accent-ink: #F2B456;
 
-  /* Soft tints become deep */
+  /* States and soft tints */
   --ps-success: #4CC38A;
   --ps-success-soft: #12301F;
   --ps-error: #F27A70;
@@ -96,7 +96,7 @@
 
   --ps-focus-ring: var(--ps-primary);
 
-  /* In dark mode shadows need more density to be visible */
+  /* Shadows */
   --ps-shadow-sm: 0 1px 2px rgba(0,0,0,0.4);
   --ps-shadow-md: 0 8px 20px -6px rgba(0,0,0,0.55);
   --ps-shadow-lg: 0 20px 44px -12px rgba(0,0,0,0.7);
@@ -144,7 +144,7 @@
 }
 
 /* --------------------------------------------------------------------------
-   3. Fixed tokens: radii and breakpoints
+   3. Radii and breakpoints
    rounded-none and rounded-full are always available.
    Spacing stays Tailwind's default (--spacing: 0.25rem = 4px grid).
    -------------------------------------------------------------------------- */

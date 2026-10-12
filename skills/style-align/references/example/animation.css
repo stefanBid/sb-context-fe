@@ -1,0 +1,68 @@
+/* ==========================================================================
+   animation.css — durations, easings, animations, reduced motion
+   Reference example: PraticaSicura, prefix "ps". The structure is the
+   standard (references/motion.md); the timings are defaults that DESIGN.md
+   overrides.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Durations and movement distance
+   Tailwind 4 has no namespace for durations: raw variables with the prefix.
+   -------------------------------------------------------------------------- */
+:root {
+  --ps-duration-feedback: 120ms;  /* 100–150ms: hover, focus, toggles, color changes */
+  --ps-duration-state: 200ms;     /* 150–300ms: dropdowns, accordions, messages appearing */
+  --ps-duration-layout: 400ms;    /* 300–500ms: side panels, overlays, layout changes */
+  --ps-duration-entrance: 600ms;  /* 500–800ms: authored entrances */
+
+  /* Used by every keyframe that translates; zeroed under reduced motion */
+  --ps-motion-distance: 8px;
+}
+
+/* --------------------------------------------------------------------------
+   2. Easings and animations, closed
+   -------------------------------------------------------------------------- */
+@theme {
+  --ease-*: initial;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);     /* arrival: things coming in */
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);         /* exit: faster than entrance */
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);   /* in-place state changes */
+
+  --animate-*: initial;
+  --animate-fade-in: fade-in var(--ps-duration-state) var(--ease-out) both;
+  --animate-fade-out: fade-out var(--ps-duration-feedback) var(--ease-in) both;
+  --animate-rise-in: rise-in var(--ps-duration-state) var(--ease-out) both;
+  --animate-slide-in-right: slide-in-right var(--ps-duration-layout) var(--ease-out) both;
+  --animate-spin: spin 0.8s linear infinite;     /* loading indicators only */
+
+  @keyframes fade-in        { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes fade-out       { from { opacity: 1; } to { opacity: 0; } }
+  @keyframes rise-in        { from { opacity: 0; transform: translateY(var(--ps-motion-distance)); } to { opacity: 1; transform: none; } }
+  @keyframes slide-in-right { from { opacity: 0; transform: translateX(calc(var(--ps-motion-distance) * 3)); } to { opacity: 1; transform: none; } }
+  @keyframes spin           { to { transform: rotate(360deg); } }
+}
+
+/* --------------------------------------------------------------------------
+   3. Standard transition for controls
+   -------------------------------------------------------------------------- */
+@utility ps-transition {
+  transition-property: color, background-color, border-color, outline-color, box-shadow, opacity, transform;
+  transition-duration: var(--ps-duration-feedback);
+  transition-timing-function: var(--ease-in-out);
+}
+
+/* --------------------------------------------------------------------------
+   4. Reduced motion: required
+   Spatial movement goes away; opacity, color and state transitions that carry
+   meaning stay, so durations are NOT zeroed.
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --ps-motion-distance: 0px;
+  }
+  @layer base {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+}

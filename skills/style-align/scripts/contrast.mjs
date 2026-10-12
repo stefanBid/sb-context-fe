@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 // Contrast check by role, in the light and dark themes.
 //
-// Usage:
-//   node contrast.mjs <theme.css> --prefix ps            standard role pairs
-//   node contrast.mjs <file.css> --pairs pairs.json      custom pairs
-//   node contrast.mjs --pair "#56626C" "#F5F3EE"         a single pair
+// Usage (call it as node "${CLAUDE_SKILL_DIR}/scripts/contrast.mjs" ...):
+//   contrast.mjs <theme.css> --prefix ps            standard role pairs
+//   contrast.mjs <file.css> --pairs pairs.json      custom pairs
+//   contrast.mjs --pair "#56626C" "#F5F3EE"         a single pair
 //   add --json for JSON output
 //
 // pairs.json: [{ "fg": "--text-main", "bg": "--page", "min": 4.5, "note": "body text", "level": "required" }]
@@ -187,14 +187,10 @@ function checks(surf, themeName) {
   const bg = get('bg'), s1 = get('surface'), s2 = get('surface-2'), ink = get('ink');
   if (bg && s1 && s2) {
     if (themeName === 'light' && !(s1.L >= bg.L && bg.L > s2.L))
-      notes.push('Light surface order differs from the method: expected surface ≥ bg > surface-2 in lightness.');
+      notes.push('Light surface order is not surface ≥ bg > surface-2 in lightness (information only; check it is intentional).');
     if (themeName === 'dark' && !(bg.L < s1.L && s1.L < s2.L))
-      notes.push('Dark surface order differs from the method: expected bg < surface < surface-2 (surfaces rise toward the viewer).');
+      notes.push('Dark surface order is not bg < surface < surface-2 in lightness (information only; check it is intentional).');
   }
-  if (bg && themeName === 'light' && bg.hex === '#FFFFFF')
-    notes.push('The page background is pure white: the method uses a warm white for bg and keeps #FFF for surface.');
-  if (ink && (ink.hex === '#000000' || ink.hex === '#FFFFFF'))
-    notes.push(`ink is pure ${ink.hex}: the method uses a tinted ink.`);
   return notes;
 }
 
@@ -240,7 +236,7 @@ if (asJson) {
   }
   const allNotes = Object.entries(notes).flatMap(([t, n]) => n.map((line) => `- (${t}) ${line}`));
   if (allNotes.length) {
-    console.log('## Observations (indicative: color is the flexible part of the method)\n');
+    console.log('## Observations (information only: values follow DESIGN.md or the project)\n');
     console.log(allNotes.join('\n'));
   }
   console.log(`\nPairs checked: ${allRows.length}, below minimum or unreadable: ${failed.length}, warnings: ${warned.length}.`);

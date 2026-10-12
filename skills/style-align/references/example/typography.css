@@ -1,10 +1,11 @@
 /* ==========================================================================
    typography.css — families, type scale, typographic utilities
    Reference example: PraticaSicura, prefix "ps".
+   The values are PraticaSicura's; the structure is the standard.
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
-   1. Fixed tokens
+   1. Tokens
    The --text-* values are the DESKTOP values. The mobile reduction lives
    in the utilities (section 2), not in the tokens.
    -------------------------------------------------------------------------- */
@@ -15,13 +16,13 @@
   --font-body: "Figtree", ui-sans-serif, system-ui, sans-serif;
   --default-font-family: var(--font-body);
 
-  /* Weights: three, closed */
+  /* Weights: closed to the ones the faces and roles actually use */
   --font-weight-*: initial;
   --font-weight-normal: 400;
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
 
-  /* Scale: ratios to body = 1rem (see references/typography.md) */
+  /* Scale: the project's own values (see references/typography.md) */
   --text-*: initial;
   --text-shadow-*: initial;
 

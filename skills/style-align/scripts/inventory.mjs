@@ -2,16 +2,17 @@
 // Inventory of the global style of a Nuxt 4 + Tailwind 4 project.
 //
 // Usage (from the project root):
-//   node <skill>/scripts/inventory.mjs                     analyze the project
-//   node <skill>/scripts/inventory.mjs --root ../app       another root
-//   node <skill>/scripts/inventory.mjs --file a.css --file b.css   only these files
+//   node "${CLAUDE_SKILL_DIR}/scripts/inventory.mjs"                     analyze the project
+//   node "${CLAUDE_SKILL_DIR}/scripts/inventory.mjs" --root ../app       another root
+//   node "${CLAUDE_SKILL_DIR}/scripts/inventory.mjs" --file a.css --file b.css   only these files
 //   --out path.json   also save the full inventory as JSON
 //   --classes         also scan the classes used in components (impact of closing
 //                     the Tailwind namespaces). Off by default: it reads every
 //                     .vue/.ts/.js file in the project; use it only if the user asks.
 //
 // Prints a Markdown summary. Never modifies any file.
-// Requires postcss, which a Nuxt project already has.
+// Requires postcss, which a Nuxt project already has (resolved from the project root,
+// then from @tailwindcss/vite and nuxt, so it also works with pnpm).
 
 import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { join, resolve, dirname, relative, extname } from 'node:path';
@@ -30,16 +31,27 @@ const outFile = get('--out');
 const scanClasses = argv.includes('--classes');
 
 // ---------------------------------------------------------------------------
-// postcss: from the project, otherwise from the current folder or the skill
+// postcss: from the project root, then from the location of @tailwindcss/vite
+// and nuxt (pnpm does not hoist transitive dependencies), then fail clearly
 // ---------------------------------------------------------------------------
 function loadPostcss() {
-  const bases = [join(root, 'package.json'), join(process.cwd(), 'package.json'), import.meta.url];
-  for (const b of bases) {
+  const bases = [createRequire(join(root, 'package.json'))];
+  const first = bases[0];
+  for (const pkgName of ['@tailwindcss/vite', 'nuxt']) {
+    for (const target of [`${pkgName}/package.json`, pkgName]) {
+      try {
+        bases.push(createRequire(first.resolve(target)));
+        break;
+      } catch {}
+    }
+  }
+  bases.push(createRequire(join(process.cwd(), 'package.json')));
+  for (const r of bases) {
     try {
-      return createRequire(b)('postcss');
+      return r('postcss');
     } catch {}
   }
-  console.error('postcss not found. Run the script from the root of a Nuxt project (postcss is one of its dependencies) or install it with: npm i -D postcss');
+  console.error('postcss not found from the project root, from @tailwindcss/vite or from nuxt. Run the script from the root of a Nuxt 4 project with its dependencies installed.');
   process.exit(2);
 }
 const postcss = loadPostcss();
@@ -284,11 +296,11 @@ function parseFontShorthand(v) {
   return { weight: m[1] ?? null, size: m[2], lineHeight: m[3] ?? null, family: m[4] };
 }
 
-const SCALE = [
-  [12, 'overline'], [14, 'label / small'], [16, 'body'], [18, 'h4'], [19, 'lead'], [22, 'h3'],
-  [24, 'h2 mobile'], [30, 'h2 / h1 mobile'], [36, 'display mobile'], [40, 'h1'], [56, 'display'],
-];
+// The scale is the project's own: --text-<role> tokens when present, otherwise
+// clusters of the distinct sizes found in the CSS (see buildScale below).
+let SCALE = [];
 function nearest(px) {
+  if (!SCALE.length) return { step: null, role: null, offset: null, equidistant: false };
   let best = SCALE[0];
   for (const s of SCALE) if (Math.abs(s[0] - px) < Math.abs(best[0] - px)) best = s;
   const tie = SCALE.find((s) => s !== best && Math.abs(Math.abs(s[0] - px) - Math.abs(best[0] - px)) < 0.01);
@@ -334,7 +346,7 @@ for (const r of rules.values()) {
   }
   const lhPx = r.lh ? toPx(r.lh) : null;
   const ratio = lhPx ? (lhPx.px !== null ? lhPx.px / p.px : lhPx.ratio) : null;
-  sizes.push({ ...r, kind: 'fixed', px: +p.px.toFixed(2), unit: p.unit, lineHeightRatio: ratio ? +ratio.toFixed(3) : null, ...nearest(p.px) });
+  sizes.push({ ...r, kind: 'fixed', px: +p.px.toFixed(2), unit: p.unit, lineHeightRatio: ratio ? +ratio.toFixed(3) : null });
 }
 
 // Text tokens already defined in @theme
@@ -345,7 +357,44 @@ for (const t of textTokens) {
     continue;
   }
   const p = toPx(t.value);
-  if (p?.px) sizes.push({ file: t.file, line: t.line, selector: t.prop, context: t.context, size: t.value, kind: 'token', px: +p.px.toFixed(2), unit: p.unit, ...nearest(p.px) });
+  if (p?.px) sizes.push({ file: t.file, line: t.line, selector: t.prop, context: t.context, size: t.value, kind: 'token', px: +p.px.toFixed(2), unit: p.unit });
+}
+
+
+// Build the project's scale
+let scaleSource = 'none';
+const clusters = [];
+{
+  const tokenSizes = sizes.filter((m) => m.kind === 'token');
+  if (tokenSizes.length) {
+    scaleSource = 'tokens';
+    const byPx = new Map();
+    for (const t of tokenSizes) {
+      const role = t.selector.replace(/^--text-/, '');
+      byPx.set(t.px, [...(byPx.get(t.px) ?? []), role]);
+    }
+    SCALE = [...byPx.entries()].sort((a, b) => a[0] - b[0]).map(([px, roles]) => [px, roles.join(' / ')]);
+  } else {
+    // no tokens: distinct sizes with their count, clustered (within 1px, or 2px above 24px)
+    const counts = new Map();
+    for (const m of sizes.filter((x) => x.kind === 'fixed')) counts.set(m.px, (counts.get(m.px) ?? 0) + 1);
+    const sorted = [...counts.entries()].sort((a, b) => a[0] - b[0]);
+    for (const [px, n] of sorted) {
+      const last = clusters[clusters.length - 1];
+      const tol = px > 24 ? 2 : 1;
+      if (last && px - last.members[0].px <= tol) last.members.push({ px, n });
+      else clusters.push({ members: [{ px, n }] });
+    }
+    for (const c of clusters) {
+      c.count = c.members.reduce((s, m) => s + m.n, 0);
+      c.proposed = c.members.reduce((a, b) => (b.n > a.n ? b : a)).px;
+    }
+    if (clusters.length) {
+      scaleSource = 'clusters (proposed, provisional)';
+      SCALE = clusters.map((c) => [c.proposed, c.members.length > 1 ? `cluster ${c.members.map((m) => m.px).join('/')}` : 'single value']);
+    }
+  }
+  for (const m of sizes) if (m.px !== undefined) Object.assign(m, nearest(m.px));
 }
 
 // Literal colors: inside theme blocks (definitions) or scattered
@@ -440,6 +489,7 @@ const out = {
   darkTheme,
   reducedMotion,
   resets,
+  scale: { source: scaleSource, steps: SCALE.map(([px, role]) => ({ px, role })), clusters },
   sizes,
   distinctColors: Object.fromEntries([...distinct.entries()].sort((a, b) => b[1] - a[1])),
   scatteredColors,
@@ -480,6 +530,14 @@ p(`- Tailwind namespaces already closed: ${resets.length ? resets.join(', ') : '
 p();
 
 p('## Text sizes\n');
+p(`Scale source: **${scaleSource}**${SCALE.length ? ` — steps: ${SCALE.map(([px, role]) => `${px}px (${role})`).join(', ')}` : ''}`);
+if (clusters.length) {
+  p('\nProposed clusters (values within 1px, or 2px above 24px; the most frequent value is the proposal):\n');
+  p('| Cluster | Values (count) | Proposed |');
+  p('| --- | --- | --- |');
+  clusters.forEach((c, i) => p(`| ${i + 1} | ${c.members.map((m) => `${m.px}px ×${m.n}`).join(', ')} | ${c.proposed}px |`));
+}
+p();
 p('| Where | Selector / token | Size | px | Nearest step | Offset | Line height | Weight |');
 p('| --- | --- | --- | --- | --- | --- | --- | --- |');
 for (const m of sizes.sort((a, b) => (b.px ?? 999) - (a.px ?? 999))) {
