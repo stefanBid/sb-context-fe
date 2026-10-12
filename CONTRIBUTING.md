@@ -1,0 +1,74 @@
+# Contributing
+
+`main` is protected: every change goes through a pull request, merged with **squash**. The PR title becomes the commit on `main`, and [release-please](https://github.com/googleapis/release-please) reads it to decide the next version, the tag and the changelog. A title outside the format means a missing or wrong release, so the `lint-pr-title` check blocks the merge.
+
+## Commit / PR title format
+
+```
+<type>(<optional scope>): <short description in the imperative>
+```
+
+Lowercase type, no trailing period, description under about 70 characters.
+
+| Type | Use it for | Version bump | In the changelog |
+| --- | --- | --- | --- |
+| `feat` | a new skill, or a new capability of an existing one | minor (`0.3.0` → `0.4.0`) | yes |
+| `fix` | a bug in a skill, script or reference | patch (`0.3.0` → `0.3.1`) | yes |
+| `perf` | a faster script, same behaviour | patch | yes |
+| `revert` | reverting an earlier change | patch | yes |
+| `docs` | README, CONTRIBUTING, skill descriptions only | none | no |
+| `refactor` | restructuring without changing behaviour | none | no |
+| `style` | formatting only | none | no |
+| `test` | tests and evals | none | no |
+| `build` | packaging, plugin manifests | none | no |
+| `ci` | GitHub Actions and repo automation | none | no |
+| `chore` | anything else that is not shipped | none | no |
+
+A change that edits what a skill **does** (`skills/**`) is a `feat` or a `fix`, even when only a `SKILL.md` changes: that file is the product.
+
+Until `1.0.0`, a breaking change bumps the **minor** version, not the major.
+
+### Breaking changes
+
+Add `!` after the type, and explain in the PR body:
+
+```
+feat(style-align)!: rename the token prefix question
+
+BREAKING CHANGE: the prefix is now asked after the inventory, not before.
+```
+
+### Scopes
+
+Use the skill name when the change touches one skill: `style-align`, `style-migrate`, `design-import`, `component-adapt`, `gh-admin`, `gh-checks`, `onboard`, `lint-check`, `build-check`, `seo-check`, `dependency-check`, `docs-update`, `full-checkup`. Leave the scope out for changes that cut across the plugin.
+
+### Examples
+
+```
+feat(gh-admin): add security audit recipe
+fix(style-align): report the comment that justifies a drift
+docs: list the new skills in the README
+ci: add release-please
+refactor(style-migrate): split the mapping table
+```
+
+## Workflow
+
+1. Branch from `main`: `feat/<topic>`, `fix/<topic>`, `chore/<topic>`.
+2. Commit as you like on the branch; only the **PR title** has to follow the format, because the squash commit takes it.
+3. Open the PR into `main` and wait for `lint-pr-title`.
+4. Squash and merge. The branch is deleted automatically.
+
+## Releases
+
+Never edit `version` by hand. release-please keeps a release PR (`chore(main): release X.Y.Z`) open and up to date. Merging it bumps `.claude-plugin/plugin.json`, writes `CHANGELOG.md` and creates the `vX.Y.Z` tag and the GitHub Release.
+
+Other projects receive it with:
+
+```
+/plugin marketplace update sb-context-nuxt
+/plugin update sb-context-nuxt@sb-context-nuxt
+/reload-plugins
+```
+
+If the release PR shows the `lint-pr-title` check as pending forever, edit its title and put it back: pull requests opened by `GITHUB_TOKEN` do not trigger other workflows, and an edit from a user does.
