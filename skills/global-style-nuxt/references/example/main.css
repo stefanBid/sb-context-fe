@@ -1,0 +1,29 @@
+/* ==========================================================================
+   main.css — entry point of the global style
+   The only file listed in nuxt.config.ts (css). Prefix "ps".
+   ========================================================================== */
+
+@import "tailwindcss";
+@import "./theme.css";
+@import "./typography.css";
+@import "./animation.css";
+
+/* The dark theme follows data-theme on <html>, written by @nuxtjs/color-mode */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+@layer base {
+  body {
+    @apply bg-bg text-ink antialiased ps-body;
+  }
+
+  /* One focus ring, visible on every surface */
+  :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid var(--ps-focus-ring);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background-color: var(--ps-primary-soft);
+    color: var(--ps-ink);
+  }
+}

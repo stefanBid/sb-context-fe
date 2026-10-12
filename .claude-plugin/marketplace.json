@@ -1,0 +1,11 @@
+{
+  "name": "sb-context-nuxt",
+  "owner": { "name": "stefanBid" },
+  "plugins": [
+    {
+      "name": "sb-context-nuxt",
+      "source": "./",
+      "description": "Global style (theme/typography/motion), gh repo admin and maintenance skills for Nuxt 4 + Tailwind 4 projects."
+    }
+  ]
+}

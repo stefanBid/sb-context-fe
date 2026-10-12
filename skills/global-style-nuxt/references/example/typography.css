@@ -1,0 +1,133 @@
+/* ==========================================================================
+   typography.css — families, type scale, typographic utilities
+   Reference example: PraticaSicura, prefix "ps".
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Fixed tokens
+   The --text-* values are the DESKTOP values. The mobile reduction lives
+   in the utilities (section 2), not in the tokens.
+   -------------------------------------------------------------------------- */
+@theme {
+  /* Families: two roles. The names belong to the project (references/fonts.md); @nuxt/fonts loads them. */
+  --font-*: initial;
+  --font-display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Figtree", ui-sans-serif, system-ui, sans-serif;
+  --default-font-family: var(--font-body);
+
+  /* Weights: three, closed */
+  --font-weight-*: initial;
+  --font-weight-normal: 400;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* Scale: ratios to body = 1rem (see references/typography.md) */
+  --text-*: initial;
+  --text-shadow-*: initial;
+
+  --text-display: 3.5rem;                 /* 56 */
+  --text-display--line-height: 3.75rem;   /* 60 */
+  --text-display--font-weight: 700;
+  --text-display--letter-spacing: -0.02em;
+
+  --text-h1: 2.5rem;                      /* 40 */
+  --text-h1--line-height: 2.875rem;       /* 46 */
+  --text-h1--font-weight: 700;
+  --text-h1--letter-spacing: -0.015em;
+
+  --text-h2: 1.875rem;                    /* 30 */
+  --text-h2--line-height: 2.25rem;        /* 36 */
+  --text-h2--font-weight: 700;
+  --text-h2--letter-spacing: -0.01em;
+
+  --text-h3: 1.375rem;                    /* 22 */
+  --text-h3--line-height: 1.75rem;        /* 28 */
+  --text-h3--font-weight: 600;
+
+  --text-h4: 1.125rem;                    /* 18 */
+  --text-h4--line-height: 1.5rem;         /* 24 */
+  --text-h4--font-weight: 600;
+
+  --text-lead: 1.1875rem;                 /* 19 */
+  --text-lead--line-height: 1.875rem;     /* 30 */
+  --text-lead--font-weight: 400;
+
+  --text-body: 1rem;                      /* 16: the base, never less in inputs */
+  --text-body--line-height: 1.625rem;     /* 26 */
+  --text-body--font-weight: 400;
+
+  --text-body-strong: 1rem;
+  --text-body-strong--line-height: 1.625rem;
+  --text-body-strong--font-weight: 600;
+
+  --text-label: 0.875rem;                 /* 14 */
+  --text-label--line-height: 1.25rem;     /* 20 */
+  --text-label--font-weight: 600;
+
+  --text-small: 0.875rem;                 /* 14 */
+  --text-small--line-height: 1.25rem;     /* 20 */
+  --text-small--font-weight: 400;
+
+  --text-overline: 0.75rem;               /* 12 */
+  --text-overline--line-height: 1rem;     /* 16 */
+  --text-overline--font-weight: 700;
+  --text-overline--letter-spacing: 0.08em;
+}
+
+/* --------------------------------------------------------------------------
+   2. Typographic utilities (project prefix)
+   One class = one complete style (family, size, line height, weight,
+   letter spacing). Works on any element and accepts variants (md:ps-h2).
+   No color inside: the context provides it.
+   Only display, h1 and h2 change size, in one step at lg.
+   -------------------------------------------------------------------------- */
+@utility ps-display {
+  @apply font-display text-display;
+  font-size: 2.25rem;       /* mobile 36 / 40 */
+  line-height: 2.5rem;
+  @variant lg {
+    font-size: var(--text-display);
+    line-height: var(--text-display--line-height);
+  }
+}
+
+@utility ps-h1 {
+  @apply font-display text-h1;
+  font-size: 1.875rem;      /* mobile 30 / 36 */
+  line-height: 2.25rem;
+  @variant lg {
+    font-size: var(--text-h1);
+    line-height: var(--text-h1--line-height);
+  }
+}
+
+@utility ps-h2 {
+  @apply font-display text-h2;
+  font-size: 1.5rem;        /* mobile 24 / 30 */
+  line-height: 1.875rem;
+  @variant lg {
+    font-size: var(--text-h2);
+    line-height: var(--text-h2--line-height);
+  }
+}
+
+@utility ps-h3          { @apply font-display text-h3; }
+@utility ps-h4          { @apply font-display text-h4; }
+@utility ps-lead        { @apply font-body text-lead; }
+@utility ps-body        { @apply font-body text-body; }
+@utility ps-body-strong { @apply font-body text-body-strong; }
+@utility ps-label       { @apply font-body text-label; }
+@utility ps-small       { @apply font-body text-small; }
+@utility ps-overline    { @apply font-body text-overline uppercase; }
+
+/* --------------------------------------------------------------------------
+   3. Default tag styles
+   The tag level follows the page structure; where the look must differ,
+   override it with a class (<h3 class="ps-h4">).
+   -------------------------------------------------------------------------- */
+@layer base {
+  h1 { @apply ps-h1; }
+  h2 { @apply ps-h2; }
+  h3 { @apply ps-h3; }
+  h4 { @apply ps-h4; }
+}
