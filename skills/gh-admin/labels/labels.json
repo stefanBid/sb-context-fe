@@ -1,0 +1,12 @@
+[
+  { "name": "feat", "color": "0e8a16", "description": "New feature" },
+  { "name": "fix", "color": "d73a4a", "description": "Bug fix" },
+  { "name": "docs", "color": "0075ca", "description": "Documentation only" },
+  { "name": "refactor", "color": "5319e7", "description": "Code change that neither fixes a bug nor adds a feature" },
+  { "name": "perf", "color": "fbca04", "description": "Performance improvement" },
+  { "name": "chore", "color": "ededed", "description": "Maintenance, tooling, dependencies" },
+  { "name": "breaking", "color": "b60205", "description": "Breaking change (major version)" },
+  { "name": "dependencies", "color": "0366d6", "description": "Dependency updates" },
+  { "name": "autorelease: pending", "color": "ededed", "description": "release-please: release PR not yet tagged" },
+  { "name": "autorelease: tagged", "color": "ededed", "description": "release-please: release PR tagged" }
+]
