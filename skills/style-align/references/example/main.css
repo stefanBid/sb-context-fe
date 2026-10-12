@@ -1,0 +1,59 @@
+/* ==========================================================================
+   main.css — entry point of the global style
+   The only file listed in nuxt.config.ts (css). Prefix "sb".
+   ========================================================================== */
+
+@import "tailwindcss";
+@import "./theme.css";
+@import "./typography.css";
+@import "./animation.css";
+
+/* The dark theme follows data-theme on <html>, written by @nuxtjs/color-mode */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+@layer base {
+  html {
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+    scrollbar-gutter: stable;
+    -webkit-text-size-adjust: 100%; /* prevent iOS Safari text inflation */
+  }
+
+  html,
+  body {
+    min-height: 100%;
+  }
+
+  html.app-scroll-locked,
+  html.app-scroll-locked body {
+    overflow: hidden !important;
+  }
+
+  body {
+    @apply bg-bg text-ink antialiased sb-body;
+    text-rendering: optimizeLegibility;
+  }
+
+  img, picture, video, canvas, svg {
+    display: block;
+    max-width: 100%;
+    height: auto;
+  }
+
+  ::selection {
+    background-color: var(--sb-primary);
+    color: var(--sb-on-primary);
+  }
+
+  /* Scrollbar (webkit only, subtle) */
+  *::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+  *::-webkit-scrollbar-thumb {
+    @apply bg-ink-muted border border-ink-muted rounded-full;
+  }
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}

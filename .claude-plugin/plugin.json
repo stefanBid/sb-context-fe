@@ -1,6 +1,6 @@
 {
   "name": "sb-context-nuxt",
-  "version": "0.1.0",
-  "description": "Personal agent context for Nuxt projects: global style tooling, GitHub CLI admin, template maintenance.",
+  "version": "0.2.0",
+  "description": "Aligns and maintains Nuxt 4 + Tailwind 4 projects in progress: global style alignment, template migration, GitHub admin.",
   "author": { "name": "stefanBid" }
 }
