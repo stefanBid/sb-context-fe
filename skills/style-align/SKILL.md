@@ -60,7 +60,7 @@ Ask whether they want to know which component classes will stop working once the
 
 ### 0. Values source
 
-If `DESIGN.md` exists at the project root, **read it first** and take palette, families, type values, radii, shadows and motion from it. When it comes from `/sb-context-nuxt:design-import` (header with `source`, a `tokens` JSON block), read that block: it is the normalized values contract (`design-import/references/design-md.md`). Its "Gaps" list becomes the **provisional** items of the report. Report any conflict between `DESIGN.md` and the current CSS (P10); `DESIGN.md` wins, except for the eyebrow, breakpoint and 16px rules.
+If `DESIGN.md` exists at the project root, **read it first** and take palette, families, type values, radii, shadows and motion from it. `DESIGN.md` follows the open DESIGN.md format (YAML frontmatter: colors, typography, rounded, spacing; standard body sections). When it comes from `/sb-context-nuxt:design-import` it also has a `style-align extension` JSON block (dark theme, mobile sizes, shadows, breakpoints, `suggestedPrefix`); see `${CLAUDE_SKILL_DIR}/../design-import/references/design-md.md`. Its "Gaps" list, or whatever is absent (a `DESIGN.md` written by Impeccable has no extension), becomes the **provisional** items of the report. Report any conflict between `DESIGN.md` and the current CSS (P10); `DESIGN.md` wins, except for the eyebrow, breakpoint and 16px rules.
 
 No `DESIGN.md` but the user has a design made in Claude desktop (an artifact link)? Run `/sb-context-nuxt:design-import` first.
 

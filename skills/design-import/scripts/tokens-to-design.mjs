@@ -1,6 +1,10 @@
 #!/usr/bin/env node
 // Converts the `project/tokens.json` of a claude.ai "Design System" artifact into a
 // DESIGN.md for the project root: the values contract that style-align reads.
+// The file follows the DESIGN.md spec (github.com/google-labs-code/design.md): YAML
+// frontmatter with colors/typography/rounded/spacing, the standard body sections in
+// order. What the spec cannot express (dark theme, mobile sizes, shadows, breakpoints,
+// provenance) goes in an extra `## style-align extension` section with a JSON block.
 //
 // Usage:
 //   node "${CLAUDE_SKILL_DIR}/scripts/tokens-to-design.mjs" --tokens <tokens.json> \
@@ -143,19 +147,6 @@ if (Object.keys(radius).length < 2) gaps.push('Fewer than 2 radii declared.');
 gaps.push('Motion: the design system has no motion family. Defaults from `style-align` references/motion.md apply, marked provisional.');
 if (!Object.keys(shadow).length) gaps.push('No shadows declared: three levels derived minimally, provisional.');
 
-const data = {
-  themes,
-  colors,
-  fonts: { ...fonts, files: fontFiles },
-  weights: [...weightSet].sort((a, b) => a - b),
-  type,
-  radius,
-  shadow,
-  spacing,
-  breakpoints,
-  motion: null,
-};
-
 // ---------------------------------------------------------------------------
 // Prose: keep the brand book, remove only the eyebrow wording
 // ---------------------------------------------------------------------------
@@ -170,43 +161,124 @@ const prose = readme
   .join('\n')
   .trim();
 
-const md = `---
-name: ${name}
-source: ${get('--source') ?? 'unknown'}
-sourceVersion: ${get('--version') ?? 'unknown'}
-importedAt: ${new Date().toISOString().slice(0, 10)}
-suggestedPrefix: ${suggestedPrefix ?? ''}
----
+// ---------------------------------------------------------------------------
+// DESIGN.md (spec) + extension block
+// ---------------------------------------------------------------------------
+const q = (v) => JSON.stringify(String(v));
+const ref = (v) => (/^\{[\w.-]+\}$/.test(v) ? `{colors.${v.slice(1, -1)}}` : v);
+const firstFamily = (stack) => (stack ? String(stack).split(',')[0].trim().replace(/^["']|["']$/g, '') : null);
+const numWeight = (w) => (typeof w === 'number' ? w : parseInt(String(w).match(/\d+/)?.[0] ?? '400', 10));
+const light = themes[0];
+const dark = themes[1] ?? null;
 
-# ${name} — design
+const y = [];
+y.push('---', 'version: alpha', `name: ${q(name)}`);
+y.push('omitted:', '  - components');
+y.push('colors:');
+for (const [n, c] of Object.entries(colors)) y.push(`  ${n}: ${q(ref(c[light]))}`);
+y.push('typography:');
+for (const [n, s] of Object.entries(type)) {
+  y.push(`  ${n}:`);
+  const fam = firstFamily(s.family && fams[s.family] ? fams[s.family] : null);
+  if (fam) y.push(`    fontFamily: ${q(fam)}`);
+  y.push(`    fontSize: ${s.size}`);
+  y.push(`    fontWeight: ${numWeight(s.weight)}`);
+  if (s.lineHeight) y.push(`    lineHeight: ${s.lineHeight}`);
+  if (s.letterSpacing) y.push(`    letterSpacing: ${s.letterSpacing}`);
+}
+y.push('rounded:');
+for (const [n, v] of Object.entries(radius)) y.push(`  ${n}: ${v}`);
+for (const x of t.radius?.tokens ?? []) if (/-full$/.test(x.name)) y.push(`  full: ${x.value}`);
+y.push('spacing:');
+for (const [n, v] of Object.entries(spacing)) y.push(`  ${n}: ${v}`);
+y.push('---');
 
-Values contract for \`style-align\`. Imported from a claude.ai Design System artifact by \`design-import\`; the artifact stays the source, this file is the project's snapshot. Regenerate it with \`/sb-context-nuxt:design-import\` when the design changes. Do not hand-edit the \`tokens\` block: it is machine-read.
+const ext = {
+  source: get('--source') ?? 'unknown',
+  sourceVersion: get('--version') ?? 'unknown',
+  importedAt: new Date().toISOString().slice(0, 10),
+  suggestedPrefix,
+  themes,
+  colorsDark: dark ? Object.fromEntries(Object.entries(colors).map(([n, c]) => [n, ref(c[dark])])) : null,
+  fonts: { display: fonts.display, body: fonts.body, mono: fonts.mono, files: fontFiles },
+  weights: [...weightSet].sort((a, b) => a - b),
+  familyRole: Object.fromEntries(Object.entries(type).map(([n, s]) => [n, s.family])),
+  mobile: Object.fromEntries(Object.entries(type).filter(([, s]) => s.mobile).map(([n, s]) => [n, s.mobile])),
+  shadows: shadow,
+  breakpoints,
+  motion: null,
+};
 
-\`suggestedPrefix\` is only a proposal: \`style-align\` always asks which prefix to use and the answer wins.
+const colorLines = Object.entries(colors).map(([n, c]) => `- **${n} (${c[light]}${dark ? ` / ${c[dark]}` : ''}):** ${c.usage}`);
+const typeLines = Object.entries(type).map(([n, s]) => `- **${n}** — ${s.size} / ${s.lineHeight ?? 'auto'}, weight ${numWeight(s.weight)}${s.letterSpacing ? `, tracking ${s.letterSpacing}` : ''}${s.mobile ? `; mobile ${s.mobile.size} / ${s.mobile.lineHeight}` : ''}. ${s.usage}`);
+const shadowLines = Object.entries(shadow).map(([n, v]) => `- **${n}:** ${Object.values(v)[0]}`);
+const bpLines = Object.entries(breakpoints).map(([n, v]) => `- **${n}** ${v}`);
+const spacingLines = Object.entries(spacing).map(([n, v]) => `- **${n}** ${v}`);
+const radiusLines = Object.entries(radius).map(([n, v]) => `- **${n}** ${v}`);
 
-## Rules that override this document
+const intro = prose.split(/\n(?=##\s)/)[0].startsWith('##') ? '' : prose.split(/\n(?=##\s)/)[0];
+const restSections = prose.split(/\n(?=##\s)/).filter((b) => b.startsWith('##')).join('\n\n');
 
-- No eyebrows: \`overline\` is for badges, tags, counters, table headers and metadata, never a kicker above a heading.
-- Breakpoints are fixed to sm 640 / md 768 / lg 1024 / xl 1280.
-- Running text and inputs are never below 16px.
+const md = `${y.join('\n')}
 
-## Tokens
+# ${name}
 
-\`\`\`json tokens
-${JSON.stringify(data, null, 2)}
+## Overview
+
+${intro || `${name} design system, imported from a claude.ai Design System artifact.`}
+
+## Colors
+
+Light${dark ? ' and dark' : ''} values per role; the frontmatter holds the ${light} theme${dark ? ', the dark values are in the extension section' : ''}.
+
+${colorLines.join('\n')}
+
+## Typography
+
+${fonts.display ? `Display: ${fonts.display}. ` : ''}${fonts.body ? `Body: ${fonts.body}.` : ''}
+
+${typeLines.join('\n')}
+
+## Layout
+
+Spacing scale:
+
+${spacingLines.join('\n')}
+
+Breakpoints (mobile-first):
+
+${bpLines.join('\n')}
+
+## Elevation & Depth
+
+${t.shadow?.note ? `${t.shadow.note}\n\n` : ''}${shadowLines.join('\n') || 'No shadows declared.'}
+
+## Shapes
+
+${radiusLines.join('\n')}
+
+## Do's and Don'ts
+
+- Don't use \`overline\` (or any small uppercase text) as a kicker above a heading: it is for badges, tags, counters, table headers and metadata.
+- Don't set running text or form inputs below 16px.
+- Do keep the breakpoints at sm 640 / md 768 / lg 1024 / xl 1280.
+- Do keep the contrast minimums: 4.5:1 for text, 3:1 for large text, controls and focus.
+
+${restSections ? `${restSections}\n\n` : ''}## style-align extension
+
+Not part of the DESIGN.md spec: values it cannot express, plus provenance. Written by \`design-import\`, read by \`style-align\`. \`suggestedPrefix\` is only a proposal: the prefix is always asked and the answer wins.
+
+\`\`\`json style-align
+${JSON.stringify(ext, null, 2)}
 \`\`\`
 
-## Overrides applied during import
+### Overrides applied during import
 
 ${overrides.length ? overrides.map((o) => `- ${o}`).join('\n') : 'None.'}
 
-## Gaps to resolve in style-align
+### Gaps to resolve in style-align
 
 ${gaps.map((g) => `- ${g}`).join('\n')}
-
-## Brand book
-
-${prose || '_No README provided._'}
 `;
 writeFileSync(out, md);
 console.log(`Written ${out}`);

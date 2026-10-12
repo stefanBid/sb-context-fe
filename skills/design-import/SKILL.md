@@ -12,7 +12,7 @@ The bridge between a design made in Claude desktop and the project's global styl
 Claude desktop (design) → artifact link → design-import → DESIGN.md → style-align → global style
 ```
 
-The artifact stays the source of truth. `DESIGN.md` is the project's local, versioned snapshot: it works offline, `style-align` reads it without network or login, and its header records which artifact version was applied. It is produced here, never by Claude desktop.
+The artifact stays the source of truth. `DESIGN.md` is the project's local, versioned snapshot, in the open DESIGN.md format so other tools (Impeccable included) can read it too: it works offline, `style-align` reads it without network or login, and its header records which artifact version was applied. It is produced here, never by Claude desktop.
 
 **Language**: this file is in English; talk to the user in their language.
 
@@ -35,7 +35,7 @@ node "${CLAUDE_SKILL_DIR}/scripts/tokens-to-design.mjs" --tokens <saved tokens.j
   --source <artifact link> --version <artifact version> --out DESIGN.md
 ```
 
-It is deterministic: no interpretation. It writes the `tokens` block (colors per theme, families, weights, type styles with mobile values when the design gives them, radii, shadows, spacing, breakpoints), the brand book prose, a **suggested prefix**, the overrides it applied and the gaps.
+It is deterministic: no interpretation. It writes a `DESIGN.md` in the standard DESIGN.md format (the one Impeccable's `/impeccable document` uses: YAML frontmatter with colors, typography, rounded, spacing, then the standard sections), plus a `style-align extension` section for what the format cannot hold (dark theme, mobile sizes, shadows, breakpoints, provenance, a **suggested prefix**), the overrides applied and the gaps.
 
 If `DESIGN.md` already exists the script refuses. Write to another path (`--out DESIGN.new.md`), show the differences, and ask: replace, keep, or merge. Never overwrite silently.
 
@@ -64,5 +64,5 @@ Offer `/sb-context-nuxt:style-align`. It reads `DESIGN.md` first, asks the prefi
 
 | File | When |
 | --- | --- |
-| `references/design-md.md` | the `DESIGN.md` format the script writes and `style-align` reads |
+| `references/design-md.md` | the `DESIGN.md` format the script writes and `style-align` reads (spec + extension) |
 | `scripts/tokens-to-design.mjs` | the conversion |
