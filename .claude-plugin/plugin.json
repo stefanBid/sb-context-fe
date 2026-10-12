@@ -1,6 +1,8 @@
 {
   "name": "sb-context-nuxt",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Aligns and maintains Nuxt 4 + Tailwind 4 projects in progress: global style alignment, template migration, GitHub admin.",
-  "author": { "name": "stefanBid" }
+  "author": {
+    "name": "stefanBid"
+  }
 }
