@@ -12,21 +12,25 @@ The script proposes; the agent decides by looking at the line, the tag, the sibl
 
 ## 2. Text
 
+Text roles are matched against **the project's scale** (the `--text-<role>` tokens the script reads), not against px ranges. The size of the old class picks the nearest token; the element's role breaks ties.
+
 | Situation | Role |
 | --- | --- |
 | text of an `h1`…`h4` with the same size as its level | no class |
 | heading that must look like another level | `{p}-hN` of the intended level |
-| bold `div`/`span` from 17px up (card title, section title) | `{p}-h4` or `{p}-h3`; if it really is a heading, also propose the tag (To decide) |
-| intro paragraph below a heading, 18–20px | `{p}-lead` |
-| running text, 15–17px | `{p}-body` |
+| bold `div`/`span` at heading size (card title, section title) | `{p}-h4` or `{p}-h3`; if it really is a heading, also propose the tag (To decide) |
+| intro paragraph below a heading | `{p}-lead` |
+| running text | `{p}-body` |
 | emphasis, values, button text | `{p}-body-strong` |
-| `label`, chips, tabs, 13–15px bold | `{p}-label` |
-| help, errors, metadata, captions, 12–15px regular | `{p}-small` |
-| small uppercase (`uppercase`, `tracking-*`), badges, counters | `{p}-overline` (also removes `uppercase` and `tracking-*`) |
+| `label`, chips, tabs | `{p}-label` |
+| help, errors, metadata, captions | `{p}-small` |
+| small uppercase (`uppercase`, `tracking-*`) used for badges, tags, counters, table headers, metadata | `{p}-overline` (also removes `uppercase` and `tracking-*`) |
 | larger than `display` | `{p}-hero` if the theme has it; otherwise `{p}-display` and a note for the global style |
 | `text-{role}` without family (`text-h4`) | `{p}-{role}` |
 
-Typical equidistant cases: 15px → `body` if it is text to read, `small` if it is secondary; 13px → `small` if it is text, `overline` if it is an uppercase label; 20px → `h4` if bold, `lead` if regular.
+Small uppercase text that works as a kicker above a heading is not an `overline` case: there is no role for it. Flag it under "To decide" (usually removed or turned into `{p}-small`).
+
+When the old size is equidistant between two of the project's tokens, the element decides: text to read → the body-side role, secondary → `small`, uppercase label → `overline`, bold → the strong or heading-side role.
 
 ## 3. Weights and families
 
@@ -57,7 +61,7 @@ Opacity (`bg-primary/10`) is kept if it was there; if it served to get a light t
 
 - Radii: the script proposes the nearest theme step. Bare `rounded` and `rounded-xs` become `rounded-sm`; `rounded-full` and `rounded-none` stay.
 - Shadows: `shadow` and `shadow-xs` → `shadow-sm`; `shadow-xl`, `shadow-2xl` → `shadow-lg`; `shadow-inner` → To decide.
-- Easings: `ease-in` → `ease-exit`, `ease-out` → `ease-enter`, `ease-in-out` → `ease-standard`. `transition` + `duration-*` + `ease-*` on controls → `{p}-transition`.
+- Easings: `ease-in` → `ease-in`, `ease-out` → `ease-out`, `ease-in-out` → `ease-in-out`, **only if those tokens exist in the theme**; otherwise report. `transition` + `duration-*` + `ease-*` on controls → `{p}-transition`; other durations map to the nearest `--{p}-duration-feedback|state|layout|entrance` band.
 - Default animations (`animate-pulse`, `animate-bounce`, `animate-ping`): To decide, usually removed; `animate-spin` stays if the theme defines it.
 - Breakpoints: `2xl:` → `xl:`. Arbitrary values (`min-[900px]:`) → the nearest method breakpoint.
 

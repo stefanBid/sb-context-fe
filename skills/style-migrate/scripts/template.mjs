@@ -37,26 +37,49 @@ const outFile = opt('--out');
 const valued = new Set(['--css', '--root', '--out']);
 const targets = argv.filter((a, i) => !a.startsWith('--') && !valued.has(argv[i - 1])).map((t) => resolve(root, t));
 
+// ---------------------------------------------------------------------------
+// Module resolution (works with pnpm, where transitive deps are not hoisted):
+// the project root first, then the location of @tailwindcss/vite and nuxt.
+// ---------------------------------------------------------------------------
 const req = createRequire(join(root, 'package.json'));
-function need(name) {
-  try {
-    return req(name);
-  } catch {
-    console.error(`Module "${name}" not found in the project. Run the script from the root of a Nuxt 4 project with Tailwind 4 (@tailwindcss/vite).`);
-    process.exit(2);
+const bases = [req];
+for (const pkgName of ['@tailwindcss/vite', 'nuxt']) {
+  for (const target of [`${pkgName}/package.json`, pkgName]) {
+    try {
+      bases.push(createRequire(req.resolve(target)));
+      break;
+    } catch {}
   }
 }
+function locate(name) {
+  for (const r of bases) {
+    try {
+      return { r, path: r.resolve(name) };
+    } catch {}
+  }
+  return null;
+}
+function need(name) {
+  const found = locate(name);
+  if (!found) {
+    console.error(`Module "${name}" not found from the project root, from @tailwindcss/vite or from nuxt. Run the script from the root of a Nuxt 4 project with Tailwind 4 (@tailwindcss/vite) and install its dependencies first.`);
+    process.exit(2);
+  }
+  return found.r(name);
+}
 async function needEsm(name) {
+  const found = locate(name);
+  if (!found) return need(name);
   try {
-    return await import(pathToFileURL(req.resolve(name)).href);
+    return await import(pathToFileURL(found.path).href);
   } catch {
-    return need(name);
+    return found.r(name);
   }
 }
 const postcss = need('postcss');
 const { parse: parseSfc } = need('vue/compiler-sfc');
 const { compile } = await needEsm('@tailwindcss/node');
-const twDir = dirname(req.resolve('tailwindcss/package.json'));
+const twDir = dirname(locate('tailwindcss/package.json')?.path ?? need('tailwindcss/package.json'));
 
 // ---------------------------------------------------------------------------
 // Project configuration
@@ -380,9 +403,10 @@ function suggest(cls, el) {
 
   // easings and animations
   if (root === 'ease') {
-    const map = { in: 'exit', out: 'enter', 'in-out': 'standard' };
+    // same names as the theme tokens: only valid when the theme defines them
     out.category = 'motion';
-    out.proposal = map[value] && eases.includes(map[value]) ? vprefix + `ease-${map[value]}` : null;
+    if (['in', 'out', 'in-out'].includes(value) && eases.includes(value)) out.proposal = vprefix + `ease-${value}`;
+    else out.note = `The theme has no ease-${value} token: report it, do not guess.`;
     return out;
   }
   if (root === 'animate') {
@@ -490,7 +514,7 @@ for (const file of files) {
         const px = remPx(d.value.match(/([\d.]+(?:px|rem))/)?.[1] ?? '');
         if (px) styleIssues.push({ line, selector: sel, prop: d.prop, value: d.value, kind: 'text size outside the theme', proposal: nearestTextRole(px).map((r) => `@apply ${u(r)}`).join(' or ') });
       }
-      if (d.prop === 'font-weight' && !/^(400|600|700|normal|bold|var\()/.test(d.value)) styleIssues.push({ line, selector: sel, prop: d.prop, value: d.value, kind: 'weight outside the theme', proposal: '400, 600 or 700' });
+      if (d.prop === 'font-weight' && !/^var\(/.test(d.value) && weights.length && !weights.some((x) => x.w === (d.value === 'normal' ? 400 : d.value === 'bold' ? 700 : parseInt(d.value, 10)))) styleIssues.push({ line, selector: sel, prop: d.prop, value: d.value, kind: 'weight outside the theme', proposal: weights.map((x) => x.w).join(', ') });
       if (/^(font-family)$/.test(d.prop) && !/var\(/.test(d.value)) styleIssues.push({ line, selector: sel, prop: d.prop, value: d.value, kind: 'hard-coded family', proposal: families.map((f) => `var(--font-${f})`).join(' | ') });
     });
   }
