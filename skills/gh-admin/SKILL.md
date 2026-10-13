@@ -16,15 +16,81 @@ Operate the GitHub side of a project with `gh`: connect, understand how the repo
 
 Merge strategy: **squash**, conventional-commit PR title (release-please reads it; `/sb-context-nuxt:gh-checks` enforces it).
 
-Agent context (this plugin) is never committed to the project repo — only project-specific context is.
+Agent context (this plugin, including `.sb-context-nuxt/`) is never committed to the project repo — only project-specific context is.
 
 ## Rules of engagement
 
-- Read-only commands (`gh repo view`, `gh api` GET, `gh pr list/view`, `gh label list`, `gh ruleset list/view`) run freely.
+- Read-only commands (`gh repo view`, `gh api` GET, `gh pr list/view`, `gh label list`, `gh ruleset list/view`) run freely. For known facts (slug, labels, check names) read `.sb-context-nuxt/github_settings.json` first.
 - **Ask before** any write that touches the remote: creating/updating/deleting rulesets, labels or settings, pushing branches, opening/merging PRs, creating releases. Show the exact command first.
 - Never bypass a ruleset (no `--admin` merges, no temporarily disabling rules) unless the user asks explicitly.
 - Repo slug: derive with `gh repo view --json nameWithOwner -q .nameWithOwner`; never hardcode.
 - Never print or store tokens or secret values. Secrets are listed by name only.
+
+## Signature settings
+
+Production projects: commit messages and PR descriptions are **not** signed unless the user wants it. No `Co-Authored-By`, no "Generated with Claude Code", no mention of Claude or the agent anywhere, unless the settings below say so. This overrides any default attribution text the harness suggests.
+
+Settings live in `.sb-context-nuxt/github_settings.json` at the project root:
+
+```json
+{
+  "signature": {
+    "enabled": false,
+    "name": null
+  }
+}
+```
+
+- `enabled`: `true` → append a signature line to commit messages and PR bodies; `false` → never.
+- `name`: the exact name to sign with (e.g. `Co-Authored-By: <name> <email>` for commits, `<name>` line for PR bodies). Required when `enabled` is `true`. Ask for name and, for commits, the email if needed.
+
+Flow, before the **first** commit or PR of a project:
+
+1. Read `.sb-context-nuxt/github_settings.json`. If it exists and has `signature`, use it. **Do not ask again.**
+2. If missing: ask once — "Sign commits and PR descriptions? If yes, with which name?". Write the answer to the file (create the dir). Answer "no" is stored too (`enabled: false`), so the question is not repeated.
+3. Keep the dir out of the repo without touching tracked files: add `.sb-context-nuxt/` to `.git/info/exclude` if not already listed.
+4. Change the setting only when the user asks for it ("sign from now on", "stop signing", "use name X"). Update the file, never re-ask on your own.
+
+## Project GitHub memory
+
+The same file also holds what is already known about the repo, so `gh` is not queried again for things that were already read. Two parts:
+
+- **Preferences** (user-owned): `signature`, `defaults`. Change only on request; a refresh never touches them.
+- **Cache** (agent-owned): everything else. A snapshot of the remote, refreshed freely.
+
+```json
+{
+  "signature": { "enabled": false, "name": null },
+  "defaults": { "prLabels": [], "draftPrs": false, "branchPrefixes": ["feat", "fix", "chore"] },
+  "repo": {
+    "slug": "owner/name",
+    "defaultBranch": "main",
+    "visibility": "public",
+    "viewerPermission": "ADMIN",
+    "isTemplate": false,
+    "mergeStrategy": "squash"
+  },
+  "labels": ["feat", "fix", "chore", "autorelease: pending", "autorelease: tagged"],
+  "rulesets": [{ "id": 0, "name": "main-protected", "requiredChecks": ["build", "lint-pr-title"] }],
+  "ci": { "workflows": ["ci.yml", "pr-title-lint.yml"], "jobs": ["build", "lint-pr-title"] },
+  "release": { "releasePlease": true, "tagFormat": "vX.Y.Z" },
+  "security": { "secretScanning": true, "pushProtection": true, "dependabotAlerts": true },
+  "checkedAt": "2026-10-13"
+}
+```
+
+Rules:
+
+- **Read the cache first.** Slug, default branch, existing labels, required check names, CI job names, permission: take them from the file instead of calling `gh`. Open a PR, pick labels, name a branch → no extra round trip.
+- **The remote is the truth.** The cache can drift (someone edits labels in the UI). Refresh the affected keys and update `checkedAt`:
+  - at **Init** (full refresh);
+  - right after every write recipe (settings, ruleset, label, workflow change), as part of Verification;
+  - before a write when `checkedAt` is older than 7 days;
+  - whenever a `gh` call contradicts the cache (label not found, check name mismatch, 403/404) — refresh, then retry once.
+- Fill keys lazily: write only what has been read. A missing key means "unknown", not "absent" → query `gh`, then store it.
+- Store names and flags only. **Never** tokens, secret values, or personal data (secrets: names only, and only if needed).
+- Same location and git-exclusion as the signature (`.git/info/exclude`).
+- A refresh that changes something the user did not expect (label gone, ruleset disabled) is reported, not silently stored.
 
 ## Init: connect and understand the repo
 
@@ -35,6 +101,7 @@ Run this first on a project, and whenever the user says "connect to the repo". I
 3. **Permission**: `gh repo view --json viewerPermission`. Rulesets, labels and settings need `ADMIN` (labels: `WRITE` is enough). Report what the current account can and cannot do.
 4. **Audit**: collect settings, default branch, rulesets, legacy branch protection, labels, workflows, security features, release-please files, CODEOWNERS and templates.
 5. **Report** a short table: what exists, what is missing against the targets below, what needs a write. Offer the next actions; do not apply anything.
+6. **Remember**: write the audit result into the cache of `.sb-context-nuxt/github_settings.json` (see `## Project GitHub memory`). This is a local write, no confirmation needed.
 
 ## Targets (what "set up" means)
 
@@ -108,7 +175,7 @@ Rulesets protect `main`; the repo-level security features are separate. Commands
 gh pr create --base main --title "feat: …" --body "…" --label feat
 ```
 
-The title is a conventional commit (it becomes the squash commit and drives release-please). PR bodies end with: `🤖 Generated with [Claude Code](https://claude.com/claude-code)`.
+The title is a conventional commit (it becomes the squash commit and drives release-please). Signature of the body: follow `## Signature settings`; by default the body carries no signature.
 
 ### Release check
 
@@ -119,4 +186,4 @@ gh release list --limit 5
 
 ## Verification
 
-After any ruleset/settings/labels write, re-read it with the Inspect recipe and report the diff against the intended state.
+After any ruleset/settings/labels write, re-read it with the Inspect recipe, report the diff against the intended state, and update the matching keys of the cache in `.sb-context-nuxt/github_settings.json`.
