@@ -1,8 +1,8 @@
 # Method: color roles, light and dark themes, shapes
 
-The skill applies the **structure**, not the values. Every project keeps its own palette, radii and shadows. What is fixed: the role names, where literal colors live, how light and dark work, the closed namespaces. What follows `DESIGN.md` (or, without it, the project's current values): the colors themselves, radii, shadow values, how roles are used on a page. Taste is Impeccable's job.
+The skill applies the **structure**, not the values. Every project keeps its own palette, radii and shadows. What is fixed: the role names, where literal colors live, how light and dark work, the closed namespaces. What follows `design-source.md` (or, without it, the project's current values): the colors themselves, radii, shadow values, how roles are used on a page. Taste is Impeccable's job.
 
-If `DESIGN.md` exists its palette wins over the CSS; report any conflict. Without it, keep the project's colors. Roles the structure needs but the project lacks (a dark value, `on-primary`, a `-soft` tint) are derived minimally, marked **provisional**, and listed for refinement with `/impeccable colorize`.
+If `design-source.md` exists its palette wins over the CSS; report any conflict. Without it, keep the project's colors. Roles the structure needs but the project lacks (a dark value, `on-primary`, a `-soft` tint) are derived minimally, marked **provisional**, and listed for refinement with `/impeccable colorize`.
 
 ## 1. Roles: a reference vocabulary
 
@@ -89,8 +89,8 @@ Two colors that must be told apart (for example success and error) differ in lig
 
 | Family | Closed set | Note |
 | --- | --- | --- |
-| Radii | `sm`, `md`, `lg` (+ `xl` if the project needs a fourth step; `none` and `full` are always available) | values from `DESIGN.md` or the project, merged into three or four steps |
-| Shadows | `sm`, `md`, `lg`, a value per theme | values from `DESIGN.md` or the project, merged into three levels |
+| Radii | `sm`, `md`, `lg` (+ `xl` if the project needs a fourth step; `none` and `full` are always available) | values from `design-source.md` or the project, merged into three or four steps |
+| Shadows | `sm`, `md`, `lg`, a value per theme | values from `design-source.md` or the project, merged into three levels |
 | Spacing | Tailwind default (`--spacing: 0.25rem`) | 4px grid |
 | Breakpoints | `sm` 640, `md` 768, `lg` 1024, `xl` 1280 | **fixed**: no others, no different values |
 

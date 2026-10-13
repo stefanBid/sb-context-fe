@@ -5,10 +5,10 @@ Every report item uses a code from this catalog, so the user can find the rule. 
 - **Blocking**: the skill stops, or the item must be solved first.
 - **Applied**: a **structure** rule; the skill corrects it during the rewrite and the report lists it, without asking.
 - **To decide**: the skill makes a proposal and waits for the user's choice.
-- **Follows DESIGN.md**: a **value**; if `DESIGN.md` exists it decides, and the report only notes the conflict with the current CSS.
+- **Follows design-source.md**: a **value**; if `design-source.md` exists it decides, and the report only notes the conflict with the current CSS.
 - **Info**: flagged only.
 
-"Applied" is used **only for structure**. Values (palette, sizes, weights, radii, shadows, motion timings) are "To decide" or "Follows DESIGN.md". Without `DESIGN.md`, the project's own values are kept and normalized; anything derived is marked **provisional**.
+"Applied" is used **only for structure**. Values (palette, sizes, weights, radii, shadows, motion timings) are "To decide" or "Follows design-source.md". Without `design-source.md`, the project's own values are kept and normalized; anything derived is marked **provisional**.
 
 The "Source" column says where the issue is found: `inv` = `inventory.mjs`, `con` = `contrast.mjs`, `read` = reading the files.
 
@@ -25,8 +25,8 @@ The "Source" column says where the issue is found: `inv` = `inventory.mjs`, `con
 | P7 | CSS files in `assets` not linked from `nuxt.config` | To decide | inv | Include them or leave them out (never deleted) |
 | P8 | `<style>` without `scoped` in `.vue` files (global state outside `assets`) | To decide | inv | Move their rules into the four files and remove the block |
 | P9 | More than one CSS entry point in `nuxt.config` | Applied | inv | Only `~/assets/css/main.css` |
-| P10 | `DESIGN.md` conflicts with the current CSS | Follows DESIGN.md | read | `DESIGN.md` wins; list each conflict |
-| P11 | Eyebrow or kicker usage (`overline` above a heading) in the CSS, `DESIGN.md` or the brand book | Applied | read | Removed, always: it wins over `DESIGN.md`. List it in the report |
+| P10 | `design-source.md` conflicts with the current CSS | Follows design-source.md | read | `design-source.md` wins; list each conflict |
+| P11 | Eyebrow or kicker usage (`overline` above a heading) in the CSS, `design-source.md` or the brand book | Applied | read | Removed, always: it wins over `design-source.md`. List it in the report |
 
 ## Structure (files, sections, tokens, naming)
 
@@ -40,7 +40,7 @@ The "Source" column says where the issue is found: `inv` = `inventory.mjs`, `con
 | S6 | Role names diverge from the vocabulary (`--text-heading-1`, `--color-text`) | To decide | read | Map to the closed role set; keep project-specific colors with an agreed name |
 | S7 | Base layer for `h1`–`h4` or `body` missing | Applied | read | Added from the example |
 
-## Typography (structure; values follow DESIGN.md)
+## Typography (structure; values follow design-source.md)
 
 | Code | Issue | Severity | Source | Correction |
 | --- | --- | --- | --- | --- |
@@ -69,7 +69,7 @@ The "Source" column says where the issue is found: `inv` = `inventory.mjs`, `con
 | B2 | Tailwind breakpoints redefined with other values, or `2xl` used | Applied | inv, read | `--breakpoint-*: initial` and the method's four |
 | B3 | `max-width` media queries in the global style | Applied | inv | Mobile-first, `min-width` |
 
-## Color and theme (structure fixed, values follow DESIGN.md)
+## Color and theme (structure fixed, values follow design-source.md)
 
 | Code | Issue | Severity | Source | Proposal |
 | --- | --- | --- | --- | --- |
@@ -80,7 +80,7 @@ The "Source" column says where the issue is found: `inv` = `inventory.mjs`, `con
 | C5 | A pure hue name for a specific meaning (`--blue` used for links) | To decide | read | The role name |
 | C6 | Project color without a matching role | To decide | read | Stays, with an agreed semantic name |
 | C7 | Contrast below the minimum (4.5:1 text, 3:1 large text, controls, focus) | To decide | con | Lightness-only correction, before and after |
-| C8 | Color values differ from `DESIGN.md` | Follows DESIGN.md | read | `DESIGN.md` wins |
+| C8 | Color values differ from `design-source.md` | Follows design-source.md | read | `design-source.md` wins |
 | C9 | Same color for decorative and control borders | To decide | read | Separate `border` and `border-strong` |
 | C10 | Secondary text made with opacity | To decide | inv | An `ink-muted` color |
 | C11 | Theme on `.dark` or only on `prefers-color-scheme`, without `data-theme` | Applied | inv | `[data-theme="dark"]` and `@custom-variant dark` |
@@ -91,11 +91,11 @@ The "Source" column says where the issue is found: `inv` = `inventory.mjs`, `con
 
 | Code | Issue | Severity | Source | Correction |
 | --- | --- | --- | --- | --- |
-| F1 | Scattered radii, not reducible to a few steps | To decide | inv | Three or four steps from the project's values or `DESIGN.md` |
+| F1 | Scattered radii, not reducible to a few steps | To decide | inv | Three or four steps from the project's values or `design-source.md` |
 | F2 | Scattered shadows, or identical in both themes | To decide | inv | Three levels per theme |
 | F3 | `--radius-*`, `--shadow-*`, `--inset-shadow-*`, `--drop-shadow-*`, `--text-shadow-*` namespaces not closed | Applied | inv | Resets from the example |
 
-## Motion (structure fixed, timings follow DESIGN.md)
+## Motion (structure fixed, timings follow design-source.md)
 
 | Code | Issue | Severity | Source | Correction |
 | --- | --- | --- | --- | --- |

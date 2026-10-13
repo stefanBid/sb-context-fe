@@ -7,7 +7,7 @@
 //   options:
 //     --css <file>      global style entry point (default: first css entry in nuxt.config,
 //                       otherwise <srcDir>/assets/css/main.css)
-//     --root <dir>      project root (default: current folder)
+//     --root <dir>      project root (default: the Nuxt project found from the current folder upward)
 //     --out <file>      also save the result as JSON
 //
 // Each class is judged by compiling it with Tailwind:
@@ -21,6 +21,7 @@ import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from '
 import { join, resolve, dirname, relative, extname } from 'node:path';
 import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
+import { projectRoot } from '../../../scripts/lib/project.mjs';
 import { parseColor, toOklch, findColors } from './color.mjs';
 
 // ---------------------------------------------------------------------------
@@ -31,7 +32,7 @@ const opt = (n) => {
   const i = argv.indexOf(n);
   return i === -1 ? null : argv[i + 1];
 };
-const root = resolve(opt('--root') || process.cwd());
+const root = projectRoot(opt('--root'));
 const summaryOnly = argv.includes('--summary');
 const outFile = opt('--out');
 const valued = new Set(['--css', '--root', '--out']);

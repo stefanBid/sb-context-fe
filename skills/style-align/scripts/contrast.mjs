@@ -236,7 +236,7 @@ if (asJson) {
   }
   const allNotes = Object.entries(notes).flatMap(([t, n]) => n.map((line) => `- (${t}) ${line}`));
   if (allNotes.length) {
-    console.log('## Observations (information only: values follow DESIGN.md or the project)\n');
+    console.log('## Observations (information only: values follow design-source.md or the project)\n');
     console.log(allNotes.join('\n'));
   }
   console.log(`\nPairs checked: ${allRows.length}, below minimum or unreadable: ${failed.length}, warnings: ${warned.length}.`);

@@ -21,7 +21,7 @@ The two can be the same family. Declared in `@theme` of `typography.css`, with `
 1. **Detect the families** from `font-family`, `@font-face`, Google `@import` and `fonts.families` (the inventory lists them) and assign each the role it plays (where it appears).
 2. **Two or fewer families**: map them to the two roles. One family can serve both.
 3. **More than two families in use**: ask which roles they play. If the pairing looks unintentional (e.g. three similar sans), note it in the report and point to `/impeccable typeset`. Do not choose for the user.
-4. **If `DESIGN.md` names the families**, it wins; report any conflict with the current CSS.
+4. **If `design-source.md` names the families**, it wins; report any conflict with the current CSS.
 
 ## 4. Effect on the files
 
