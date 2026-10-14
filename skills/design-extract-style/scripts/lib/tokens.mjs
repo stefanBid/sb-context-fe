@@ -114,5 +114,6 @@ export function buildRoleMap(colors, type) {
   return { roleMap, coreMissing, typeMissing };
 }
 
-// headings of the design's README move one level down so they do not look like this file's own sections
-export const demote = (md) => md.replace(/^(#{1,5}) /gm, '$1# ');
+// headings of the design's READMEs move down so they sit below the section that contains them
+// (h1 of the brand README under "## Brand guide" becomes ###), never deeper than h6
+export const demote = (md, levels = 1) => md.replace(/^(#{1,6}) /gm, (_, h) => `${'#'.repeat(Math.min(6, h.length + levels))} `);

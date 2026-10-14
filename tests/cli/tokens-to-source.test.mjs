@@ -86,10 +86,11 @@ describe('tokens-to-source.mjs', () => {
       classes: ['sb-btn', 'sb-btn--primary'],
     });
     assert.equal(card.files.readme, null);
-    assert.match(md, /### Button\n\n_Buttons for actions_\n\nPrimary and secondary actions\.\n/);
+    assert.match(md, /### Button\n\n_Buttons for actions_\n\nPrimary and secondary actions\.\n\n#### Rules\n/);
+    assert.match(md, /## Brand guide\n[\s\S]*?\n### Sample Brand\n[\s\S]*?\n#### Voice\n/);
   });
 
-  test('README headings never reach the level of the file\'s own sections', { todo: 'demote() adds one #: the brand README h1 becomes ##, and component READMEs are not demoted at all ("## Rules")' }, () => {
+  test('README headings never reach the level of the file\'s own sections', () => {
     p = makeProject();
     extract(p);
     const own = ['Provenance', 'Colors', 'Typography', 'Spacing', 'Radii', 'Shadows', 'Breakpoints', 'Motion', 'Brand guide', 'Components', 'Overrides applied during extraction', 'Gaps to resolve in style-align', 'Machine data'];
