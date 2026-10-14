@@ -12,7 +12,8 @@ import { ROLES, ROLE_TYPES } from '../../skills/design-extract-style/scripts/lib
 import { STANDARD_PAIRS } from '../../skills/style-align/scripts/lib/theme-vars.mjs';
 import { PREF } from '../../skills/style-migrate/scripts/lib/classes.mjs';
 
-const read = (p) => readFileSync(join(REPO, p), 'utf8');
+// LF even where git checks files out with CRLF (Windows)
+const read = (p) => readFileSync(join(REPO, p), 'utf8').replaceAll('\r\n', '\n');
 const tracked = execFileSync('git', ['ls-files'], { cwd: REPO, encoding: 'utf8' }).split('\n').filter(Boolean);
 const SCRIPTS = tracked.filter((f) => /^(scripts|skills\/[^/]+\/scripts)\/[^/]+\.mjs$/.test(f));
 const DOCS = tracked.filter((f) => f.endsWith('.md') && f !== 'CHANGELOG.md' && !f.startsWith('tests/'));
