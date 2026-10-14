@@ -686,7 +686,7 @@ A skill is instructions for a model: how well it is followed depends on the mode
 | --- | --- |
 | Unit | color parsing, OKLCH and WCAG contrast; CSS variables per theme; value normalizers and in-place rewrites of the style; prefix rules; type scale and size clusters; class anatomy and nearest theme roles; design role maps; i18n heuristics; dependency notes; project settings |
 | CLI | every script run end to end on a throwaway Nuxt project: exit codes, JSON output, files written, `--apply` idempotent, nothing written on a dry run |
-| Contract | every script path a `SKILL.md` points to exists, every `/sb-context-nuxt:<skill>` names a real skill, shared helpers are identical in every skill that ships them, manifests and docs agree with the code |
+| Contract | Claude Code's own `claude plugin validate --strict` on the marketplace, the manifest and every skill; every script path a `SKILL.md` points to exists, every `/sb-context-nuxt:<skill>` names a real skill, shared helpers are identical in every skill that ships them, manifests and docs agree with the code |
 
 The badges at the top are measured on `main` after every merge: line and branch coverage of the scripts the skills run (`scripts/` and `skills/*/scripts/`). Every pull request that produces a release (`feat`, `fix`, `perf`, `revert`, breaking changes) must pass the suite before it can be merged.
 

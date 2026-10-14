@@ -3,7 +3,8 @@ name: Tests
 # The suite is required only for pull requests that produce a release (feat, fix, perf, revert,
 # or a breaking change of any type): the same rule release-please uses. Every other PR (docs,
 # chore, ci, test… and the release PRs themselves) skips it. The ruleset requires one check,
-# `tests-gate`, which always reports: it fails only when the suite ran and did not pass.
+# `tests-gate`, which always reports: it fails only when the suite or the plugin validation ran
+# and did not pass.
 
 on:
   pull_request:
@@ -75,6 +76,38 @@ jobs:
       - name: Run tests
         run: npm test
 
+  # Claude Code's own schema check of the marketplace, the plugin manifest and every skill
+  # (frontmatter, unknown fields), plus the plugin's projected token cost in the job summary.
+  # No model call, no credentials.
+  plugin-check:
+    name: plugin validate
+    needs: scope
+    if: needs.scope.outputs.releasable == 'true'
+    runs-on: ubuntu-latest
+    env:
+      CLAUDE_CODE_VERSION: 2.1.299
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install Claude Code
+        run: npm install --global "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}"
+
+      - name: Validate the plugin
+        run: npm run validate
+
+      - name: Token cost
+        run: |
+          {
+            echo '### Plugin token cost'
+            echo '```'
+            claude --plugin-dir . plugin details sb-context-nuxt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
   # main only: measures coverage and publishes the README badges (shields.io endpoint JSON)
   # on the `badges` branch, which holds nothing else and is not protected by the main ruleset
   coverage:
@@ -121,15 +154,18 @@ jobs:
 
   gate:
     name: tests-gate
-    needs: [scope, test]
+    needs: [scope, test, plugin-check]
     if: always()
     runs-on: ubuntu-latest
     steps:
       - env:
           SCOPE: ${{ needs.scope.result }}
           TEST: ${{ needs.test.result }}
+          PLUGIN: ${{ needs.plugin-check.result }}
           RELEASABLE: ${{ needs.scope.outputs.releasable }}
         run: |
-          echo "scope: $SCOPE · releasable: $RELEASABLE · test: $TEST"
+          echo "scope: $SCOPE · releasable: $RELEASABLE · test: $TEST · plugin validate: $PLUGIN"
           [ "$SCOPE" = success ] || exit 1
-          if [ "$RELEASABLE" = true ]; then [ "$TEST" = success ]; else [ "$TEST" = skipped ]; fi
+          want=skipped
+          [ "$RELEASABLE" = true ] && want=success
+          [ "$TEST" = "$want" ] && [ "$PLUGIN" = "$want" ]

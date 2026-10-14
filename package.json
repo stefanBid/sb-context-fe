@@ -12,7 +12,8 @@
     "test:cli": "node --test \"tests/cli/**/*.test.mjs\"",
     "test:contract": "node --test \"tests/contract/**/*.test.mjs\"",
     "test:coverage": "node --test --experimental-test-coverage --test-coverage-include=\"scripts/**\" --test-coverage-include=\"skills/**\" \"tests/**/*.test.mjs\"",
-    "test:coverage:lcov": "node --test --experimental-test-coverage --test-coverage-include=\"scripts/**\" --test-coverage-include=\"skills/**\" --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=lcov.info \"tests/**/*.test.mjs\""
+    "test:coverage:lcov": "node --test --experimental-test-coverage --test-coverage-include=\"scripts/**\" --test-coverage-include=\"skills/**\" --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=lcov.info \"tests/**/*.test.mjs\"",
+    "validate": "claude plugin validate . --strict && claude plugin validate .claude-plugin/plugin.json --strict && claude plugin validate skills --strict"
   },
   "devDependencies": {
     "@tailwindcss/node": "^4.3.3",

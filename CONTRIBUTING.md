@@ -64,6 +64,7 @@ npm run test:cli       # each script run on a throwaway Nuxt project (tests/cli)
 npm run test:contract  # SKILL.md paths, cross-skill references, manifests, docs (tests/contract)
 npm run test:coverage
 npm run test:coverage:lcov  # same, and writes lcov.info (used for the README badges)
+npm run validate            # claude plugin validate --strict on the marketplace, the manifest and the skills (needs Claude Code installed)
 ```
 
 | Layer | What it guarantees |
@@ -80,7 +81,7 @@ The `Tests` workflow decides from the PR title whether the suite is required, wi
 
 | PR | Suite | `tests-gate` (required check) |
 | --- | --- | --- |
-| `feat`, `fix`, `perf`, `revert`, or any type with `!` / a `BREAKING CHANGE:` footer | runs on Node 22 and 24 | passes only if the suite passes: a red suite blocks the merge |
+| `feat`, `fix`, `perf`, `revert`, or any type with `!` / a `BREAKING CHANGE:` footer | runs on Node 22 and 24, with `claude plugin validate --strict` | passes only if the suite and the validation pass: a red one blocks the merge |
 | everything else (`docs`, `chore`, `ci`, `test`, `refactor`…, and the `chore(main): release` PRs) | skipped | passes |
 
 The workflow also runs when the title is edited, so renaming a `chore` PR to `fix` runs the suite before the merge. Every push to `main` runs it anyway.
