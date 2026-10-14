@@ -5,6 +5,8 @@ export const READ_ATTRS = new Set(['alt', 'title', 'placeholder', 'aria-label', 
 export const SKIP_TAGS = new Set(['style', 'svg', 'code', 'pre', 'path']);
 const TEXT_KEYS = /\b(label|title|text|description|placeholder|caption|message|heading|subtitle|alt|tooltip|hint|cta|name)\s*:\s*$/;
 const SEO_KEYS = /\b(title|description|ogTitle|ogDescription|twitterTitle|twitterDescription)\s*:\s*$/;
+// Tailwind utilities that are a single plain word: in a class string they look like prose
+const BARE_UTILITIES = new Set(['flex', 'grid', 'block', 'inline', 'hidden', 'contents', 'table', 'flow-root', 'relative', 'absolute', 'fixed', 'sticky', 'static', 'visible', 'invisible', 'collapse', 'isolate', 'container', 'grow', 'shrink', 'border', 'rounded', 'shadow', 'outline', 'ring', 'transition', 'transform', 'filter', 'blur', 'uppercase', 'lowercase', 'capitalize', 'italic', 'underline', 'overline', 'truncate', 'antialiased', 'ordinal', 'grayscale', 'invert', 'sepia', 'resize', 'snap', 'group', 'peer', 'prose', 'dark']);
 
 /** Text tests; words in `allow` (brand names, proper nouns) never count as text. */
 export function textRules(allow = []) {
@@ -13,7 +15,8 @@ export function textRules(allow = []) {
     for (const a of allow) t = t.split(a).join(' ');
     return /\p{L}{2,}/u.test(t);
   };
-  const classLike = (s) => s.split(/\s+/).every((tok) => /[-:/\[\]()%!#.=_]|\d/.test(tok) || /^[a-z]+$/.test(tok) === false && /^[A-Z]/.test(tok) === false && tok.length < 3);
+  // every token looks like a utility: it has a utility mark (-, :, /, [ ], a digit…) or is a bare utility word
+  const classLike = (s) => s.split(/\s+/).every((tok) => /[-:/\[\]()%!#.=_]|\d/.test(tok) || BARE_UTILITIES.has(tok) || /^[a-z]+$/.test(tok) === false && /^[A-Z]/.test(tok) === false && tok.length < 3);
   const isSentence = (s) => {
     const words = s.trim().split(/\s+/).filter((w) => /^[\p{L}'’.,;:!?()«»"-]{2,}$/u.test(w));
     return words.length >= 2 && !classLike(s) && hasText(s);

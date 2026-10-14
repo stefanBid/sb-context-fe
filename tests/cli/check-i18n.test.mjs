@@ -114,7 +114,7 @@ const route = { to: '/home', icon: 'i-lucide-home' }
     assert.equal(check('app').json().note, null);
   });
 
-  test('a class string made of plain words is not a sentence', { todo: 'classLike() needs every token to look like a utility: "flex items-center gap-2" is reported as a script string' }, () => {
+  test('a class string made of plain words is not a sentence', () => {
     p = makeProject({ 'app/a.vue': "<template><div /></template>\n<script setup>\nconst cls = 'flex items-center gap-2'\n</script>\n" });
     assert.deepEqual(check('app').json().inline, []);
   });
