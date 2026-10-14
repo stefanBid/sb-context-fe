@@ -75,6 +75,8 @@ npm run validate            # claude plugin validate --strict on the marketplace
 
 How scripts are written so they can be tested: the logic lives in `lib/` modules next to the script (`scripts/lib/`, `skills/<skill>/scripts/lib/`) as pure exported functions; the script itself reads arguments and files, calls them, prints, and exits. A new algorithm goes in `lib/` with its unit tests; a new script gets a test in `tests/cli`.
 
+Outputs that other skills or the model read as a format (`design-source.md`, the inventory, template, contrast and sync reports) are pinned as golden files in `tests/snapshots/`. A change to them must be a decision: run `UPDATE_SNAPSHOTS=1 npm test`, review the diff and commit it with the change.
+
 A known gap is written as a test with `{ todo: '<what is wrong>' }`: it runs and is reported, but does not fail the suite until it is fixed (then the `todo` is removed).
 
 The `Tests` workflow decides from the PR title whether the suite is required, with the same rule release-please uses to cut a release:
