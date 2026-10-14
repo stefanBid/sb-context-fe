@@ -25,7 +25,7 @@ describe('dotted paths', () => {
     assert.deepEqual(s, { version: 1, i18n: { locales: ['it'], source: 'detected', updatedAt: '2026-10-14' } });
   });
 
-  test('setPath keeps a top-level scalar as it is', { todo: 'the section of the first key is forced to an object: `set flag 1` saves flag: {}' }, () => {
+  test('setPath keeps a top-level scalar as it is', () => {
     assert.deepEqual(setPath({ version: 1 }, 'flag', 1, { date: 'd' }), { version: 1, flag: 1 });
     assert.deepEqual(setPath({ version: 1 }, 'list', ['a'], { date: 'd' }), { version: 1, list: ['a'] });
   });
