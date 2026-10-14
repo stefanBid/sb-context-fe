@@ -77,6 +77,8 @@ How scripts are written so they can be tested: the logic lives in `lib/` modules
 
 Outputs that other skills or the model read as a format (`design-source.md`, the inventory, template, contrast and sync reports) are pinned as golden files in `tests/snapshots/`. A change to them must be a decision: run `UPDATE_SNAPSHOTS=1 npm test`, review the diff and commit it with the change.
 
+Property tests (`tests/unit/fuzz.test.mjs`, `tests/cli/properties.test.mjs`) check rules on many random inputs instead of a few examples: the parsers never throw, `sync-values --apply` always ends aligned and idempotent, `tokens-to-source` always has full coverage and is deterministic, a prefix rename round trip is lossless. The inputs come from a fixed seed, so a failure is reproducible; `SEED=<n> npm test` explores other inputs.
+
 A known gap is written as a test with `{ todo: '<what is wrong>' }`: it runs and is reported, but does not fail the suite until it is fixed (then the `todo` is removed).
 
 The `Tests` workflow decides from the PR title whether the suite is required, with the same rule release-please uses to cut a release:
