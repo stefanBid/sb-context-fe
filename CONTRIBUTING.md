@@ -63,6 +63,7 @@ npm run test:unit      # pure functions (tests/unit)
 npm run test:cli       # each script run on a throwaway Nuxt project (tests/cli)
 npm run test:contract  # SKILL.md paths, cross-skill references, manifests, docs (tests/contract)
 npm run test:coverage
+npm run test:coverage:lcov  # same, and writes lcov.info (used for the README badges)
 ```
 
 | Layer | What it guarantees |
@@ -83,6 +84,8 @@ The `Tests` workflow decides from the PR title whether the suite is required, wi
 | everything else (`docs`, `chore`, `ci`, `test`, `refactor`…, and the `chore(main): release` PRs) | skipped | passes |
 
 The workflow also runs when the title is edited, so renaming a `chore` PR to `fix` runs the suite before the merge. Every push to `main` runs it anyway.
+
+On every push to `main` the `coverage badge` job measures line and branch coverage and publishes them as shields.io endpoint files (`coverage.json`, `coverage-branches.json`) on the `badges` branch, which the README badges read. The branch holds nothing else; never merge it.
 
 ## Workflow
 

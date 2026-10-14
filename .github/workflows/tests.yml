@@ -75,6 +75,50 @@ jobs:
       - name: Run tests
         run: npm test
 
+  # main only: measures coverage and publishes the README badges (shields.io endpoint JSON)
+  # on the `badges` branch, which holds nothing else and is not protected by the main ruleset
+  coverage:
+    name: coverage badge
+    needs: test
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install test dependencies
+        run: npm ci
+
+      - name: Measure coverage
+        run: npm run test:coverage:lcov
+
+      - name: Build the badges
+        run: node .github/scripts/coverage-badge.mjs lcov.info "$RUNNER_TEMP/badges-out"
+
+      - name: Publish on the badges branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          dir="$RUNNER_TEMP/badges"
+          git init -q "$dir" && cd "$dir"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git"
+          if git fetch -q --depth 1 origin badges; then git checkout -q -b badges FETCH_HEAD; else git checkout -q --orphan badges; fi
+          cp "$RUNNER_TEMP"/badges-out/*.json .
+          git add -A
+          if git diff --cached --quiet; then echo "Badges unchanged."; exit 0; fi
+          git commit -q -m "coverage of ${SHA::7}"
+          git push -q origin badges
+
   gate:
     name: tests-gate
     needs: [scope, test]

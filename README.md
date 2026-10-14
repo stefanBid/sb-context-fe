@@ -1,5 +1,9 @@
 # sb-context-nuxt
 
+[![Tests](https://github.com/stefanBid/sb-context-nuxt/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/stefanBid/sb-context-nuxt/actions/workflows/tests.yml?query=branch%3Amain)
+[![Coverage](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2FstefanBid%2Fsb-context-nuxt%2Fbadges%2Fcoverage.json)](#reliability)
+[![Branch coverage](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2FstefanBid%2Fsb-context-nuxt%2Fbadges%2Fcoverage-branches.json)](#reliability)
+
 Claude Code plugin for **Nuxt 4 + Tailwind 4 projects already in progress**. This README is the user guide: every skill, when to use it, what to say to trigger it, what it reads and writes.
 
 It does two things:
@@ -62,6 +66,7 @@ It does **not** judge or improve the design. That is the job of [Impeccable](#im
   - [Exit codes of sync-values](#exit-codes-of-sync-values)
 - [Impeccable (design quality)](#impeccable-design-quality)
 - [Troubleshooting and FAQ](#troubleshooting-and-faq)
+- [Reliability](#reliability)
 - [Contributing and releases](#contributing-and-releases)
 
 ---
@@ -673,6 +678,22 @@ After alignment: `/impeccable document` records the aligned system in `DESIGN.md
 
 ---
 
+## Reliability
+
+A skill is instructions for a model: how well it is followed depends on the model and cannot be pinned by a test. What the skills **compute** can. Every algorithm they rely on lives in a script, and those scripts are covered by a test suite that runs on Node 22 and 24:
+
+| Layer | What it guarantees |
+| --- | --- |
+| Unit | color parsing, OKLCH and WCAG contrast; CSS variables per theme; value normalizers and in-place rewrites of the style; prefix rules; type scale and size clusters; class anatomy and nearest theme roles; design role maps; i18n heuristics; dependency notes; project settings |
+| CLI | every script run end to end on a throwaway Nuxt project: exit codes, JSON output, files written, `--apply` idempotent, nothing written on a dry run |
+| Contract | every script path a `SKILL.md` points to exists, every `/sb-context-nuxt:<skill>` names a real skill, shared helpers are identical in every skill that ships them, manifests and docs agree with the code |
+
+The badges at the top are measured on `main` after every merge: line and branch coverage of the scripts the skills run (`scripts/` and `skills/*/scripts/`). Every pull request that produces a release (`feat`, `fix`, `perf`, `revert`, breaking changes) must pass the suite before it can be merged.
+
+Run it locally with `npm ci && npm test`; [CONTRIBUTING.md](CONTRIBUTING.md#tests) explains the layers and how to add tests.
+
+---
+
 ## Contributing and releases
 
-`main` is protected: every change goes through a pull request, merged with **squash**. The PR title is a conventional-commit title (`feat`, `fix`, `docs`, …) and release-please reads it to choose the next version, the tag and the changelog; the `lint-pr-title` check blocks the merge when it is wrong. A change to what a skill **does** (`skills/**`) is a `feat` or a `fix`. Full rules: [CONTRIBUTING.md](CONTRIBUTING.md).
+`main` is protected: every change goes through a pull request, merged with **squash**. The PR title is a conventional-commit title (`feat`, `fix`, `docs`, …) and release-please reads it to choose the next version, the tag and the changelog; the `lint-pr-title` check blocks the merge when it is wrong, and `tests-gate` blocks a releasing PR whose tests fail. A change to what a skill **does** (`skills/**`) is a `feat` or a `fix`. Full rules: [CONTRIBUTING.md](CONTRIBUTING.md).
