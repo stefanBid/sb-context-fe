@@ -44,7 +44,7 @@ When the old size is equidistant between two of the project's tokens, the elemen
 | Property | Roles to consider first |
 | --- | --- |
 | text | `ink`, `ink-muted`, `primary` (links), `accent-ink`, states |
-| white or black text on a fill | `on-primary`, `on-accent` |
+| white or black text on a fill | `on-primary`, `on-accent`, `on-error` (on a solid `error` fill) |
 | page or section background | `bg`, `surface`, `surface-2` |
 | button and action background | `primary` (`hover:` `primary-hover`), `accent` (`hover:` `accent-hover`) |
 | light highlight background, selected chips | `primary-soft`, state `-soft` tints |

@@ -2,7 +2,7 @@
 // mobile sizes and the role map.
 
 // The plugin's fixed roles
-export const ROLES = ['bg', 'surface', 'surface-2', 'border', 'border-strong', 'ink', 'ink-muted', 'primary', 'primary-hover', 'on-primary', 'primary-soft', 'accent', 'accent-hover', 'on-accent', 'accent-ink', 'success', 'success-soft', 'error', 'error-soft', 'warning', 'warning-soft', 'info', 'info-soft', 'focus-ring'];
+export const ROLES = ['bg', 'surface', 'surface-2', 'border', 'border-strong', 'ink', 'ink-muted', 'primary', 'primary-hover', 'on-primary', 'primary-soft', 'accent', 'accent-hover', 'on-accent', 'accent-ink', 'success', 'success-soft', 'error', 'error-soft', 'on-error', 'warning', 'warning-soft', 'info', 'info-soft', 'focus-ring'];
 export const ROLE_TYPES = ['display', 'h1', 'h2', 'h3', 'h4', 'lead', 'body', 'body-strong', 'label', 'small', 'overline'];
 
 // ---------------------------------------------------------------------------

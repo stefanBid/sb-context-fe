@@ -53,7 +53,7 @@ test('resolveVars: nested, fallbacks, unknown, cycles', () => {
 });
 
 test('standard pairs: names follow the prefix; one warning pair', () => {
-  assert.equal(STANDARD_PAIRS.length, 34);
+  assert.equal(STANDARD_PAIRS.length, 35);
   const pairs = standardPairs('ps');
   assert.deepEqual(pairs[0], ['--ps-ink', '--ps-bg', 4.5, 'body text', 'required']);
   assert.deepEqual(pairs.filter((p) => p[4] === 'warning').map((p) => [p[0], p[1], p[2]]), [['--ps-border-strong', '--ps-bg', 3]]);

@@ -16,6 +16,7 @@ Where a project color has the same meaning as a role, it takes the role's name. 
 | Primary | `primary`, `primary-hover`, `on-primary`, `primary-soft` | actions, links, selection, focus; text on top; relief tint |
 | Accent | `accent`, `accent-hover`, `on-accent`, `accent-ink` | a secondary highlight color; `accent-ink` when it has to be text |
 | States | `success`, `error`, `warning`, `info` and their `-soft` | feedback |
+| Error fill | `on-error` | text on a solid `error` fill: destructive button, error badge |
 | Focus | `focus-ring` | focus ring, usually an alias of `primary` |
 
 **Recommended base.** A theme holds up with: `bg`, `surface`, `border`, `ink`, `ink-muted`, `primary`, `on-primary`, `focus-ring`. If one is missing, the skill derives it (provisional). The other roles are added when the project needs them (a form that shows errors needs `error` and `error-soft`), not to fill the table.
@@ -64,6 +65,7 @@ Two colors that must be told apart (for example success and error) differ in lig
 | `ink` | 0.24 | |
 | `primary` | 0.40 | ≥ 4.5:1 with `on-primary` |
 | `primary-hover` | `primary` − 0.06 | |
+| `on-error` | ~1.00 | ≥ 4.5:1 on `error` |
 | state text colors, `accent-ink` | 0.48–0.53 | ≥ 4.5:1 on `surface` and on their `-soft` |
 | `-soft` tints | 0.94–0.96 | same hue as their reference color |
 
@@ -81,6 +83,7 @@ Two colors that must be told apart (for example success and error) differ in lig
 | `primary` | 0.72–0.78 | |
 | `primary-hover` | `primary` + 0.05 | |
 | `on-primary` | ~0.24 | whatever holds contrast on the primary |
+| `on-error` | ~0.24 | whatever holds contrast on `error` |
 | state text colors, `accent-ink` | 0.71–0.81 | |
 | `-soft` tints | 0.26–0.30 | |
 | shadows | alpha 0.4–0.7 on black | |
