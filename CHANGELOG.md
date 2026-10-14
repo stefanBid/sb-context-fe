@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.5](https://github.com/stefanBid/sb-context-nuxt/compare/v0.4.4...v0.4.5) (2026-10-14)
+
+
+### Bug Fixes
+
+* report Vue files that check-i18n cannot parse ([#18](https://github.com/stefanBid/sb-context-nuxt/issues/18)) ([36d1b9a](https://github.com/stefanBid/sb-context-nuxt/commit/36d1b9ae7602b10fbc2ee818a0eebd85fa677fe7))
+
 ## [0.4.4](https://github.com/stefanBid/sb-context-nuxt/compare/v0.4.3...v0.4.4) (2026-10-14)
 
 
