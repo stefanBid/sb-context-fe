@@ -71,7 +71,7 @@ npm run validate            # claude plugin validate --strict on the marketplace
 | --- | --- |
 | `tests/unit` | the logic in the `lib/` modules: color math and WCAG contrast, CSS variable resolution, value normalizers and in-place rewrites, prefix rules, type scale and clusters, class anatomy, role maps, i18n heuristics, dependency notes |
 | `tests/cli` | each script end to end on a real folder (`tests/helpers/fixture.mjs`): exit codes, JSON output, files written, idempotence of `--apply`, `.git/info/exclude` |
-| `tests/contract` | every `${CLAUDE_SKILL_DIR}/…` path exists, every `/sb-context-nuxt:<skill>` names a skill, the two `color.mjs` copies are identical, manifests and CONTRIBUTING agree with the code |
+| `tests/contract` | the files gh-admin and gh-checks apply to other projects (labels, ruleset, workflow template) are valid; every `${CLAUDE_SKILL_DIR}/…` path exists, every `/sb-context-nuxt:<skill>` names a skill, the two `color.mjs` copies are identical, manifests and CONTRIBUTING agree with the code |
 
 How scripts are written so they can be tested: the logic lives in `lib/` modules next to the script (`scripts/lib/`, `skills/<skill>/scripts/lib/`) as pure exported functions; the script itself reads arguments and files, calls them, prints, and exits. A new algorithm goes in `lib/` with its unit tests; a new script gets a test in `tests/cli`.
 

@@ -86,7 +86,8 @@ jobs:
         run: npm test
 
   # Claude Code's own schema check of the marketplace, the plugin manifest and every skill
-  # (frontmatter, unknown fields), plus the plugin's projected token cost in the job summary.
+  # (frontmatter, unknown fields), actionlint on every workflow (ours and gh-checks' template),
+  # plus the plugin's projected token cost in the job summary.
   # No model call, no credentials.
   plugin-check:
     name: plugin validate
@@ -107,6 +108,14 @@ jobs:
 
       - name: Validate the plugin
         run: npm run validate
+
+      # the repo's workflows and the one gh-checks copies into other projects
+      - name: Lint the workflows
+        env:
+          ACTIONLINT_VERSION: 1.7.7
+        run: |
+          bash <(curl -sSfL "https://raw.githubusercontent.com/rhysd/actionlint/v${ACTIONLINT_VERSION}/scripts/download-actionlint.bash") "$ACTIONLINT_VERSION" "$RUNNER_TEMP"
+          "$RUNNER_TEMP/actionlint" -color .github/workflows/*.yml skills/gh-checks/workflows/*.yml
 
       - name: Token cost
         run: |
