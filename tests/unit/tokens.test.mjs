@@ -129,8 +129,10 @@ describe('buildRoleMap', () => {
   });
 });
 
-test('demote moves every heading one level down, up to h6', () => {
+test('demote moves every heading down by the given levels, up to h6', () => {
   assert.equal(demote('# A\n## B\n##### E\n###### F\nnot # a heading'), '## A\n### B\n###### E\n###### F\nnot # a heading');
+  assert.equal(demote('# A\n## B\n#### D', 2), '### A\n#### B\n###### D');
+  assert.equal(demote('#hashtag', 2), '#hashtag');
 });
 
 test('role lists', () => {

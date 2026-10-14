@@ -15,8 +15,8 @@ The file is free-form markdown, designed to lose nothing and to be read by an ag
 | `## Colors` | every role: light, dark, whether the name is in the plugin's fixed set, usage |
 | `## Typography` | families, weights, every style: family role, size / line, weight, tracking, mobile values, usage |
 | `## Spacing`, `## Radii`, `## Shadows`, `## Breakpoints`, `## Motion` | the design's values; breakpoints show design vs plugin-fixed; radii mark `full`/`none` as static utilities; no motion → defaults provisional |
-| `## Brand guide` | the design's README, verbatim except for the eyebrow wording; its headings are moved one level down |
-| `## Components` | index table (name, group, summary, classes in the preview) and, per component, its README verbatim |
+| `## Brand guide` | the design's README, verbatim except for the eyebrow wording; its headings are moved two levels down (its `#` becomes `###`), so they never look like this file's own sections |
+| `## Components` | index table (name, group, summary, classes in the preview) and, per component (`### <Name>`), its README verbatim with its headings two levels down (`##` becomes `####`) |
 | `## Overrides applied during extraction` | everything the plugin changed against the design (eyebrows removed, breakpoints fixed) |
 | `## Gaps to resolve in style-align` | what the design does not give: derived later, provisional |
 | `## Machine data` | the same information, complete and normalized, in a fenced block ` ```json design-source ` |

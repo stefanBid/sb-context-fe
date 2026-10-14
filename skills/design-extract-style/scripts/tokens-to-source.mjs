@@ -139,7 +139,7 @@ gaps.push('Motion: the design system has no motion family. Defaults from `style-
 // ---------------------------------------------------------------------------
 // Brand guide (README) and components (folders saved from the artifact)
 // ---------------------------------------------------------------------------
-const brandGuide = demote(cleanBlock(readme, 'README').trim());
+const brandGuide = demote(cleanBlock(readme, 'README').trim(), 2);
 
 const components = [];
 const compRoot = get('--components-dir') ? join(resolve(get('--components-dir')), 'project', 'components') : null;
@@ -292,7 +292,7 @@ ${brandGuide || '_The design system has no README._'}`);
 
 sections.push(`## Components
 
-${components.length ? `${components.length} documented components. \`design-extract-ui\` matches the requested name against this list, then reads the markup in \`project/components/<Name>/preview.html\` from the artifact. Styles are in \`project/bundle.css\`.\n\n${table(['Component', 'Group', 'Summary', 'Classes in the preview'], components.map((c) => [`\`${c.name}\``, c.group, c.summary, c.classes.map((k) => `\`${k}\``).join(' ')]))}\n\n${components.map((c) => `### ${c.name}\n\n${c.subtitle ? `_${c.subtitle}_\n\n` : ''}${c.readme || '_No README._'}`).join('\n\n')}` : '_No components were read from the design system._'}`);
+${components.length ? `${components.length} documented components. \`design-extract-ui\` matches the requested name against this list, then reads the markup in \`project/components/<Name>/preview.html\` from the artifact. Styles are in \`project/bundle.css\`.\n\n${table(['Component', 'Group', 'Summary', 'Classes in the preview'], components.map((c) => [`\`${c.name}\``, c.group, c.summary, c.classes.map((k) => `\`${k}\``).join(' ')]))}\n\n${components.map((c) => `### ${c.name}\n\n${c.subtitle ? `_${c.subtitle}_\n\n` : ''}${demote(c.readme, 2) || '_No README._'}`).join('\n\n')}` : '_No components were read from the design system._'}`);
 
 sections.push(`## Overrides applied during extraction
 
