@@ -49,7 +49,7 @@ describe('output snapshots', () => {
     return out;
   };
 
-  test('report tables keep their columns', { todo: 'template.mjs joins color proposals with " | " inside a table cell' }, () => {
+  test('report tables keep their columns', () => {
     for (const [name, md] of [
       ['inventory', p.run(SCRIPTS.inventory, []).stdout],
       ['template', p.run(SCRIPTS.template, ['app/pages/index.vue']).stdout],

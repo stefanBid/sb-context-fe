@@ -356,7 +356,7 @@ function suggest(cls, el) {
         : /^(border|divide|ring|outline)/.test(root) ? PREF.border : null;
       let names = nearestColors(c, 3, pref);
       if (root === 'text' && /^(white|black)$/.test(raw)) names = [...new Set(['on-primary', 'on-accent', ...names])].filter((n) => themeColors.some((t) => t.name === n)).slice(0, 3);
-      out.proposal = names.map((n) => `${vprefix}${root}-${n}${isArbitrary ? '' : alpha}`).join(' | ');
+      out.proposal = names.map((n) => `${vprefix}${root}-${n}${isArbitrary ? '' : alpha}`).join(' or ');
       out.note = /^(white|black)$/.test(raw) && root === 'text'
         ? 'Text on a fill: on-primary or on-accent, depending on the background.'
         : 'Nearby theme colors, ordered by the role that suits the property: choose by role, not by similarity.';
@@ -426,13 +426,13 @@ for (const file of files) {
       const line = (d.source?.start?.line ?? 0) + offset;
       const sel = d.parent?.selector ?? '';
       const cols = findColors(d.value);
-      if (cols.length) styleIssues.push({ line, selector: sel, prop: d.prop, value: d.value, kind: 'literal color', proposal: nearestColors(parseColor(cols[0]) ?? { r: 0, g: 0, b: 0, a: 1 }).map((n) => `var(--color-${n})`).join(' | ') });
+      if (cols.length) styleIssues.push({ line, selector: sel, prop: d.prop, value: d.value, kind: 'literal color', proposal: nearestColors(parseColor(cols[0]) ?? { r: 0, g: 0, b: 0, a: 1 }).map((n) => `var(--color-${n})`).join(' or ') });
       if (/^(font-size|font)$/.test(d.prop) && !/var\(/.test(d.value)) {
         const px = remPx(d.value.match(/([\d.]+(?:px|rem))/)?.[1] ?? '');
         if (px) styleIssues.push({ line, selector: sel, prop: d.prop, value: d.value, kind: 'text size outside the theme', proposal: nearestTextRole(px).map((r) => `@apply ${u(r)}`).join(' or ') });
       }
       if (d.prop === 'font-weight' && !/^var\(/.test(d.value) && weights.length && !weights.some((x) => x.w === (d.value === 'normal' ? 400 : d.value === 'bold' ? 700 : parseInt(d.value, 10)))) styleIssues.push({ line, selector: sel, prop: d.prop, value: d.value, kind: 'weight outside the theme', proposal: weights.map((x) => x.w).join(', ') });
-      if (/^(font-family)$/.test(d.prop) && !/var\(/.test(d.value)) styleIssues.push({ line, selector: sel, prop: d.prop, value: d.value, kind: 'hard-coded family', proposal: families.map((f) => `var(--font-${f})`).join(' | ') });
+      if (/^(font-family)$/.test(d.prop) && !/var\(/.test(d.value)) styleIssues.push({ line, selector: sel, prop: d.prop, value: d.value, kind: 'hard-coded family', proposal: families.map((f) => `var(--font-${f})`).join(' or ') });
     });
   }
 
