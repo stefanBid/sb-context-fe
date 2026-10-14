@@ -45,7 +45,7 @@ describe('template.mjs', () => {
       '3|sb-h1|redundant|(remove)',
       '4|text-xl|broken|(remove)',
       '4|font-medium|broken|font-normal or font-semibold',
-      '4|text-gray-500|broken|text-ink-muted | text-primary | text-border-strong',
+      '4|text-gray-500|broken|text-ink-muted or text-primary or text-border-strong',
       '5|text-[40px]|arbitrary value|(remove)',
       '6|text-sm|broken|sb-small',
       '6|rounded-xl|broken|rounded-sm',
@@ -54,8 +54,8 @@ describe('template.mjs', () => {
       '6|foo-bar|unknown|null',
       '6|2xl:p-4|broken|xl:p-4',
       '6|style="color: #00804a; font-size: 18px"|inline style|text-primary sb-lead',
-      '7|bg-blue-600|broken|bg-primary-hover | bg-primary | bg-info',
-      '7|text-white|broken|text-on-primary | text-surface | text-on-error',
+      '7|bg-blue-600|broken|bg-primary-hover or bg-primary or bg-info',
+      '7|text-white|broken|text-on-primary or text-surface or text-on-error',
     ]);
     assert.ok(!rows().some((r) => r.includes('own-thing')), 'defined in the file <style>');
     assert.ok(result.results[0].rows.filter((r) => r.line === 7).every((r) => r.dynamic));
@@ -63,10 +63,10 @@ describe('template.mjs', () => {
 
   test('checks the component <style> block', () => {
     assert.deepEqual(result.results[0].style.map((s) => `${s.line}|${s.prop}|${s.kind}|${s.proposal}`), [
-      '11|color|literal color|var(--color-error) | var(--color-warning) | var(--color-border-strong)',
+      '11|color|literal color|var(--color-error) or var(--color-warning) or var(--color-border-strong)',
       '11|font-size|text size outside the theme|@apply sb-body or @apply sb-small',
       '11|font-weight|weight outside the theme|400, 600, 700',
-      '11|font-family|hard-coded family|var(--font-display) | var(--font-body) | var(--font-mono)',
+      '11|font-family|hard-coded family|var(--font-display) or var(--font-body) or var(--font-mono)',
     ]);
   });
 
