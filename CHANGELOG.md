@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.7](https://github.com/stefanBid/sb-context-nuxt/compare/v0.4.6...v0.4.7) (2026-10-14)
+
+
+### Bug Fixes
+
+* read CSS Color 4 colors correctly in the color helpers ([#31](https://github.com/stefanBid/sb-context-nuxt/issues/31)) ([e2de62e](https://github.com/stefanBid/sb-context-nuxt/commit/e2de62e1400b999bd17be921485e55c7d7fc01bf))
+
 ## [0.4.6](https://github.com/stefanBid/sb-context-nuxt/compare/v0.4.5...v0.4.6) (2026-10-14)
 
 
