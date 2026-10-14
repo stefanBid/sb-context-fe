@@ -37,7 +37,8 @@ describe('contrast.mjs on a theme file', () => {
   let p;
   afterEach(() => p?.cleanup());
 
-  test('the reference theme passes every required pair in both themes', () => {
+  // its JSON is larger than 8 KB: see tests/cli/large-output.test.mjs
+  test('the reference theme passes every required pair in both themes', { todo: Number(process.versions.node.split('.')[0]) < 22 && 'piped stdout truncated at 8 KB on Node 20' }, () => {
     const r = contrast(join(EXAMPLE_CSS, 'theme.css'), '--prefix', 'sb', '--json');
     const out = r.json();
     const failed = out.pairs.filter((x) => (x.ok === false && x.level !== 'warning') || x.error);

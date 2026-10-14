@@ -37,7 +37,7 @@ export function makeProject(files = {}, { git = true, modules = true, nuxtConfig
   if (nuxtConfig && !('nuxt.config.ts' in files)) files = { 'nuxt.config.ts': DEFAULT_CONFIG, ...files };
   for (const [p, content] of Object.entries(files)) write(root, p, content);
   if (git) mkdirSync(join(root, '.git', 'info'), { recursive: true });
-  if (modules) symlinkSync(join(REPO, 'node_modules'), join(root, 'node_modules'), 'dir');
+  if (modules) symlinkSync(join(REPO, 'node_modules'), join(root, 'node_modules'), process.platform === 'win32' ? 'junction' : 'dir');
   return {
     root,
     path: (p) => join(root, p),
