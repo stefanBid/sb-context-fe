@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/stefanBid/sb-context-nuxt/compare/v0.4.9...v0.5.0) (2026-10-14)
+
+
+### Features
+
+* add on-error to the fixed color roles ([#38](https://github.com/stefanBid/sb-context-nuxt/issues/38)) ([4e2c3e5](https://github.com/stefanBid/sb-context-nuxt/commit/4e2c3e51712c3047c5317c99a2cca9adeb7f5592))
+
 ## [0.4.9](https://github.com/stefanBid/sb-context-nuxt/compare/v0.4.8...v0.4.9) (2026-10-14)
 
 
