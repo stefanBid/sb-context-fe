@@ -49,18 +49,27 @@ jobs:
           echo "releasable=$releasable" >> "$GITHUB_OUTPUT"
           echo "Title: $TITLE → releasable: $releasable"
 
+  # the scripts run on the user's machine: every Node version Nuxt 4 supports, and the three OSes
   test:
-    name: test (node ${{ matrix.node }})
+    name: test (${{ matrix.os }}, node ${{ matrix.node }})
     needs: scope
     if: needs.scope.outputs.releasable == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
 
     strategy:
       fail-fast: false
       matrix:
+        os:
+          - ubuntu-latest
         node:
+          - 20
           - 22
           - 24
+        include:
+          - os: macos-latest
+            node: 24
+          - os: windows-latest
+            node: 24
 
     steps:
       - uses: actions/checkout@v4

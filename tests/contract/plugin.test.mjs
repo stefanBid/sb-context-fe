@@ -5,11 +5,11 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs';
-import { join, resolve, relative } from 'node:path';
+import { join, resolve, relative, sep } from 'node:path';
 import { execFileSync } from 'node:child_process';
-import { REPO } from '../helpers/fixture.mjs';
+import { REPO, lf } from '../helpers/fixture.mjs';
 
-const read = (p) => readFileSync(join(REPO, p), 'utf8');
+const read = (p) => lf(readFileSync(join(REPO, p), 'utf8'));
 const tracked = execFileSync('git', ['ls-files'], { cwd: REPO, encoding: 'utf8' }).split('\n').filter(Boolean);
 const SKILLS = readdirSync(join(REPO, 'skills')).filter((d) => statSync(join(REPO, 'skills', d)).isDirectory()).sort();
 const skillFiles = (skill) => tracked.filter((f) => f.startsWith(`skills/${skill}/`) && f.endsWith('.md'));
@@ -41,7 +41,7 @@ describe('skills', () => {
           for (const [, p] of text.matchAll(/\$\{CLAUDE_SKILL_DIR\}\/([^\s`"')]+)/g)) {
             const target = resolve(REPO, 'skills', skill, p.replace(/[.,:;]+$/, ''));
             assert.ok(existsSync(target), `${file}: ${p} → ${relative(REPO, target)} does not exist`);
-            assert.ok(target.startsWith(REPO + '/'), `${file}: ${p} points outside the plugin`);
+            assert.ok(target.startsWith(REPO + sep), `${file}: ${p} points outside the plugin`);
           }
         }
       });

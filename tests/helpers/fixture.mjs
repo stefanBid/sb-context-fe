@@ -26,6 +26,23 @@ export const SCRIPTS = {
   template: join(REPO, 'skills/style-migrate/scripts/template.mjs'),
 };
 
+// Windows: scripts print paths with backslashes and git checks files out with CRLF. Both are legit
+// there, so tests compare POSIX paths and LF text. Bugs that only show on Windows are todo via onWindows().
+const WIN = process.platform === 'win32';
+export const onWindows = (reason) => WIN && reason;
+const deepPosix = (v) => (typeof v === 'string' ? v.replaceAll('\\', '/') : Array.isArray(v) ? v.map(deepPosix) : v && typeof v === 'object' ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, deepPosix(x)])) : v);
+/** stdout with POSIX paths on Windows (JSON is parsed and re-printed, plain text has its backslashes turned into slashes). */
+export function posixOutput(text) {
+  if (!WIN) return text;
+  try {
+    return JSON.stringify(deepPosix(JSON.parse(text)), null, 2);
+  } catch {
+    return text.replaceAll('\\', '/');
+  }
+}
+/** Text as committed: LF line endings. */
+export const lf = (text) => text.replaceAll('\r\n', '\n');
+
 const DEFAULT_CONFIG = "export default defineNuxtConfig({\n  css: ['~/assets/css/main.css'],\n})\n";
 
 /**
@@ -37,12 +54,12 @@ export function makeProject(files = {}, { git = true, modules = true, nuxtConfig
   if (nuxtConfig && !('nuxt.config.ts' in files)) files = { 'nuxt.config.ts': DEFAULT_CONFIG, ...files };
   for (const [p, content] of Object.entries(files)) write(root, p, content);
   if (git) mkdirSync(join(root, '.git', 'info'), { recursive: true });
-  if (modules) symlinkSync(join(REPO, 'node_modules'), join(root, 'node_modules'), 'dir');
+  if (modules) symlinkSync(join(REPO, 'node_modules'), join(root, 'node_modules'), process.platform === 'win32' ? 'junction' : 'dir');
   return {
     root,
     path: (p) => join(root, p),
     read: (p) => readFileSync(join(root, p), 'utf8'),
-    json: (p) => JSON.parse(readFileSync(join(root, p), 'utf8')),
+    json: (p) => (WIN ? deepPosix : (x) => x)(JSON.parse(readFileSync(join(root, p), 'utf8'))),
     exists: (p) => existsSync(join(root, p)),
     write: (p, content) => write(root, p, content),
     run: (script, args = [], opts = {}) => run(script, args, { cwd: root, ...opts }),
@@ -65,13 +82,14 @@ function write(root, p, content) {
 /** Runs a script with node. Returns { code, stdout, stderr, json() }. */
 export function run(script, args = [], { cwd = REPO, env = {} } = {}) {
   const r = spawnSync(process.execPath, [script, ...args], { cwd, encoding: 'utf8', env: { ...process.env, NO_COLOR: '1', ...env } });
+  const stdout = posixOutput(r.stdout);
   return {
     code: r.status,
-    stdout: r.stdout,
+    stdout,
     stderr: r.stderr,
     json() {
       try {
-        return JSON.parse(r.stdout);
+        return JSON.parse(stdout);
       } catch (e) {
         throw new Error(`stdout is not JSON (exit ${r.status}):\n${r.stdout}\n--- stderr ---\n${r.stderr}`, { cause: e });
       }
