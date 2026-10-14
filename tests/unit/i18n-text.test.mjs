@@ -19,8 +19,11 @@ describe('textRules', () => {
     for (const s of ['Hello', 'w-8 h-8 md:flex', 'text-sm font-bold', '1 2 3', 'a b', 'GET /api/users']) assert.equal(rules.isSentence(s), false, s);
   });
 
-  test('isSentence: utility classes made of plain words', { todo: '"flex items-center gap-2": "flex" is a plain word, so the string is not class-like' }, () => {
-    assert.equal(rules.isSentence('flex items-center gap-2'), false);
+  test('isSentence: utility classes that include plain-word utilities', () => {
+    for (const s of ['flex items-center gap-2', 'hidden md:flex', 'uppercase tracking-wide text-sm', 'relative flex-col'])
+      assert.equal(rules.isSentence(s), false, s);
+    for (const s of ['e-mail address', 'well-known fact', 'flex your muscles', 'Hidden gems'])
+      assert.equal(rules.isSentence(s), true, s);
   });
 });
 
