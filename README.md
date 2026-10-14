@@ -123,7 +123,7 @@ Reading is free; writing asks first.
 | `design-extract-style` | writing `design-source.md` |
 | `design-extract-ui` | replacing an existing component, naming new files |
 | `gh-admin`, `gh-checks` | any write to the remote: rulesets, labels, settings, pushes, PRs, releases |
-| `dependency-check` | major version bumps (never done automatically) |
+| `dependency-check` | the scope (minor/patch or also major) and the approval of every major migration plan |
 | `onboard` | every confirmation of the skills it calls |
 
 ### Where things live
@@ -161,7 +161,7 @@ Nothing from this plugin is ever committed to a project. Outside a Nuxt project 
 | `lint-check` | `/sb-context-nuxt:lint-check` | model or command | ESLint fix and report |
 | `build-check` | `/sb-context-nuxt:build-check` | model or command | Type check and production build, errors categorized |
 | `seo-check` | `/sb-context-nuxt:seo-check` | model or command | robots, sitemap, per-page meta |
-| `dependency-check` | `/sb-context-nuxt:dependency-check` | model or command | Outdated and vulnerable dependencies, safe updates |
+| `dependency-check` | `/sb-context-nuxt:dependency-check` | model or command | Outdated and vulnerable dependencies: minor/patch updates and major migrations (changelog, conflicts, notes) |
 | `docs-update` | `/sb-context-nuxt:docs-update` | model or command | Align `README.md` with the code of the project |
 | `full-checkup` | `/sb-context-nuxt:full-checkup` | command only | All the checks above, aggregated |
 | `gh-admin` | `/sb-context-nuxt:gh-admin` | model or command | Connect to the repo, audit it, settings, rulesets, security, labels, PRs |
@@ -181,7 +181,7 @@ Nothing from this plugin is ever committed to a project. Outside a Nuxt project 
 | Know if the project is healthy before a release | `full-checkup` |
 | Fix lint / see if the build passes | `lint-check` / `build-check` |
 | Check robots, sitemap, meta tags | `seo-check` |
-| See outdated or vulnerable packages | `dependency-check` |
+| See outdated or vulnerable packages, update them, migrate a major | `dependency-check` |
 | Refresh the project README | `docs-update` |
 | Connect the repo, set up rulesets, labels, open a PR | `gh-admin` |
 | Block merges with a wrong PR title | `gh-checks` |
@@ -198,7 +198,7 @@ Phrases below are the ones written in the skill descriptions (**listed**) or req
 | `lint-check` | listed: "check the lint", "is the project clean?", "check del lint" |
 | `build-check` | listed: "check the build", "does the project build?", "check del build" |
 | `seo-check` | listed: "check SEO", "check GSC readiness", "verifica la SEO" |
-| `dependency-check` | listed: "check dependencies", "update dependencies", "verifichiamo le dipendenze" |
+| `dependency-check` | listed: "check dependencies", "update dependencies", "verifichiamo le dipendenze"; matches: "migrate to the new major", "update nuxt to the next major" |
 | `docs-update` | listed: "update the documentation", "update the README", "aggiorna la documentazione" |
 | `gh-admin` | matches: "connect to the repo", "open a PR", "manage labels", "change branch protection / rulesets", "inspect repo settings" |
 | `gh-checks` | matches: "add the PR title check", "require a status check", "align CI checks with release-please" |
@@ -376,7 +376,7 @@ Text is never left inline: it goes to the locale files (see [The i18n stance](#t
 
 | # | Check | Notes |
 | --- | --- | --- |
-| 1 | `dependency-check` | |
+| 1 | `dependency-check` | minor/patch only; reports the open dependency notes |
 | 2 | `seo-check` | |
 | 3 | Design sync | only if `design-source.md` exists; `sync-values.mjs --check`: drift is reported and `style-align` proposed |
 | 4 | Inline text | `check-i18n.mjs` on pages, components, layouts; skipped if `i18n.enabled: false`; findings are **warnings** with file and line |
@@ -426,15 +426,43 @@ Report: per check, blockers vs warnings vs OK.
 
 | | |
 | --- | --- |
-| **Trigger** | "check dependencies", "update dependencies", "verifichiamo le dipendenze" |
-| **Does** | Lists outdated packages, classifies them, updates the safe ones, audits vulnerabilities |
-| **Branch** | follows the install policy of the project's `CLAUDE.md`; otherwise a dedicated `chore/deps-<date>` branch |
+| **Trigger** | "check dependencies", "update dependencies", "migrate to the new major", "verifichiamo le dipendenze" |
+| **Does** | Lists outdated packages, updates minor/patch, migrates majors like a migration manager, audits vulnerabilities |
+| **Lists first** | scans and shows **every** available update **grouped** into Major / Minor / Patch, one table per group: package, **current** (installed) → **new**, and dependency type |
+| **Asks only if there is a choice** | nothing outdated: no question. Only minor/patch: no question, it updates. Majors **and** minor/patch: everything, only minor/patch (default), or pick the majors. Only majors: all, pick, or leave them. Skipped if your request already says it |
+| **Branch** | follows the install policy of the project's `CLAUDE.md`; otherwise a dedicated `chore/deps-<date>` branch, never `main` |
+| **Writes** | `package.json`, lockfile, project files of an approved migration plan, `.sb-context-nuxt/dependency-notes.json` |
 
-| Class | Rule |
+Rules:
+
+- **Forward only.** Never downgrades a package, never lowers a constraint, never `--force` / `--legacy-peer-deps` / `npm audit fix --force`, never an `overrides` entry that pins an old version to make a new one fit. What does not fit **waits**, and is noted.
+- `0.y.z` → `0.(y+1).z` counts as a major.
+- One major at a time, core first (`nuxt`, `vue`, `vite`, `tailwindcss`), verified before the next.
+
+Minor and patch: same major as the declared constraint. The changelog is checked first; if a concern shows up, the package is handled as a major.
+
+Major, per package:
+
+| Step | What happens |
 | --- | --- |
-| **Safe to auto-update** | latest has the same major as the declared constraint, after reading the changelog (new required config, removed APIs, peer-dependency changes, especially `nuxt`, `vue`, `vite`, `tailwindcss`) |
-| **Needs attention** | different major, or the changelog showed a concern: reported with reason and link, **never** auto-updated |
-| **Vulnerabilities** | `npm audit`, `npm audit fix` for what is in semver range, **never `--force`**; if a fix needs it, it stops and reports package, advisory, severity |
+| **Read** | release notes of **every** major between current and target (GitHub releases, `CHANGELOG.md`, migration guide): breaking changes, new requirements (Node, peers), deprecations turned into removals |
+| **Match** | searches the project for each change (imports, `nuxt.config`, module options, templates, scripts) and builds a table: change, used here?, where, what must change. "Not used" is a finding, not an assumption |
+| **Check compatibility** | peers of the target, dependents that still list the old range, install dry run, Node `engines` |
+| **Judge each conflict** | who owns it (`project` or `upstream`), how much it matters (blocks install / breaks build or runtime / warning only), is it already fixed in a newer version of the other library, what is the way forward (update both, change our code, **wait**, ask you) |
+| **Propose** | release notes in short, exact edits (file, line, before → after), conflicts, order, what is postponed. **Stops** for your approval (all, part, or postpone) |
+| **Apply and verify** | edits, install, `build-check`, `lint-check` (and tests if any); only new failures count. If it cannot be fixed inside the plan it stops, does not downgrade, and asks before discarding the attempt |
+
+Dependency notes (`.sb-context-nuxt/dependency-notes.json`): everything postponed or blocked is written there, so the next run remembers.
+
+| Field | Meaning |
+| --- | --- |
+| `status` | `deferred` (waits for something outside the project, or a later decision), `watching` (could move soon), `resolved` (history) |
+| `blockedBy` | package, range, and **owner**: `upstream` (another library must release a fix) or `project` (our code, constraint or choice must change) |
+| `recheck` | the concrete thing to verify next time, e.g. "does `@nuxtjs/sitemap@latest` accept `vue-router@^5`?" |
+
+At the start of every run the skill lists the open notes and re-verifies each one before scanning: blocker gone → offers the migration; still blocked → notes what it checked; `project`-owned → reminds you. `full-checkup` runs minor/patch only and reports the open notes.
+
+Vulnerabilities: `npm audit`, `npm audit fix` for what is in range; a fix that needs a major is handled as a major, and if it cannot be done now it is noted with advisory, severity and owner.
 
 ### docs-update
 
@@ -581,6 +609,7 @@ At the project root, kept out of git (`.git/info/exclude`). Never committed.
 | `design-source.md` | `design-extract-style` | snapshot of the Claude design: values, brand guide, component index, provenance, gaps, machine block |
 | `design-applied.json` | `style-align` (sync) | which version of the snapshot is applied to the project |
 | `project-settings.json` | `onboard`, any skill that needs a setting | the [keys](#keys) above |
+| `dependency-notes.json` | `dependency-check` | what was postponed or blocked (package, target, blockers with owner, what to recheck) |
 | `github_settings.json` | `gh-admin` | signature settings and the cache of what is known about the repo (slug, default branch, rulesets, labels, check names) |
 
 ### Scripts
@@ -590,6 +619,7 @@ Skills call these; you rarely run them by hand.
 | Script | Used by | Purpose |
 | --- | --- | --- |
 | `scripts/project-settings.mjs` (`detect`, `get`, `set`) | most skills | read and save project settings |
+| `scripts/dependency-notes.mjs` (`list`, `add`, `touch`, `resolve`) | `dependency-check` | read and write the dependency notes |
 | `scripts/check-i18n.mjs` | `full-checkup`, `seo-check`, `design-extract-ui` | find inline text and missing keys in the default locale |
 | `scripts/lib/project.mjs` | all scripts | find the Nuxt root and `srcDir` |
 | `skills/design-extract-style/scripts/tokens-to-source.mjs` | `design-extract-style` | convert the artifact's tokens into the snapshot, with coverage check |
