@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/stefanBid/sb-context-nuxt/compare/v0.3.1...v0.4.0) (2026-10-14)
+
+
+### Features
+
+* replace design-import and component-adapt with design-extract-style and design-extract-ui ([#6](https://github.com/stefanBid/sb-context-nuxt/issues/6)) ([e055b51](https://github.com/stefanBid/sb-context-nuxt/commit/e055b513fa3603a4cf5b4e8794167e14c74c2e99))
+
 ## [0.3.1](https://github.com/stefanBid/sb-context-nuxt/compare/v0.3.0...v0.3.1) (2026-10-13)
 
 
