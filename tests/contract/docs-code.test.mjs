@@ -91,7 +91,7 @@ describe('exit codes', () => {
     assert.match(read('skills/design-extract-style/references/design-source.md'), /exits with code 4/);
   });
 
-  test('the README table of sync-values codes matches the script', { todo: 'the README table lists 0, 10 and 4 but not 3 (no snapshot / no aligned style)' }, () => {
+  test('the README table of sync-values codes matches the script', () => {
     const section = read('README.md').split('### Exit codes of sync-values')[1].split('\n---')[0];
     const table = new Set([...section.matchAll(/^\| `(\d+)` \|/gm)].map((m) => Number(m[1])));
     const real = new Set([...exitsOf(split(byName['sync-values.mjs']).code)].filter((c) => c !== 2));

@@ -642,6 +642,7 @@ Skills call these; you rarely run them by hand.
 | --- | --- | --- |
 | `0` | style matches the snapshot | nothing |
 | `10` | drift: the design changed or the style never got its values | run the sync flow of `style-align` |
+| `3` | no snapshot (`.sb-context-nuxt/design-source.md`), or no aligned style (`theme.css` / `typography.css` missing) | run `design-extract-style`, or `style-align` first |
 | `4` | role mapping missing or inconsistent | agree the mapping in `style-align`, then repeat |
 
 ---
