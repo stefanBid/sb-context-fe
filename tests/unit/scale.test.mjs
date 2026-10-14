@@ -1,4 +1,5 @@
 import { test } from 'node:test';
+import { join, resolve, sep } from 'node:path';
 import assert from 'node:assert/strict';
 import { toPx, parseFontShorthand, nearestStep, scaleFromTokens, clusterSizes, scaleFromClusters, mediaWidths, commonDir } from '../../skills/style-align/scripts/lib/scale.mjs';
 
@@ -59,9 +60,12 @@ test('mediaWidths: min/max-width and range syntax, rem at 16px', () => {
   assert.deepEqual(mediaWidths('(prefers-color-scheme: dark)'), []);
 });
 
-test('commonDir', () => {
-  assert.equal(commonDir(['/a/b/c.css', '/a/b/d/e.css'], '/x'), '/a/b');
-  assert.equal(commonDir(['/a/b/c.css'], '/x'), '/a/b');
-  assert.equal(commonDir(['/a/c.css', '/b/d.css'], '/x'), '/');
-  assert.equal(commonDir([], '/x'), '/x');
+test('commonDir works with the native separator', () => {
+  const r = resolve(sep); // '/' on POSIX, the drive root on Windows
+  const p = (...parts) => join(r, ...parts);
+  assert.equal(commonDir([p('a', 'b', 'c.css'), p('a', 'b', 'd', 'e.css')], 'x'), p('a', 'b'));
+  assert.equal(commonDir([p('a', 'b', 'c.css')], 'x'), p('a', 'b'));
+  assert.equal(commonDir([p('a', 'c.css'), p('b', 'd.css')], 'x'), r);
+  assert.equal(commonDir([p('ab', 'c.css'), p('a', 'd.css')], 'x'), r, 'a folder name prefix is not a common folder');
+  assert.equal(commonDir([], 'x'), 'x');
 });
