@@ -119,6 +119,17 @@ const route = { to: '/home', icon: 'i-lucide-home' }
     assert.deepEqual(check('app').json().inline, []);
   });
 
+  test('a .vue file that does not parse is reported and fails the check', () => {
+    p = makeProject({ 'app/Broken.vue': '<template>\n  <div><p>Testo</p>\n</template>', 'app/Ok.vue': '<template><p>{{ $t(\'a\') }}</p></template>' });
+    const r = check('app');
+    assert.equal(r.code, 10);
+    const out = r.json();
+    assert.equal(out.checked, 2);
+    assert.deepEqual(out.inline, [], 'a broken file is not analyzed');
+    assert.deepEqual(out.parseErrors, [{ file: 'app/Broken.vue', line: 2, message: 'Element is missing end tag.' }]);
+    assert.match(p.run(SCRIPTS.checkI18n, ['app']).stdout, /Not checked, the file does not parse \(1 error\(s\)\):\n {2}app\/Broken\.vue:2 Element is missing end tag\./);
+  });
+
   test('without targets it exits 2', () => {
     p = makeProject();
     assert.equal(p.run(SCRIPTS.checkI18n, []).code, 2);
