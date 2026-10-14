@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.2](https://github.com/stefanBid/sb-context-nuxt/compare/v0.4.1...v0.4.2) (2026-10-14)
+
+
+### Bug Fixes
+
+* **design-extract-style:** drop the conjunction left by a removed eyebrow ([#12](https://github.com/stefanBid/sb-context-nuxt/issues/12)) ([d0b3036](https://github.com/stefanBid/sb-context-nuxt/commit/d0b303614f67952a5a7980d6815b61f63fab1c69))
+
 ## [0.4.1](https://github.com/stefanBid/sb-context-nuxt/compare/v0.4.0...v0.4.1) (2026-10-14)
 
 
