@@ -78,14 +78,16 @@ describe('template.mjs', () => {
     const r = p.run(SCRIPTS.template, ['--summary']);
     assert.equal(r.code, 0, r.stderr);
     assert.match(r.stdout, /\| app\/pages\/index\.vue \| 9 \| 1 \| 2 \| 1 \| 1 \| 4 \| 2 \|/);
-    assert.match(r.stdout, /\| app\/components\/Broken\.vue \| 1 \| 0 \| 0 \| 0 \| 0 \| 0 \| 0 \|/);
     assert.doesNotMatch(r.stdout, /Clean\.vue \|/);
     assert.match(r.stdout, /Files with nothing to change: 1 of 3\./);
   });
 
-  test('a malformed SFC is reported as an error', { todo: 'parseSfc() does not throw: descriptor.errors is ignored, so an unclosed tag is analyzed silently' }, () => {
+  test('a malformed SFC is reported as an error, not analyzed', () => {
     const r = p.run(SCRIPTS.template, ['--summary']);
-    assert.match(r.stdout, /ERROR app\/components\/Broken\.vue/);
+    assert.match(r.stdout, /- ERROR app\/components\/Broken\.vue: Element is missing end tag\. \(line 1\)/);
+    assert.doesNotMatch(r.stdout, /\| app\/components\/Broken\.vue \|/);
+    const detail = p.run(SCRIPTS.template, ['app/components/Broken.vue']);
+    assert.match(detail.stdout, /## app\/components\/Broken\.vue\n\nERROR: Element is missing end tag\./);
   });
 
   test('exit 2 without a global style or without .vue files', () => {
