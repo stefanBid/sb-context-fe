@@ -1,6 +1,6 @@
 # Labels
 
-`labels/labels.json` is the base set: conventional-commit types, `breaking`, `dependencies`, and the two labels release-please uses.
+`labels/labels.json` is the base set: one label per conventional-commit type the title lint accepts (`feat`, `fix`, `docs`, `refactor`, `perf`, `chore`, `style`, `test`, `build`, `ci`, `revert`), `breaking`, `dependencies`, and the two labels release-please uses.
 
 ## Sync procedure
 

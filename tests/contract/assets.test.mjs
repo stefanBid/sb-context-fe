@@ -32,7 +32,7 @@ describe('gh-admin labels', () => {
     for (const n of ['autorelease: pending', 'autorelease: tagged', 'breaking']) assert.ok(labels.some((l) => l.name === n), n);
   });
 
-  test('every type the title lint accepts has its label', { todo: 'labels.json has feat, fix, docs, refactor, perf, chore: a style, test, build, ci or revert PR gets no type label (gh pr edit --add-label fails)' }, () => {
+  test('every type the title lint accepts has its label', () => {
     const names = new Set(labels.map((l) => l.name));
     assert.deepEqual(LINT_TYPES.filter((t) => !names.has(t)), []);
   });
