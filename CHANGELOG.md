@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.8](https://github.com/stefanBid/sb-context-nuxt/compare/v0.4.7...v0.4.8) (2026-10-14)
+
+
+### Bug Fixes
+
+* **gh-admin:** add a label for every type the title lint accepts ([#33](https://github.com/stefanBid/sb-context-nuxt/issues/33)) ([3754e2b](https://github.com/stefanBid/sb-context-nuxt/commit/3754e2bf99c0f9668cb1736a8f1233850a691fb9))
+
 ## [0.4.7](https://github.com/stefanBid/sb-context-nuxt/compare/v0.4.6...v0.4.7) (2026-10-14)
 
 
