@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.4](https://github.com/stefanBid/sb-context-nuxt/compare/v0.4.3...v0.4.4) (2026-10-14)
+
+
+### Bug Fixes
+
+* **style-migrate:** report Vue files that do not parse ([#16](https://github.com/stefanBid/sb-context-nuxt/issues/16)) ([f5322f0](https://github.com/stefanBid/sb-context-nuxt/commit/f5322f0f8ad03746f81d3348c1eff9b32aa9383b))
+
 ## [0.4.3](https://github.com/stefanBid/sb-context-nuxt/compare/v0.4.2...v0.4.3) (2026-10-14)
 
 
