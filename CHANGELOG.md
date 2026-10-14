@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.6](https://github.com/stefanBid/sb-context-nuxt/compare/v0.4.5...v0.4.6) (2026-10-14)
+
+
+### Bug Fixes
+
+* make the scripts reliable on Node 20 and on Windows ([#29](https://github.com/stefanBid/sb-context-nuxt/issues/29)) ([0e56c88](https://github.com/stefanBid/sb-context-nuxt/commit/0e56c8810b2647633c94b4dfe6fe3d745e9aa535))
+
 ## [0.4.5](https://github.com/stefanBid/sb-context-nuxt/compare/v0.4.4...v0.4.5) (2026-10-14)
 
 
