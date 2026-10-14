@@ -1,0 +1,12 @@
+Snapshot: Sample Brand · artifact version 3 · prefix sb · app/assets/css
+Last applied: never recorded
+Values: 1 difference(s) between the design and the project
+
+| Area | Token | Theme | Project now | Design |
+| --- | --- | --- | --- | --- |
+| color | `primary` | light | `#00804a` | `#123456` |
+Motion (animation.css) is not synced: the design system has no motion; the file keeps its own timings.
+
+Needs a decision (never applied automatically):
+- [color] `on-error`: in the project, not in the design: kept (project-specific role)
+- [radius] `xl`: new in the design (30px): not in the project
