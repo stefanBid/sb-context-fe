@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.9](https://github.com/stefanBid/sb-context-nuxt/compare/v0.4.8...v0.4.9) (2026-10-14)
+
+
+### Bug Fixes
+
+* **style-migrate:** keep report table rows aligned with their header ([#35](https://github.com/stefanBid/sb-context-nuxt/issues/35)) ([c4d3d59](https://github.com/stefanBid/sb-context-nuxt/commit/c4d3d59811fc11fd115648ba180f26fed435c36c))
+
 ## [0.4.8](https://github.com/stefanBid/sb-context-nuxt/compare/v0.4.7...v0.4.8) (2026-10-14)
 
 
