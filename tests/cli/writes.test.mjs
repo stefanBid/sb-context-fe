@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readdirSync, readFileSync, lstatSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { createHash } from 'node:crypto';
-import { makeProject, withExampleStyle, run, SCRIPTS, EXAMPLE_CSS, onWindows } from '../helpers/fixture.mjs';
+import { makeProject, withExampleStyle, run, SCRIPTS, EXAMPLE_CSS } from '../helpers/fixture.mjs';
 import { extract, tokens } from '../helpers/design.mjs';
 
 // Every file of the project (node_modules link excluded) with a hash of its content.
@@ -74,7 +74,7 @@ describe('what the scripts write', () => {
     assert.deepEqual([...new Set(all)].filter((f) => f !== '.git/info/exclude').sort(), ['.sb-context-nuxt/dependency-notes.json', '.sb-context-nuxt/design-applied.json', '.sb-context-nuxt/design-map.json', '.sb-context-nuxt/project-settings.json']);
   });
 
-  test('a design extraction writes only the snapshot, its previous version and the git exclude', { todo: onWindows('.sb-context-nuxt/ is never added to .git/info/exclude (startsWith(dir + "/"))') }, () => {
+  test('a design extraction writes only the snapshot, its previous version and the git exclude', () => {
     const t = tokens();
     t.color.tokens[0].value.light = '#000000';
     p.write('.git/info/exclude', '');

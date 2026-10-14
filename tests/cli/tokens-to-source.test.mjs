@@ -1,13 +1,13 @@
 import { test, describe, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { makeProject, SCRIPTS, onWindows } from '../helpers/fixture.mjs';
+import { makeProject, SCRIPTS } from '../helpers/fixture.mjs';
 import { TOKENS, SOURCE, machine, extract, tokens as clone } from '../helpers/design.mjs';
 
 describe('tokens-to-source.mjs', () => {
   let p;
   afterEach(() => p?.cleanup());
 
-  test('writes the snapshot in .sb-context-nuxt with full coverage and an identity role map', { todo: onWindows('the output is checked with startsWith(dir + "/"): .sb-context-nuxt/ is never added to .git/info/exclude') }, () => {
+  test('writes the snapshot in .sb-context-nuxt with full coverage and an identity role map', () => {
     p = makeProject();
     const r = extract(p);
     assert.equal(r.code, 0, r.stderr);
@@ -72,7 +72,7 @@ describe('tokens-to-source.mjs', () => {
     assert.deepEqual(d.breakpoints.fixed, { sm: '640px', md: '768px', lg: '1024px', xl: '1280px' });
   });
 
-  test('indexes components with their group, classes and README', { todo: onWindows('READMEs with CRLF keep a \\r at the end of the summary') }, () => {
+  test('indexes components with their group, classes and README', () => {
     p = makeProject();
     extract(p);
     const md = p.read(SOURCE);

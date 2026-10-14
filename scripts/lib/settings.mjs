@@ -41,8 +41,9 @@ export function parseI18nConfig(cfg) {
   };
 }
 
-/** Naming of components (paths relative to the components folder): name prefixes and subfolders. */
+/** Naming of components (paths relative to the components folder, / or \\ separators): name prefixes and subfolders. */
 export function componentNaming(paths) {
+  paths = paths.map((c) => c.replaceAll('\\', '/'));
   const prefixes = {};
   for (const c of paths) {
     const base = c.split('/').pop().replace('.vue', '');

@@ -25,7 +25,7 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync, copyFileSync, readdirSync, statSync } from 'node:fs';
 import { resolve, dirname, join } from 'node:path';
 import { createHash } from 'node:crypto';
-import { projectRoot, pluginDirOf, excludePluginDir } from '../../../scripts/lib/project.mjs';
+import { projectRoot, pluginDirOf, excludePluginDir, isInside } from '../../../scripts/lib/project.mjs';
 import { suggestPrefix } from '../../../scripts/lib/prefix.mjs';
 import { ROLES, ROLE_TYPES, eyebrowCleaner, normalizeColors, splitMobile, weightsOf, sizePx, buildRoleMap, demote } from './lib/tokens.mjs';
 
@@ -55,7 +55,9 @@ if (!t.color?.tokens?.length || !t.type?.groups?.length) {
   console.error('tokens.json has no color tokens or no type groups: this is not a Design System artifact. Nothing written.');
   process.exit(2);
 }
-const readme = get('--readme') && existsSync(get('--readme')) ? readFileSync(get('--readme'), 'utf8') : '';
+// texts saved on Windows may have CRLF line endings: read every text as LF
+const readText = (p) => readFileSync(p, 'utf8').replaceAll('\r\n', '\n');
+const readme = get('--readme') && existsSync(get('--readme')) ? readText(get('--readme')) : '';
 
 const gaps = [];
 const overrides = [];
@@ -147,8 +149,8 @@ if (compRoot && existsSync(compRoot)) {
   for (const dir of readdirSync(compRoot).sort()) {
     const p = join(compRoot, dir);
     if (!statSync(p).isDirectory()) continue;
-    const rd = existsSync(join(p, 'README.md')) ? cleanBlock(readFileSync(join(p, 'README.md'), 'utf8'), `component ${dir}`).replace(/^# .*\n+/, '').trim() : '';
-    const pv = existsSync(join(p, 'preview.html')) ? readFileSync(join(p, 'preview.html'), 'utf8') : '';
+    const rd = existsSync(join(p, 'README.md')) ? cleanBlock(readText(join(p, 'README.md')), `component ${dir}`).replace(/^# .*\n+/, '').trim() : '';
+    const pv = existsSync(join(p, 'preview.html')) ? readText(join(p, 'preview.html')) : '';
     const card = pv.match(/<!--\s*@dsCard\s+([^>]*?)-->/);
     const attr = (k) => card?.[1].match(new RegExp(`${k}="([^"]*)"`))?.[1] ?? null;
     const classes = [...new Set([...pv.matchAll(/class="([^"]*)"/g)].flatMap((m) => m[1].split(/\s+/)).filter(Boolean))].sort();
@@ -330,7 +332,7 @@ writeFileSync(out, md);
 // keep the folder out of git without touching tracked files
 let excluded = 'not a git repo';
 try {
-  excluded = out.startsWith(pluginDirOf(root) + '/') ? excludePluginDir(root) : 'output is outside .sb-context-nuxt/: not touched';
+  excluded = isInside(pluginDirOf(root), out) ? excludePluginDir(root) : 'output is outside .sb-context-nuxt/: not touched';
 } catch {
   excluded = 'could not update .git/info/exclude: do it by hand';
 }

@@ -1,7 +1,7 @@
 // The analysis of inventory.mjs, without I/O: sizes in px, the font shorthand, the project's
 // type scale (tokens or clusters) and media query widths.
 
-import { dirname } from 'node:path';
+import { dirname, sep } from 'node:path';
 
 /** CSS length → { px, unit }; a unitless number → { px: null, ratio }; anything else → null. resolve expands var(). */
 export function toPx(raw, resolve = (v) => v) {
@@ -85,8 +85,12 @@ export function mediaWidths(query) {
 /** The deepest folder that contains every path (for display), or fallback when there are none. */
 export function commonDir(paths, fallback) {
   if (!paths.length) return fallback;
-  const parts = paths.map((p) => dirname(p).split('/'));
-  const out = [];
-  for (let i = 0; parts.every((p) => p[i] !== undefined && p[i] === parts[0][i]); i++) out.push(parts[0][i]);
-  return out.join('/') || '/';
+  let dir = dirname(paths[0]);
+  const holds = (p) => p.startsWith(dir.endsWith(sep) ? dir : dir + sep);
+  while (!paths.every(holds)) {
+    const up = dirname(dir);
+    if (up === dir) break;
+    dir = up;
+  }
+  return dir;
 }
