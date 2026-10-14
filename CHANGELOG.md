@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.1](https://github.com/stefanBid/sb-context-nuxt/compare/v0.4.0...v0.4.1) (2026-10-14)
+
+
+### Bug Fixes
+
+* **design-extract-style:** keep README headings below the snapshot sections ([#10](https://github.com/stefanBid/sb-context-nuxt/issues/10)) ([d505cdd](https://github.com/stefanBid/sb-context-nuxt/commit/d505cdd25bea12d704c65e4670413484a76dc9c8))
+* keep top-level values in project-settings set ([#9](https://github.com/stefanBid/sb-context-nuxt/issues/9)) ([de389bc](https://github.com/stefanBid/sb-context-nuxt/commit/de389bcc9e8ca8fabcfc725c6719cce7e0267da2))
+
 ## [0.4.0](https://github.com/stefanBid/sb-context-nuxt/compare/v0.3.1...v0.4.0) (2026-10-14)
 
 
