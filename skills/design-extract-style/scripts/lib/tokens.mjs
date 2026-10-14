@@ -9,13 +9,19 @@ export const ROLE_TYPES = ['display', 'h1', 'h2', 'h3', 'h4', 'lead', 'body', 'b
 // Eyebrows: never allowed, even if the design documents them
 // ---------------------------------------------------------------------------
 const EYEBROW = /\b(occhielli|occhiello|eyebrows?|kickers?)\b(\s*,\s*|\s+e\s+|\s+and\s+)?/gi;
+// "Labels and eyebrows.": no separator after the term, so the one before it goes with it
+const TRAILING = /(\s*,\s*|\s+e\s+|\s+and\s+)\b(occhielli|occhiello|eyebrows?|kickers?)\b(?!\s*,|\s+e\s|\s+and\s)/gi;
 const hasEyebrow = (s) => /\b(occhielli|occhiello|eyebrows?|kickers?)\b/i.test(s);
+const strip = (s) => {
+  for (let prev = null; prev !== s; ) [prev, s] = [s, s.replace(TRAILING, '')];
+  return s.replace(EYEBROW, '');
+};
 
 /** clean(text) for one-line usage texts, cleanBlock(text) for READMEs; each change is pushed to overrides. */
 export function eyebrowCleaner(overrides) {
   const clean = (text, where) => {
     if (!text || !hasEyebrow(text)) return text;
-    const cleaned = text.replace(EYEBROW, '').replace(/\s{2,}/g, ' ').replace(/^\s*[,:]\s*/, '').trim();
+    const cleaned = strip(text).replace(/\s{2,}/g, ' ').replace(/^\s*[,:]\s*/, '').trim();
     const final = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
     overrides.push(`${where}: "${text}" → "${final}"`);
     return final;
@@ -25,7 +31,7 @@ export function eyebrowCleaner(overrides) {
       .split('\n')
       .map((line) => {
         if (!hasEyebrow(line)) return line;
-        const c = line.replace(EYEBROW, '').replace(/\s{2,}/g, ' ');
+        const c = strip(line).replace(/\s{2,}/g, ' ');
         overrides.push(`${where}: "${line.trim().slice(0, 100)}" → "${c.trim().slice(0, 100)}"`);
         return c;
       })
