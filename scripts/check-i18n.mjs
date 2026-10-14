@@ -20,7 +20,8 @@
 // locales, i18n/lang, lang. A key missing from the default locale is an error; missing from another locale is
 // reported separately. Dynamic keys (`t(`a.${x}`)`) cannot be checked and are counted.
 //
-// Exit 0 clean, 10 when text is inline or a key is missing. Never modifies a file.
+// A .vue file that does not parse is reported and counts as a failure: it cannot be checked.
+// Exit 0 clean, 10 when text is inline, a key is missing or a file does not parse. Never modifies a file.
 
 import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { join, resolve, relative } from 'node:path';
@@ -72,11 +73,17 @@ const { hasText } = rules;
 
 const found = [];
 const keysUsed = [];
+const parseErrors = [];
 let dynamicKeys = 0;
 for (const f of files) {
   const src = readFileSync(f, 'utf8');
-  const { descriptor } = parseSfc(src, { filename: f });
   const rel = relative(root, f);
+  // the parser does not throw on a malformed template: it lists the errors and returns a partial tree
+  const { descriptor, errors } = parseSfc(src, { filename: f });
+  if (errors.length) {
+    for (const e of errors) parseErrors.push({ file: rel, line: e.loc?.start?.line ?? null, message: e.message });
+    continue;
+  }
   const add = (line, kind, text) => found.push({ file: rel, line, kind, text: String(text).replace(/\s+/g, ' ').trim().slice(0, 80) });
   const key = (line, k) => keysUsed.push({ file: rel, line, key: k });
 
@@ -167,11 +174,13 @@ if (keysUsed.length) {
   }
 }
 
-const bad = found.length > 0 || missingKeys.some((k) => k.isDefault);
-if (asJson) console.log(JSON.stringify({ checked: files.length, inline: found, keysUsed: keysUsed.length, dynamicKeys, missingKeys, note: keyNote }, null, 2));
+const bad = found.length > 0 || parseErrors.length > 0 || missingKeys.some((k) => k.isDefault);
+if (asJson) console.log(JSON.stringify({ checked: files.length, inline: found, parseErrors, keysUsed: keysUsed.length, dynamicKeys, missingKeys, note: keyNote }, null, 2));
 else {
   console.log(`Checked ${files.length} file(s): ${found.length ? `${found.length} piece(s) of text still inline` : 'no inline text ✓'}`);
   for (const x of found) console.log(`  ${x.file}:${x.line} [${x.kind}] ${x.text}`);
+  if (parseErrors.length) console.log(`Not checked, the file does not parse (${parseErrors.length} error(s)):`);
+  for (const e of parseErrors) console.log(`  ${e.file}${e.line ? `:${e.line}` : ''} ${e.message}`);
   if (keysUsed.length) {
     const d = missingKeys.filter((k) => k.isDefault);
     const o = missingKeys.filter((k) => !k.isDefault);
