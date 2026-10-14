@@ -70,7 +70,8 @@ describe('what the scripts write', () => {
       ...changed(p, () => p.run(SCRIPTS.syncValues, ['--record'])),
       ...changed(p, () => p.run(SCRIPTS.syncValues, ['--map', 'colors.bg=bg'])),
     ];
-    assert.deepEqual([...new Set(all)].sort(), ['.sb-context-nuxt/dependency-notes.json', '.sb-context-nuxt/design-applied.json', '.sb-context-nuxt/design-map.json', '.sb-context-nuxt/project-settings.json']);
+    // .git/info/exclude may be written too, by whichever command first excludes the folder
+    assert.deepEqual([...new Set(all)].filter((f) => f !== '.git/info/exclude').sort(), ['.sb-context-nuxt/dependency-notes.json', '.sb-context-nuxt/design-applied.json', '.sb-context-nuxt/design-map.json', '.sb-context-nuxt/project-settings.json']);
   });
 
   test('a design extraction writes only the snapshot, its previous version and the git exclude', { todo: onWindows('.sb-context-nuxt/ is never added to .git/info/exclude (startsWith(dir + "/"))') }, () => {
