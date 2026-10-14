@@ -10,11 +10,13 @@ import { REPO } from './fixture.mjs';
 const DIR = join(REPO, 'tests/snapshots');
 const today = new Date().toISOString().slice(0, 10);
 
-/** Removes what changes between runs and machines: today's date, temp roots, Windows separators and CRLF. */
+/**
+ * Removes what changes between runs and machines: today's date, temp roots (in native or POSIX form) and CRLF.
+ * Script output already has POSIX paths on Windows (fixture's posixOutput); file contents are left as they are.
+ */
 export function normalize(text, { roots = [] } = {}) {
   let t = text.replaceAll('\r\n', '\n').replaceAll(today, '<today>');
-  for (const r of roots) t = t.replaceAll(r, '<root>').replaceAll(r.replaceAll('\\', '\\\\'), '<root>');
-  if (process.platform === 'win32') t = t.replaceAll('\\\\', '/').replaceAll('\\', '/');
+  for (const r of roots) t = t.replaceAll(r, '<root>').replaceAll(r.replaceAll('\\', '/'), '<root>');
   return t;
 }
 
