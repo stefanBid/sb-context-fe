@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.3](https://github.com/stefanBid/sb-context-nuxt/compare/v0.4.2...v0.4.3) (2026-10-14)
+
+
+### Bug Fixes
+
+* stop reporting utility class strings as inline text ([#14](https://github.com/stefanBid/sb-context-nuxt/issues/14)) ([2103789](https://github.com/stefanBid/sb-context-nuxt/commit/21037891087f7ddda6e3414f007afe229a430353))
+
 ## [0.4.2](https://github.com/stefanBid/sb-context-nuxt/compare/v0.4.1...v0.4.2) (2026-10-14)
 
 
