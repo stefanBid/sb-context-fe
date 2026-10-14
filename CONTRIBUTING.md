@@ -79,6 +79,8 @@ Outputs that other skills or the model read as a format (`design-source.md`, the
 
 Property tests (`tests/unit/fuzz.test.mjs`, `tests/cli/properties.test.mjs`) check rules on many random inputs instead of a few examples: the parsers never throw, `sync-values --apply` always ends aligned and idempotent, `tokens-to-source` always has full coverage and is deterministic, a prefix rename round trip is lossless. The inputs come from a fixed seed, so a failure is reproducible; `SEED=<n> npm test` explores other inputs.
 
+What the plugin promises about the user's machine is tested too: no script imports a network or process module (`tests/contract/safety.test.mjs`), read-only commands change no file, and each writing command touches only the files it declares (`tests/cli/writes.test.mjs`). A new script or flag that writes must be added there.
+
 A known gap is written as a test with `{ todo: '<what is wrong>' }`: it runs and is reported, but does not fail the suite until it is fixed (then the `todo` is removed).
 
 The `Tests` workflow decides from the PR title whether the suite is required, with the same rule release-please uses to cut a release:
