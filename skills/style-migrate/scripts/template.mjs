@@ -396,7 +396,14 @@ for (const file of files) {
   const src = readFileSync(file, 'utf8');
   let descriptor;
   try {
-    descriptor = parseSfc(src, { filename: file }).descriptor;
+    const parsed = parseSfc(src, { filename: file });
+    // the parser does not throw on a malformed template: it lists the errors and returns a partial tree
+    if (parsed.errors.length) {
+      const e = parsed.errors[0];
+      results.push({ file: rel(file), error: `${e.message}${e.loc ? ` (line ${e.loc.start.line})` : ''}${parsed.errors.length > 1 ? ` and ${parsed.errors.length - 1} more` : ''}` });
+      continue;
+    }
+    descriptor = parsed.descriptor;
   } catch (e) {
     results.push({ file: rel(file), error: e.message });
     continue;
