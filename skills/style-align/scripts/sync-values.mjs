@@ -22,7 +22,7 @@
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { resolve, join, dirname } from 'node:path';
-import { projectRoot, cssDirOf, pluginDirOf, excludePluginDir } from '../../../scripts/lib/project.mjs';
+import { projectRoot, cssDirOf, pluginDirOf, excludePluginDir, relPath } from '../../../scripts/lib/project.mjs';
 import { nHex, nShadow, nFamily, toRem, same, remStr, blockOf, findSlot, writeSlots, refreshMobileComments, parseMapArg, byRole as byRoleOf } from './lib/sync.mjs';
 
 const argv = process.argv.slice(2);
@@ -55,7 +55,7 @@ const [light, dark] = S.themes;
 // ---------------------------------------------------------------------------
 const dir = cssDirOf(root); // the global style lives in <srcDir>/assets/css, always
 if (!existsSync(join(dir, 'theme.css')) || !existsSync(join(dir, 'typography.css'))) {
-  console.error(`The project has no aligned global style (theme.css / typography.css not found in ${dir.replace(root + '/', '')}). Run /sb-context-nuxt:style-align.`);
+  console.error(`The project has no aligned global style (theme.css / typography.css not found in ${relPath(root, dir)}). Run /sb-context-nuxt:style-align.`);
   process.exit(3);
 }
 const files = { theme: join(dir, 'theme.css'), typography: join(dir, 'typography.css'), animation: join(dir, 'animation.css') };
@@ -95,7 +95,7 @@ if (has('--map')) {
   mkdirSync(dirname(mapFile), { recursive: true });
   writeFileSync(mapFile, JSON.stringify(m, null, 2) + '\n');
   excludePluginDir(root);
-  console.log(`Saved the role mapping in ${mapFile.replace(root + '/', '')}.`);
+  console.log(`Saved the role mapping in ${relPath(root, mapFile)}.`);
   process.exit(0);
 }
 const rm = S.roleMap ?? { status: 'identity' };
@@ -253,7 +253,7 @@ for (const [role, want] of [['display', S.fonts?.display], ['body', S.fonts?.bod
 const applied = join(root, '.sb-context-nuxt', 'design-applied.json');
 const record = () => {
   mkdirSync(dirname(applied), { recursive: true });
-  writeFileSync(applied, JSON.stringify({ designSystem: S.source.designSystem, version: S.source.version, tokensSha256: S.source.tokensSha256, appliedAt: new Date().toISOString().slice(0, 10), prefix, cssDir: dir.replace(root + '/', '') }, null, 2) + '\n');
+  writeFileSync(applied, JSON.stringify({ designSystem: S.source.designSystem, version: S.source.version, tokensSha256: S.source.tokensSha256, appliedAt: new Date().toISOString().slice(0, 10), prefix, cssDir: relPath(root, dir) }, null, 2) + '\n');
 };
 
 if (has('--record')) {
@@ -264,7 +264,7 @@ if (has('--record')) {
 
 const prev = existsSync(applied) ? JSON.parse(readFileSync(applied, 'utf8')) : null;
 const drift = diffs.length > 0;
-const header = `Snapshot: ${S.name} · artifact version ${S.source.version} · prefix ${prefix} · ${dir.replace(root + '/', '')}\nLast applied: ${prev ? `${prev.version} on ${prev.appliedAt}` : 'never recorded'}`;
+const header = `Snapshot: ${S.name} · artifact version ${S.source.version} · prefix ${prefix} · ${relPath(root, dir)}\nLast applied: ${prev ? `${prev.version} on ${prev.appliedAt}` : 'never recorded'}`;
 
 if (has('--json')) {
   console.log(JSON.stringify({ aligned: !drift, unmapped, differences: diffs.map(({ slot: _s, make: _m, ...d }) => d), needsDecision: undecided, lastApplied: prev }, null, 2));

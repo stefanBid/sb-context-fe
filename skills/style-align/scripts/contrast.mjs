@@ -16,6 +16,7 @@
 // Exits with code 1 if at least one required pair is below its minimum.
 
 import { readFileSync } from 'node:fs';
+import '../../../scripts/lib/cli.mjs'; // blocking stdout: the JSON reaches the pipe whole
 import { parseColor, contrast } from './color.mjs';
 import { themeVars, standardPairs, customPairs, evaluate, surfaces, surfaceNotes } from './lib/theme-vars.mjs';
 

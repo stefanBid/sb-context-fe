@@ -9,7 +9,8 @@
 //   <srcDir>/assets/css/            the global style (srcDir is app/ in Nuxt 4, or the root / config srcDir)
 
 import { existsSync, readFileSync, statSync, mkdirSync, appendFileSync } from 'node:fs';
-import { join, resolve, dirname } from 'node:path';
+import { join, resolve, dirname, relative, isAbsolute, sep } from 'node:path';
+import './cli.mjs'; // blocking stdout: large outputs reach the pipe whole (see cli.mjs)
 
 const CONFIGS = ['nuxt.config.ts', 'nuxt.config.js', 'nuxt.config.mjs', 'nuxt.config.cjs'];
 
@@ -54,6 +55,15 @@ export function srcDirOf(root) {
 }
 
 export const cssDirOf = (root) => join(srcDirOf(root), 'assets', 'css');
+
+/** A path relative to the root, with / separators on every OS (for messages and recorded paths). */
+export const relPath = (root, p) => relative(root, p).split(sep).join('/') || '.';
+
+/** Whether p is inside dir (not dir itself), on every OS. */
+export function isInside(dir, p) {
+  const r = relative(dir, p);
+  return Boolean(r) && !r.startsWith('..') && !isAbsolute(r);
+}
 export const pluginDirOf = (root) => join(root, '.sb-context-nuxt');
 
 // keeps .sb-context-nuxt/ out of git without touching tracked files

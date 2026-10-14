@@ -15,7 +15,7 @@
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync, statSync } from 'node:fs';
 import { join, dirname } from 'node:path';
-import { projectRoot, srcDirOf, cssDirOf, pluginDirOf, excludePluginDir } from './lib/project.mjs';
+import { projectRoot, srcDirOf, cssDirOf, pluginDirOf, excludePluginDir, relPath } from './lib/project.mjs';
 import { dig, parseValue, setPath, parseI18nConfig, componentNaming, siteUrlOf, themePrefixOf } from './lib/settings.mjs';
 
 // always relative to the Nuxt project root, wherever the script is started from
@@ -57,7 +57,7 @@ if (cmd === 'set') {
   mkdirSync(dirname(file), { recursive: true });
   writeFileSync(file, JSON.stringify(s, null, 2) + '\n');
   excludeFromGit();
-  console.log(`Saved ${path} in ${file.replace(root + '/', '')}`);
+  console.log(`Saved ${path} in ${relPath(root, file)}`);
   process.exit(0);
 }
 
@@ -155,4 +155,4 @@ if (need.includes('seo')) {
 }
 if (need.includes('stack') && !packageManager && unset('stack.packageManager')) missing.push({ key: 'stack.packageManager', why: 'no lockfile found: which package manager installs and builds', detected: null });
 
-console.log(JSON.stringify({ settingsFile: existsSync(file) ? file.replace(root + '/', '') : null, settings: s, facts, missing }, null, 2));
+console.log(JSON.stringify({ settingsFile: existsSync(file) ? relPath(root, file) : null, settings: s, facts, missing }, null, 2));

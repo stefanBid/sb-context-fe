@@ -15,7 +15,7 @@
 // then from @tailwindcss/vite and nuxt, so it also works with pnpm).
 
 import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from 'node:fs';
-import { join, resolve, dirname, relative, extname } from 'node:path';
+import { join, resolve, dirname, relative, extname, basename, isAbsolute } from 'node:path';
 import { createRequire } from 'node:module';
 import { findColors, parseColor, toHex } from './color.mjs';
 import { projectRoot } from '../../../scripts/lib/project.mjs';
@@ -140,7 +140,7 @@ function walk(dir, exts, out = []) {
 function resolveAlias(entry) {
   if (/^~~\/|^@@\//.test(entry)) return join(root, entry.slice(3));
   if (/^~\/|^@\//.test(entry)) return join(srcDir, entry.slice(2));
-  if (entry.startsWith('/')) return entry;
+  if (isAbsolute(entry)) return entry;
   return join(root, entry);
 }
 
@@ -401,7 +401,7 @@ const structure = { prefix: null, checks: [], aligned: false };
 {
   const utilNames = inv.atRules.filter((a) => a.name === 'utility').map((a) => a.params.trim());
   structure.prefix = prefixFromUtilities(utilNames);
-  const base = (f) => f.split('/').pop();
+  const base = (f) => basename(f);
   const names = new Set(out_sources_names());
   function out_sources_names() {
     return [...sources.entries()].filter(([, s]) => !s.vue).map(([k]) => base(k));

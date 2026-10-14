@@ -1,7 +1,8 @@
 import { test, describe, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdirSync } from 'node:fs';
-import { isNuxtRoot, findProjectRoot, srcDirOf, cssDirOf, pluginDirOf, excludePluginDir } from '../../scripts/lib/project.mjs';
+import { join, sep } from 'node:path';
+import { isNuxtRoot, findProjectRoot, srcDirOf, cssDirOf, pluginDirOf, excludePluginDir, relPath, isInside } from '../../scripts/lib/project.mjs';
 import { makeProject } from '../helpers/fixture.mjs';
 
 describe('lib/project.mjs', () => {
@@ -64,5 +65,18 @@ describe('lib/project.mjs', () => {
     p.write('.git/info/exclude', '.sb-context-nuxt\n');
     excludePluginDir(p.root);
     assert.equal(p.read('.git/info/exclude'), '.sb-context-nuxt\n');
+  });
+
+  test('relPath gives / separators on every OS; isInside needs a real child', () => {
+    const root = join(sep, 'proj');
+    assert.equal(relPath(root, join(root, 'app', 'assets', 'css')), 'app/assets/css');
+    assert.equal(relPath(root, root), '.');
+    assert.equal(relPath(root, join(sep, 'other', 'x')), '../other/x');
+    const dir = join(root, '.sb-context-nuxt');
+    assert.equal(isInside(dir, join(dir, 'design-source.md')), true);
+    assert.equal(isInside(dir, join(dir, 'a', 'b.md')), true);
+    assert.equal(isInside(dir, dir), false);
+    assert.equal(isInside(dir, join(root, '.sb-context-nuxt-old', 'x.md')), false, 'a sibling with the same prefix is outside');
+    assert.equal(isInside(dir, join(root, 'snap', 'x.md')), false);
   });
 });

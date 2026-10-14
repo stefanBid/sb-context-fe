@@ -1,6 +1,6 @@
 import { test, describe, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { makeProject, SCRIPTS, onWindows } from '../helpers/fixture.mjs';
+import { makeProject, SCRIPTS } from '../helpers/fixture.mjs';
 
 const today = new Date().toISOString().slice(0, 10);
 const FILE = '.sb-context-nuxt/project-settings.json';
@@ -76,7 +76,7 @@ describe('project-settings.mjs', () => {
     assert.equal(settings('get').code, 2);
   });
 
-  test('detect reads modules, i18n, components, package manager and SEO from the project', { todo: onWindows('component paths are split on "/": subfolders and prefixes are lost') }, () => {
+  test('detect reads modules, i18n, components, package manager and SEO from the project', () => {
     p = makeProject({
       'nuxt.config.ts': I18N_CONFIG,
       'package.json': { dependencies: { nuxt: '^4.0.0', '@nuxtjs/i18n': '^9.0.0', '@nuxt/image': '^1.0.0' } },
@@ -125,7 +125,7 @@ describe('project-settings.mjs', () => {
     assert.deepEqual(settings('detect', '--need', 'i18n').json().facts.i18n.locales, ['it', 'en']);
   });
 
-  test('detect stops asking what the settings already answer, and --need limits the topics', { todo: onWindows('settingsFile is made relative with replace(root + "/"): the full path is printed') }, () => {
+  test('detect stops asking what the settings already answer, and --need limits the topics', () => {
     p = makeProject();
     settings('set', 'icons.module', '"@nuxt/icon"');
     const r = settings('detect', '--need', 'icons,stack').json();
