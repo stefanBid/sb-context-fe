@@ -1,0 +1,80 @@
+// Test helpers: throwaway Nuxt projects and a runner for the plugin's CLI scripts.
+//
+// A fixture is a real folder in the OS temp dir with a nuxt.config.ts (so the scripts find
+// the project root), the files the test asks for, an empty .git/ (so .git/info/exclude can be
+// written) and a symlink to this repo's node_modules (so postcss, tailwindcss and
+// vue/compiler-sfc resolve from the project root, as they would in a real Nuxt project).
+
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync, rmSync, symlinkSync, realpathSync, cpSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, dirname, resolve } from 'node:path';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+
+export const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
+export const EXAMPLE_CSS = join(REPO, 'skills/style-align/references/example');
+
+export const SCRIPTS = {
+  dependencyNotes: join(REPO, 'scripts/dependency-notes.mjs'),
+  projectSettings: join(REPO, 'scripts/project-settings.mjs'),
+  checkI18n: join(REPO, 'scripts/check-i18n.mjs'),
+  tokensToSource: join(REPO, 'skills/design-extract-style/scripts/tokens-to-source.mjs'),
+  contrast: join(REPO, 'skills/style-align/scripts/contrast.mjs'),
+  inventory: join(REPO, 'skills/style-align/scripts/inventory.mjs'),
+  renamePrefix: join(REPO, 'skills/style-align/scripts/rename-prefix.mjs'),
+  syncValues: join(REPO, 'skills/style-align/scripts/sync-values.mjs'),
+  template: join(REPO, 'skills/style-migrate/scripts/template.mjs'),
+};
+
+const DEFAULT_CONFIG = "export default defineNuxtConfig({\n  css: ['~/assets/css/main.css'],\n})\n";
+
+/**
+ * Creates a Nuxt project in a temp folder.
+ * files: { 'app/pages/index.vue': '...' }  (a nuxt.config.ts is added unless given, or unless nuxtConfig is false)
+ */
+export function makeProject(files = {}, { git = true, modules = true, nuxtConfig = true } = {}) {
+  const root = realpathSync(mkdtempSync(join(tmpdir(), 'sbcn-')));
+  if (nuxtConfig && !('nuxt.config.ts' in files)) files = { 'nuxt.config.ts': DEFAULT_CONFIG, ...files };
+  for (const [p, content] of Object.entries(files)) write(root, p, content);
+  if (git) mkdirSync(join(root, '.git', 'info'), { recursive: true });
+  if (modules) symlinkSync(join(REPO, 'node_modules'), join(root, 'node_modules'), 'dir');
+  return {
+    root,
+    path: (p) => join(root, p),
+    read: (p) => readFileSync(join(root, p), 'utf8'),
+    json: (p) => JSON.parse(readFileSync(join(root, p), 'utf8')),
+    exists: (p) => existsSync(join(root, p)),
+    write: (p, content) => write(root, p, content),
+    run: (script, args = [], opts = {}) => run(script, args, { cwd: root, ...opts }),
+    cleanup: () => rmSync(root, { recursive: true, force: true }),
+  };
+}
+
+/** The reference aligned style (prefix "sb") copied into <root>/app/assets/css. */
+export function withExampleStyle(project) {
+  cpSync(EXAMPLE_CSS, project.path('app/assets/css'), { recursive: true, filter: (src) => !src.endsWith('nuxt.config.ts') });
+  return project;
+}
+
+function write(root, p, content) {
+  const full = join(root, p);
+  mkdirSync(dirname(full), { recursive: true });
+  writeFileSync(full, typeof content === 'string' ? content : JSON.stringify(content, null, 2));
+}
+
+/** Runs a script with node. Returns { code, stdout, stderr, json() }. */
+export function run(script, args = [], { cwd = REPO, env = {} } = {}) {
+  const r = spawnSync(process.execPath, [script, ...args], { cwd, encoding: 'utf8', env: { ...process.env, NO_COLOR: '1', ...env } });
+  return {
+    code: r.status,
+    stdout: r.stdout,
+    stderr: r.stderr,
+    json() {
+      try {
+        return JSON.parse(r.stdout);
+      } catch (e) {
+        throw new Error(`stdout is not JSON (exit ${r.status}):\n${r.stdout}\n--- stderr ---\n${r.stderr}`, { cause: e });
+      }
+    },
+  };
+}

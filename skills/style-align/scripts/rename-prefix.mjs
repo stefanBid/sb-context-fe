@@ -19,6 +19,8 @@
 import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { join, resolve, relative, extname } from 'node:path';
 import { projectRoot } from '../../../scripts/lib/project.mjs';
+import { prefixError } from '../../../scripts/lib/prefix.mjs';
+import { detectPrefix, prefixInUse, utilityNames, renamer } from './lib/rename.mjs';
 
 const argv = process.argv.slice(2);
 const get = (n) => {
@@ -29,15 +31,13 @@ const root = projectRoot(get('--root'));
 const to = get('--to');
 const apply = argv.includes('--apply');
 
-const RESERVED = new Set(['p', 'm', 'w', 'h', 'bg', 'text', 'font', 'border', 'rounded', 'shadow', 'flex', 'grid', 'gap', 'ring', 'top', 'size', 'col', 'row', 'sr', 'dark', 'ease', 'animate', 'inset', 'space', 'divide', 'outline', 'fill', 'stroke']);
 const fail = (msg) => {
   console.error(msg);
   process.exit(2);
 };
 
 if (!to) fail('Pass the new prefix: --to <prefix>.');
-if (!/^[a-z][a-z0-9]{1,3}$/.test(to)) fail(`"${to}" is not a valid prefix: 2–4 lowercase letters or digits, starting with a letter, no hyphens.`);
-if (RESERVED.has(to)) fail(`"${to}" is a Tailwind utility root: choose another prefix.`);
+if (prefixError(to)) fail(prefixError(to));
 
 const IGNORE = new Set(['node_modules', '.nuxt', '.output', '.git', 'dist', '.data', 'coverage']);
 function walk(dir, exts, out = []) {
@@ -61,23 +61,16 @@ const cssFiles = walk(join(srcDir, 'assets'), ['.css']);
 if (!cssFiles.length) fail(`No CSS found in ${relative(root, join(srcDir, 'assets')) || '.'}. Run it from the project root.`);
 const cssText = cssFiles.map((f) => readFileSync(f, 'utf8')).join('\n');
 
-const from = get('--from') ?? cssText.match(/@utility\s+([a-z][a-z0-9]{1,3})-(?:h1|body)\b/)?.[1];
+const from = get('--from') ?? detectPrefix(cssText);
 if (!from) fail('Current prefix not detected (no `@utility <prefix>-h1` / `<prefix>-body`): the style is not aligned yet. Use --from <prefix> or run style-align first.');
 if (from === to) fail(`The prefix is already "${to}".`);
 
 // Collision check: the new prefix must not already be in use
-const used = new RegExp(`--${to}-|@utility\\s+${to}-`).test(cssText);
-if (used) fail(`"${to}" is already used by variables or utilities in the global CSS: choose another prefix.`);
+if (prefixInUse(cssText, to)) fail(`"${to}" is already used by variables or utilities in the global CSS: choose another prefix.`);
 
-const utilNames = [...cssText.matchAll(new RegExp(`@utility\\s+${from}-([\\w-]+)`, 'g'))].map((m) => m[1]);
+const utilNames = utilityNames(cssText, from);
 if (!utilNames.length) fail(`No \`@utility ${from}-*\` found: check --from.`);
-const alt = [...new Set(utilNames)].sort((a, b) => b.length - a.length).map((n) => n.replace(/[-]/g, '\\-')).join('|');
-
-const reVar = new RegExp(`(?<![\\w-])--${from}-`, 'g');
-const reUtil = new RegExp(`(?<![\\w-])${from}-(${alt})(?![\\w-])`, 'g');
-const reHeader = new RegExp(`(Prefix\\s+")${from}(")`, 'gi');
-const reOther = new RegExp(`(?<![\\w-])${from}-[\\w-]+`, 'g');
-const known = new Set(utilNames.map((n) => `${from}-${n}`));
+const { rename, others: othersIn } = renamer(from, to, utilNames);
 
 const targets = [
   ...cssFiles,
@@ -90,12 +83,8 @@ const rows = [];
 const others = new Map();
 for (const f of [...new Set(targets)]) {
   const src = readFileSync(f, 'utf8');
-  let n = 0;
-  const out = src
-    .replace(reVar, () => (n++, `--${to}-`))
-    .replace(reUtil, (_, name) => (n++, `${to}-${name}`))
-    .replace(reHeader, (_, a, b) => (n++, `${a}${to}${b}`));
-  for (const m of out.matchAll(reOther)) if (!known.has(m[0])) others.set(m[0], (others.get(m[0]) ?? 0) + 1);
+  const { out, n } = rename(src);
+  for (const id of othersIn(out)) others.set(id, (others.get(id) ?? 0) + 1);
   if (n) {
     rows.push({ file: relative(root, f), n });
     total += n;

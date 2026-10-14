@@ -26,6 +26,8 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync, copyFileSync, readd
 import { resolve, dirname, join } from 'node:path';
 import { createHash } from 'node:crypto';
 import { projectRoot, pluginDirOf, excludePluginDir } from '../../../scripts/lib/project.mjs';
+import { suggestPrefix } from '../../../scripts/lib/prefix.mjs';
+import { ROLES, ROLE_TYPES, eyebrowCleaner, normalizeColors, splitMobile, weightsOf, sizePx, buildRoleMap, demote } from './lib/tokens.mjs';
 
 const argv = process.argv.slice(2);
 const get = (n) => {
@@ -59,43 +61,9 @@ const gaps = [];
 const overrides = [];
 const today = new Date().toISOString().slice(0, 10);
 
-// ---------------------------------------------------------------------------
-// Eyebrows: never allowed, even if the design documents them
-// ---------------------------------------------------------------------------
-const EYEBROW = /\b(occhielli|occhiello|eyebrows?|kickers?)\b(\s*,\s*|\s+e\s+|\s+and\s+)?/gi;
-const hasEyebrow = (s) => /\b(occhielli|occhiello|eyebrows?|kickers?)\b/i.test(s);
-function clean(text, where) {
-  if (!text || !hasEyebrow(text)) return text;
-  const cleaned = text.replace(EYEBROW, '').replace(/\s{2,}/g, ' ').replace(/^\s*[,:]\s*/, '').trim();
-  const final = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
-  overrides.push(`${where}: "${text}" → "${final}"`);
-  return final;
-}
-const cleanBlock = (text, where) =>
-  text
-    .split('\n')
-    .map((line) => {
-      if (!hasEyebrow(line)) return line;
-      const c = line.replace(EYEBROW, '').replace(/\s{2,}/g, ' ');
-      overrides.push(`${where}: "${line.trim().slice(0, 100)}" → "${c.trim().slice(0, 100)}"`);
-      return c;
-    })
-    .join('\n');
+// eyebrows are never allowed, even if the design documents them: removed, each change listed
+const { clean, cleanBlock } = eyebrowCleaner(overrides);
 
-// ---------------------------------------------------------------------------
-// Suggested prefix (a proposal, always asked)
-// ---------------------------------------------------------------------------
-const RESERVED = new Set(['p', 'm', 'w', 'h', 'bg', 'text', 'font', 'border', 'rounded', 'shadow', 'flex', 'grid', 'gap', 'ring', 'top', 'size', 'col', 'row', 'sr', 'dark', 'ease', 'animate', 'inset', 'space', 'divide', 'outline', 'fill', 'stroke']);
-function suggestPrefix(name) {
-  if (!name) return null;
-  const words = String(name || '').replace(/([a-z])([A-Z])/g, '$1 $2').split(/[^A-Za-z]+/).filter(Boolean);
-  if (!words.length) return null;
-  let p = words.length === 1 ? words[0].slice(0, 2) : words.map((w) => w[0]).join('').slice(0, 4);
-  p = p.toLowerCase();
-  if (p.length < 2) p = (words[0] + 'x').slice(0, 2).toLowerCase();
-  if (RESERVED.has(p)) p = (p + (words[0][1] ?? 'x')).slice(0, 4).toLowerCase();
-  return p;
-}
 const name = get('--name') ?? t.name ?? null;
 if (!name) gaps.push('The design has no name (tokens.json has none and --name was not given): no prefix is suggested, ask the user.');
 const shownName = name ?? 'Design system';
@@ -105,28 +73,8 @@ const shownName = name ?? 'Design system';
 // ---------------------------------------------------------------------------
 const themes = (t.color?.themes ?? [{ id: 'light' }, { id: 'dark' }]).map((x) => x.id);
 const [light, dark = null] = themes;
-const colors = {};
-for (const c of t.color.tokens) {
-  const v = typeof c.value === 'string' ? { [light]: c.value } : { ...c.value };
-  for (const th of themes) if (v[th] === undefined) v[th] = v[light];
-  colors[c.name] = { values: v, usage: clean(c.usage ?? '', `color ${c.name}`) };
-}
-const COLOR_OK = /^(#[0-9a-f]{3,8}|rgba?\(.+\)|hsla?\(.+\)|oklch\(.+\)|oklab\(.+\)|color\(.+\))$/i;
-for (const [n, c] of Object.entries(colors)) {
-  for (const th of themes) {
-    const val = c.values[th];
-    const m = /^\{([\w-]+)\}$/.exec(val);
-    if (m) {
-      const target = colors[m[1]]?.values?.[th];
-      if (target && !/^\{/.test(target)) {
-        (c.alias ??= {})[th] = m[1];
-        c.values[th] = target;
-      } else gaps.push(`Color \`${n}\` (${th}) is an alias of \`${m[1]}\` that cannot be resolved: ask.`);
-    } else if (!COLOR_OK.test(String(val).trim())) gaps.push(`Color \`${n}\` (${th}) has a value that is not a color literal: "${val}".`);
-  }
-}
-const ROLES = ['bg', 'surface', 'surface-2', 'border', 'border-strong', 'ink', 'ink-muted', 'primary', 'primary-hover', 'on-primary', 'primary-soft', 'accent', 'accent-hover', 'on-accent', 'accent-ink', 'success', 'success-soft', 'error', 'error-soft', 'warning', 'warning-soft', 'info', 'info-soft', 'focus-ring'];
-for (const [n, c] of Object.entries(colors)) c.inFixedSet = ROLES.includes(n);
+const { colors, gaps: colorGaps } = normalizeColors(t.color.tokens, themes, clean);
+gaps.push(...colorGaps);
 const extraColors = Object.keys(colors).filter((n) => !ROLES.includes(n));
 if (extraColors.length) gaps.push(`Colors without a matching role (kept with their own name, to agree on in style-align): ${extraColors.join(', ')}.`);
 for (const must of ['bg', 'surface', 'border', 'ink', 'ink-muted', 'primary', 'on-primary', 'focus-ring'])
@@ -144,11 +92,9 @@ let typeRead = 0;
 for (const g of t.type.groups) {
   for (const s of g.styles ?? []) {
     typeRead++;
-    const usage = s.usage ?? '';
-    const m = usage.match(/Mobile:\s*([\d.]+)px\s*\/\s*([\d.]+)px/i);
+    const { mobile, usage } = splitMobile(s.usage ?? '');
     const w = s.fontWeight;
-    if (typeof w === 'number') weightSet.add(w);
-    else if (typeof w === 'string') for (const x of w.match(/\d+/g) ?? []) weightSet.add(+x);
+    for (const x of weightsOf(w)) weightSet.add(x);
     type[s.name] = {
       group: g.name ?? null,
       familyRole: g.family ?? null,
@@ -157,20 +103,19 @@ for (const g of t.type.groups) {
       lineHeight: s.lineHeight ?? null,
       weight: w,
       ...(s.letterSpacing ? { letterSpacing: s.letterSpacing } : {}),
-      ...(m ? { mobile: { size: `${m[1]}px`, lineHeight: `${m[2]}px` } } : {}),
+      ...(mobile ? { mobile } : {}),
       sample: s.sample ?? null,
-      usage: clean(usage.replace(/\s*Mobile:\s*[\d.]+px\s*\/\s*[\d.]+px\.?/i, '').trim(), `type ${s.name}`),
+      usage: clean(usage, `type ${s.name}`),
     };
   }
 }
-const ROLE_TYPES = ['display', 'h1', 'h2', 'h3', 'h4', 'lead', 'body', 'body-strong', 'label', 'small', 'overline'];
 for (const [n, s] of Object.entries(type)) s.inFixedSet = ROLE_TYPES.includes(n) || n === 'hero';
 for (const r of ROLE_TYPES) if (!type[r]) gaps.push(`Type role \`${r}\` is missing: map from the project's current sizes, or derive minimally (provisional).`);
 for (const r of ['display', 'h1', 'h2'])
   if (type[r] && !type[r].mobile) gaps.push(`\`${r}\` has no mobile values (the design gives them only in prose, if at all): ask, or derive minimally (provisional).`);
 for (const r of Object.keys(type)) if (!type[r].inFixedSet) gaps.push(`Type style \`${r}\` is not a role of the fixed set: map it to a role or absorb it.`);
 for (const [r, s] of Object.entries(type)) {
-  const px = parseFloat(s.size) * (/rem$/.test(s.size) ? 16 : 1);
+  const px = sizePx(s.size);
   if (['body', 'body-strong'].includes(r) && px < 16) gaps.push(`\`${r}\` is ${px}px: running text and inputs are never below 16px (guard rail).`);
   if (r === 'display' && px > 96) gaps.push('`display` is above 6rem (guard rail).');
 }
@@ -194,8 +139,6 @@ gaps.push('Motion: the design system has no motion family. Defaults from `style-
 // ---------------------------------------------------------------------------
 // Brand guide (README) and components (folders saved from the artifact)
 // ---------------------------------------------------------------------------
-// headings of the design's README move one level down so they do not look like this file's own sections
-const demote = (md) => md.replace(/^(#{1,5}) /gm, '$1# ');
 const brandGuide = demote(cleanBlock(readme, 'README').trim());
 
 const components = [];
@@ -240,24 +183,8 @@ for (const [k, v] of Object.entries(t)) {
 // Role map: design names → the plugin's roles. Same name does not mean same meaning
 // (a design's `surface` can be the page background, which is the plugin's `bg`).
 // ---------------------------------------------------------------------------
-const CORE = ['bg', 'surface', 'ink', 'primary'];
-const coreMissing = CORE.filter((r) => !colors[r]);
-// hints only read how a usage text BEGINS: "Page background." says bg, "Cards, menus…" says surface
-const COLOR_HINTS = [
-  [/^(page|app) background|^sfondo (della )?(pagina|app)/i, 'bg'],
-  [/^(cards?|panels?|menus?|pannelli)\b/i, 'surface'],
-  [/^(keyboard )?focus ring|^anello di focus|^keyboard focus/i, 'focus-ring'],
-];
-const TYPE_HINTS = { title: 'h2', heading: 'h2', subtitle: 'h3', headline: 'h2', paragraph: 'body', text: 'body', caption: 'small', meta: 'small', helper: 'small', button: 'label', eyebrow: 'overline', overline: 'overline' };
-const roleMap = { status: 'identity', colors: {}, type: {} };
-for (const n of Object.keys(colors)) {
-  const sugg = COLOR_HINTS.find(([re, r]) => re.test(colors[n].usage) && r && r !== n)?.[1] ?? null;
-  roleMap.colors[n] = { role: ROLES.includes(n) ? n : null, suggested: ROLES.includes(n) ? null : sugg, ...(ROLES.includes(n) && sugg && sugg !== n ? { suspicious: sugg } : {}) };
-}
-for (const n of Object.keys(type)) roleMap.type[n] = { role: ROLE_TYPES.includes(n) ? n : null, suggested: ROLE_TYPES.includes(n) ? null : TYPE_HINTS[n] ?? null };
-const typeMissing = ['h1', 'body'].filter((r) => !type[r]);
-if (coreMissing.length || typeMissing.length || Object.values(roleMap.colors).some((c) => c.suspicious)) {
-  roleMap.status = 'needs-confirmation';
+const { roleMap, coreMissing, typeMissing } = buildRoleMap(colors, type);
+if (roleMap.status === 'needs-confirmation') {
   gaps.unshift(`Role mapping needs confirmation before any value is compared or applied: ${coreMissing.length ? `core colors missing (${coreMissing.join(', ')}), so names like \`surface\` may mean something else here; ` : ''}${typeMissing.length ? `type roles missing (${typeMissing.join(', ')}); ` : ''}style-align maps each design name to a role (or to none) and saves it with \`sync-values.mjs --map\`.`);
 }
 

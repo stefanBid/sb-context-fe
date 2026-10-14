@@ -52,11 +52,36 @@ ci: add release-please
 refactor(style-migrate): split the mapping table
 ```
 
+## Tests
+
+A skill's outcome depends on the model that runs it; its scripts must not. The suite locks the deterministic part: every algorithm a skill relies on, and the plugin's own wiring. It runs on Node's built-in runner (`node:test`); `package.json` exists only for the test dependencies (postcss, tailwindcss, vue), the plugin itself has none.
+
+```
+npm ci
+npm test               # everything
+npm run test:unit      # pure functions (tests/unit)
+npm run test:cli       # each script run on a throwaway Nuxt project (tests/cli)
+npm run test:contract  # SKILL.md paths, cross-skill references, manifests, docs (tests/contract)
+npm run test:coverage
+```
+
+| Layer | What it guarantees |
+| --- | --- |
+| `tests/unit` | the logic in the `lib/` modules: color math and WCAG contrast, CSS variable resolution, value normalizers and in-place rewrites, prefix rules, type scale and clusters, class anatomy, role maps, i18n heuristics, dependency notes |
+| `tests/cli` | each script end to end on a real folder (`tests/helpers/fixture.mjs`): exit codes, JSON output, files written, idempotence of `--apply`, `.git/info/exclude` |
+| `tests/contract` | every `${CLAUDE_SKILL_DIR}/…` path exists, every `/sb-context-nuxt:<skill>` names a skill, the two `color.mjs` copies are identical, manifests and CONTRIBUTING agree with the code |
+
+How scripts are written so they can be tested: the logic lives in `lib/` modules next to the script (`scripts/lib/`, `skills/<skill>/scripts/lib/`) as pure exported functions; the script itself reads arguments and files, calls them, prints, and exits. A new algorithm goes in `lib/` with its unit tests; a new script gets a test in `tests/cli`.
+
+A known gap is written as a test with `{ todo: '<what is wrong>' }`: it runs and is reported, but does not fail the suite until it is fixed (then the `todo` is removed).
+
+The `Tests` workflow runs the suite on Node 22 and 24 for every PR into `main`.
+
 ## Workflow
 
 1. Branch from `main`: `feat/<topic>`, `fix/<topic>`, `chore/<topic>`.
 2. Commit as you like on the branch; only the **PR title** has to follow the format, because the squash commit takes it.
-3. Open the PR into `main` and wait for `lint-pr-title`.
+3. Run `npm test`, open the PR into `main` and wait for `lint-pr-title` and `Tests`.
 4. Squash and merge. The branch is deleted automatically.
 
 ## Releases
