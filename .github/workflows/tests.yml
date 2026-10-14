@@ -1,9 +1,19 @@
 name: Tests
 
+# The suite is required only for pull requests that produce a release (feat, fix, perf, revert,
+# or a breaking change of any type): the same rule release-please uses. Every other PR (docs,
+# chore, ci, test… and the release PRs themselves) skips it. The ruleset requires one check,
+# `tests-gate`, which always reports: it fails only when the suite ran and did not pass.
+
 on:
   pull_request:
     branches:
       - main
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - edited # the title decides: a PR renamed from chore to fix must run the suite
   push:
     branches:
       - main
@@ -11,9 +21,37 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: tests-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
+  scope:
+    name: release scope
+    runs-on: ubuntu-latest
+    outputs:
+      releasable: ${{ steps.check.outputs.releasable }}
+    steps:
+      - id: check
+        env:
+          EVENT: ${{ github.event_name }}
+          TITLE: ${{ github.event.pull_request.title }}
+          BODY: ${{ github.event.pull_request.body }}
+        run: |
+          releasable=false
+          if [ "$EVENT" = push ] \
+            || printf '%s' "$TITLE" | grep -Eq '^(feat|fix|perf|revert)(\([^)]*\))?!?: ' \
+            || printf '%s' "$TITLE" | grep -Eq '^[a-z]+(\([^)]*\))?!: ' \
+            || printf '%s' "$BODY" | grep -Eq '^BREAKING[ -]CHANGE: '; then
+            releasable=true
+          fi
+          echo "releasable=$releasable" >> "$GITHUB_OUTPUT"
+          echo "Title: $TITLE → releasable: $releasable"
+
   test:
     name: test (node ${{ matrix.node }})
+    needs: scope
+    if: needs.scope.outputs.releasable == 'true'
     runs-on: ubuntu-latest
 
     strategy:
@@ -36,3 +74,18 @@ jobs:
 
       - name: Run tests
         run: npm test
+
+  gate:
+    name: tests-gate
+    needs: [scope, test]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          SCOPE: ${{ needs.scope.result }}
+          TEST: ${{ needs.test.result }}
+          RELEASABLE: ${{ needs.scope.outputs.releasable }}
+        run: |
+          echo "scope: $SCOPE · releasable: $RELEASABLE · test: $TEST"
+          [ "$SCOPE" = success ] || exit 1
+          if [ "$RELEASABLE" = true ]; then [ "$TEST" = success ]; else [ "$TEST" = skipped ]; fi
