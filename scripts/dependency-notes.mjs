@@ -20,13 +20,12 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { projectRoot, pluginDirOf, excludePluginDir } from './lib/project.mjs';
+import { upsertNote, recordCheck, view } from './lib/dependency-notes.mjs';
 
 const root = projectRoot();
 const file = join(pluginDirOf(root), 'dependency-notes.json');
 const [cmd, ...rest] = process.argv.slice(2);
 
-const STATUSES = ['deferred', 'watching', 'resolved'];
-const OWNERS = ['upstream', 'project'];
 const today = () => new Date().toISOString().slice(0, 10);
 const fail = (msg) => {
   console.error(msg);
@@ -56,18 +55,14 @@ const save = (data) => {
   excludePluginDir(root);
 };
 
-// "i18n@^9:upstream" → { package, range, owner }; the last ":" splits the owner, the last "@" (not at 0) the range
-function parseBlocker(raw) {
-  const cut = raw.lastIndexOf(':');
-  const owner = cut === -1 ? '' : raw.slice(cut + 1);
-  if (!OWNERS.includes(owner)) fail(`--blocked-by "${raw}": end it with :upstream or :project (who has to change something).`);
-  const spec = raw.slice(0, cut);
-  const at = spec.lastIndexOf('@');
-  return at > 0 ? { package: spec.slice(0, at), range: spec.slice(at + 1), owner } : { package: spec, range: null, owner };
-}
-
-const days = (from) => Math.max(0, Math.floor((Date.now() - Date.parse(from)) / 86400000));
-const view = (n) => ({ ...n, openDays: n.status === 'resolved' ? null : days(n.firstSeen), sinceLastCheckDays: days(n.lastChecked) });
+// the logic lives in lib/dependency-notes.mjs and throws on bad input: report it as a usage error
+const attempt = (fn) => {
+  try {
+    return fn();
+  } catch (e) {
+    return fail(e.message);
+  }
+};
 
 // ---------------------------------------------------------------------------
 if (cmd === 'list') {
@@ -85,26 +80,10 @@ if (cmd === 'add') {
   if (!pkg || pkg.startsWith('--') || !target || !summary || !recheck) {
     fail('Usage: dependency-notes.mjs add <package> --target <version> --summary "<why>" --recheck "<what to verify next time>" [--current <v>] [--blocked-by <pkg>@<range>:<upstream|project>]... [--link <url>]... [--status deferred|watching]');
   }
-  const status = flag('--status') || 'deferred';
-  if (!STATUSES.includes(status) || status === 'resolved') fail(`--status must be deferred or watching (use "resolve" to close a note).`);
-  const id = `${pkg}@${target}`;
   const data = load();
-  const prev = data.notes.find((n) => n.id === id);
-  const note = {
-    id,
-    package: pkg,
-    current: flag('--current') ?? prev?.current ?? null,
-    target,
-    status,
-    summary,
-    blockedBy: flagAll('--blocked-by').map(parseBlocker),
-    recheck,
-    links: flagAll('--link'),
-    firstSeen: prev?.firstSeen ?? today(),
-    lastChecked: today(),
-    history: prev?.history ?? [],
-  };
-  data.notes = prev ? data.notes.map((n) => (n.id === id ? note : n)) : [...data.notes, note];
+  const input = { pkg, target, status: flag('--status') || 'deferred', summary, recheck, current: flag('--current'), blockedBy: flagAll('--blocked-by'), links: flagAll('--link') };
+  const { notes, note } = attempt(() => upsertNote(data.notes, input, today()));
+  data.notes = notes;
   save(data);
   console.log(JSON.stringify(view(note), null, 2));
   process.exit(0);
@@ -117,14 +96,7 @@ if (cmd === 'touch' || cmd === 'resolve') {
   const note = data.notes.find((n) => n.id === id);
   if (!note) fail(`No note "${id}". Open ones: ${data.notes.filter((n) => n.status !== 'resolved').map((n) => n.id).join(', ') || 'none'}.`);
   const text = cmd === 'touch' ? flag('--note') : flag('--resolution');
-  if (cmd === 'resolve' && !text) fail('resolve needs --resolution "<how it ended>".');
-  note.lastChecked = today();
-  if (text) note.history = [...(note.history ?? []), { date: today(), text }];
-  if (cmd === 'resolve') {
-    note.status = 'resolved';
-    note.resolvedAt = today();
-    note.resolution = text;
-  }
+  attempt(() => recordCheck(note, { text, resolve: cmd === 'resolve' }, today()));
   save(data);
   console.log(JSON.stringify(view(note), null, 2));
   process.exit(0);

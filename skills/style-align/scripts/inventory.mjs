@@ -19,6 +19,8 @@ import { join, resolve, dirname, relative, extname } from 'node:path';
 import { createRequire } from 'node:module';
 import { findColors, parseColor, toHex } from './color.mjs';
 import { projectRoot } from '../../../scripts/lib/project.mjs';
+import { prefixFromUtilities } from '../../../scripts/lib/prefix.mjs';
+import { toPx as toPxRaw, parseFontShorthand, nearestStep, scaleFromTokens, clusterSizes, scaleFromClusters, mediaWidths, commonDir } from './lib/scale.mjs';
 
 // ---------------------------------------------------------------------------
 // Arguments
@@ -58,14 +60,7 @@ function loadPostcss() {
 }
 const postcss = loadPostcss();
 
-function commonDir(paths) {
-  if (!paths.length) return root;
-  const parts = paths.map((p) => dirname(p).split('/'));
-  const out = [];
-  for (let i = 0; parts.every((p) => p[i] !== undefined && p[i] === parts[0][i]); i++) out.push(parts[0][i]);
-  return out.join('/') || '/';
-}
-const displayRoot = explicitFiles.length ? commonDir(explicitFiles) : root;
+const displayRoot = explicitFiles.length ? commonDir(explicitFiles, root) : root;
 const rel = (p) => relative(displayRoot, p) || p;
 const readJson = (p) => {
   try {
@@ -279,40 +274,12 @@ for (const c of inv.customProperties) vars.set(c.prop, c.value);
 const resolveVar = (v, depth = 0) =>
   depth > 10 ? v : v.replace(/var\(\s*(--[\w-]+)\s*(?:,\s*([^()]*))?\)/g, (_, n, fb) => (vars.has(n) ? resolveVar(vars.get(n), depth + 1) : fb ?? `var(${n})`));
 
-function toPx(raw) {
-  const v = resolveVar(String(raw)).trim();
-  const m = v.match(/^(-?[\d.]+)(px|rem|em|%)?$/);
-  if (!m) return null;
-  const n = parseFloat(m[1]);
-  const u = m[2] ?? '';
-  if (u === 'px') return { px: n, unit: 'px' };
-  if (u === 'rem') return { px: n * 16, unit: 'rem' };
-  if (u === 'em') return { px: n * 16, unit: 'em' };
-  if (u === '%') return { px: (n / 100) * 16, unit: '%' };
-  return { px: null, ratio: n, unit: '' };
-}
-
-function parseFontShorthand(v) {
-  const m = v.match(/^(?:(?:italic|oblique|normal)\s+)?(?:small-caps\s+)?(?:(\d{3}|bold|normal|lighter|bolder)\s+)?([\d.]+(?:px|rem|em|%)|var\([^)]+\))(?:\s*\/\s*([\d.]+(?:px|rem|em|%)?|var\([^)]+\)))?\s+(.+)$/);
-  if (!m) return null;
-  return { weight: m[1] ?? null, size: m[2], lineHeight: m[3] ?? null, family: m[4] };
-}
+const toPx = (raw) => toPxRaw(raw, resolveVar);
 
 // The scale is the project's own: --text-<role> tokens when present, otherwise
 // clusters of the distinct sizes found in the CSS (see buildScale below).
 let SCALE = [];
-function nearest(px) {
-  if (!SCALE.length) return { step: null, role: null, offset: null, equidistant: false };
-  let best = SCALE[0];
-  for (const s of SCALE) if (Math.abs(s[0] - px) < Math.abs(best[0] - px)) best = s;
-  const tie = SCALE.find((s) => s !== best && Math.abs(Math.abs(s[0] - px) - Math.abs(best[0] - px)) < 0.01);
-  return {
-    step: tie ? `${best[0]} / ${tie[0]}` : best[0],
-    role: tie ? `${best[1]} or ${tie[1]}: the role decides` : best[1],
-    offset: +(px - best[0]).toFixed(2),
-    equidistant: Boolean(tie),
-  };
-}
+const nearest = (px) => nearestStep(SCALE, px);
 
 // Text sizes
 const sizes = [];
@@ -365,35 +332,18 @@ for (const t of textTokens) {
 
 // Build the project's scale
 let scaleSource = 'none';
-const clusters = [];
+let clusters = [];
 {
   const tokenSizes = sizes.filter((m) => m.kind === 'token');
   if (tokenSizes.length) {
     scaleSource = 'tokens';
-    const byPx = new Map();
-    for (const t of tokenSizes) {
-      const role = t.selector.replace(/^--text-/, '');
-      byPx.set(t.px, [...(byPx.get(t.px) ?? []), role]);
-    }
-    SCALE = [...byPx.entries()].sort((a, b) => a[0] - b[0]).map(([px, roles]) => [px, roles.join(' / ')]);
+    SCALE = scaleFromTokens(tokenSizes);
   } else {
     // no tokens: distinct sizes with their count, clustered (within 1px, or 2px above 24px)
-    const counts = new Map();
-    for (const m of sizes.filter((x) => x.kind === 'fixed')) counts.set(m.px, (counts.get(m.px) ?? 0) + 1);
-    const sorted = [...counts.entries()].sort((a, b) => a[0] - b[0]);
-    for (const [px, n] of sorted) {
-      const last = clusters[clusters.length - 1];
-      const tol = px > 24 ? 2 : 1;
-      if (last && px - last.members[0].px <= tol) last.members.push({ px, n });
-      else clusters.push({ members: [{ px, n }] });
-    }
-    for (const c of clusters) {
-      c.count = c.members.reduce((s, m) => s + m.n, 0);
-      c.proposed = c.members.reduce((a, b) => (b.n > a.n ? b : a)).px;
-    }
+    clusters = clusterSizes(sizes.filter((x) => x.kind === 'fixed').map((m) => m.px));
     if (clusters.length) {
       scaleSource = 'clusters (proposed, provisional)';
-      SCALE = clusters.map((c) => [c.proposed, c.members.length > 1 ? `cluster ${c.members.map((m) => m.px).join('/')}` : 'single value']);
+      SCALE = scaleFromClusters(clusters);
     }
   }
   for (const m of sizes) if (m.px !== undefined) Object.assign(m, nearest(m.px));
@@ -418,14 +368,10 @@ for (const c of [...inv.literalColors, ...themeColorDefs.flatMap((c) => findColo
 const METHOD_BP = [640, 768, 1024, 1280];
 const widths = new Map();
 for (const m of inv.media) {
-  for (const w of m.query.matchAll(/(?:min|max)-width\s*:\s*([\d.]+)(px|rem|em)|width\s*[<>]=?\s*([\d.]+)(px|rem|em)/g)) {
-    const n = parseFloat(w[1] ?? w[3]);
-    const u = w[2] ?? w[4];
-    const px = u === 'px' ? n : n * 16;
-    const k = Math.round(px);
+  for (const { px: k, max } of mediaWidths(m.query)) {
     const e = widths.get(k) ?? { px: k, count: 0, maxWidth: 0, inMethod: METHOD_BP.includes(k), where: [] };
     e.count++;
-    if (/max-width|width\s*<=?/.test(w[0])) e.maxWidth++;
+    if (max) e.maxWidth++;
     if (e.where.length < 5) e.where.push(`${m.file}:${m.line}`);
     widths.set(k, e);
   }
@@ -454,7 +400,7 @@ const resets = NAMESPACES.filter((n) => inv.customProperties.some((c) => c.prop 
 const structure = { prefix: null, checks: [], aligned: false };
 {
   const utilNames = inv.atRules.filter((a) => a.name === 'utility').map((a) => a.params.trim());
-  structure.prefix = utilNames.map((u) => u.match(/^([a-z][a-z0-9]{1,3})-(?:h1|body)$/)?.[1]).find(Boolean) ?? null;
+  structure.prefix = prefixFromUtilities(utilNames);
   const base = (f) => f.split('/').pop();
   const names = new Set(out_sources_names());
   function out_sources_names() {

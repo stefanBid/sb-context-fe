@@ -26,6 +26,7 @@ import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { join, resolve, relative } from 'node:path';
 import { createRequire } from 'node:module';
 import { projectRoot, srcDirOf, pluginDirOf } from './lib/project.mjs';
+import { READ_ATTRS, SKIP_TAGS, textRules, literalOf, keysIn, scriptLineText, hasKey } from './lib/i18n-text.mjs';
 
 const argv = process.argv.slice(2);
 const opt = (n) => {
@@ -66,26 +67,8 @@ const walk = (p) => {
 };
 targets.forEach(walk);
 
-const READ_ATTRS = new Set(['alt', 'title', 'placeholder', 'aria-label', 'aria-description', 'aria-placeholder', 'label', 'summary']);
-const SKIP_TAGS = new Set(['style', 'svg', 'code', 'pre', 'path']);
-const TEXT_KEYS = /\b(label|title|text|description|placeholder|caption|message|heading|subtitle|alt|tooltip|hint|cta|name)\s*:\s*$/;
-const SEO_KEYS = /\b(title|description|ogTitle|ogDescription|twitterTitle|twitterDescription)\s*:\s*$/;
-
-const hasText = (s) => {
-  let t = String(s).replace(/&[a-z]+;|&#\d+;/gi, ' ');
-  for (const a of allow) t = t.split(a).join(' ');
-  return /\p{L}{2,}/u.test(t);
-};
-const classLike = (s) => s.split(/\s+/).every((tok) => /[-:/\[\]()%!#.=_]|\d/.test(tok) || /^[a-z]+$/.test(tok) === false && /^[A-Z]/.test(tok) === false && tok.length < 3);
-const isSentence = (s) => {
-  const words = s.trim().split(/\s+/).filter((w) => /^[\p{L}'’.,;:!?()«»"-]{2,}$/u.test(w));
-  return words.length >= 2 && !classLike(s) && hasText(s);
-};
-// the literal inside a one-string expression: 'x', "x", `x` (no ${})
-const literalOf = (exp) => {
-  const m = /^\s*(['"`])((?:\\.|(?!\1)[^\\])*)\1\s*$/.exec(exp ?? '');
-  return m && !(m[1] === '`' && m[2].includes('${')) ? m[2] : null;
-};
+const rules = textRules(allow);
+const { hasText } = rules;
 
 const found = [];
 const keysUsed = [];
@@ -98,7 +81,9 @@ for (const f of files) {
   const key = (line, k) => keysUsed.push({ file: rel, line, key: k });
 
   const scanExpr = (exp, line) => {
-    for (const m of exp.matchAll(/(?<![\w.$])\$?t\(\s*(['"`])((?:\\.|(?!\1)[^\\])*)\1/g)) (m[1] === '`' && m[2].includes('${') ? dynamicKeys++ : key(line, m[2]));
+    const { keys, dynamic } = keysIn(exp);
+    for (const k of keys) key(line, k);
+    dynamicKeys += dynamic;
   };
 
   const visit = (node) => {
@@ -139,15 +124,7 @@ for (const f of files) {
     block.content.split('\n').forEach((line, i) => {
       if (/i18n-ignore/.test(line) || /^\s*(import|export\s+type|type|interface)\b/.test(line)) return;
       scanExpr(line, base + i);
-      for (const m of line.matchAll(/(['"`])((?:\\.|(?!\1)[^\\])*)\1/g)) {
-        const [, q, text] = m;
-        if (q === '`' && text.includes('${')) continue;
-        const before = line.slice(0, m.index);
-        if (/(?<![\w.$])\$?t\(\s*$/.test(before) || /(?:keypath|key|path|href|to|src|id|class|type|name)\s*[:=]\s*$/.test(before) && !TEXT_KEYS.test(before)) continue;
-        if (SEO_KEYS.test(before) && hasText(text)) add(base + i, 'seo', text);
-        else if (TEXT_KEYS.test(before) && hasText(text)) add(base + i, 'script text', text);
-        else if (isSentence(text) && !/^\s*(\/\/|\*)/.test(line)) add(base + i, 'script string', text);
-      }
+      for (const { kind, text } of scriptLineText(line, rules)) add(base + i, kind, text);
     });
   }
 }
@@ -180,13 +157,12 @@ if (keysUsed.length) {
     const names = Object.keys(locales);
     if (!names.length) keyNote = `no JSON locale files in ${relative(root, messagesDir)}: keys not checked`;
     else {
-      const has = (o, k) => k in o || k.split('.').reduce((a, p) => (a && typeof a === 'object' ? a[p] : undefined), o) !== undefined;
       let def = null;
       try {
         def = JSON.parse(readFileSync(join(pluginDirOf(root), 'project-settings.json'), 'utf8')).i18n?.defaultLocale ?? null;
       } catch {}
       def = def && names.includes(def) ? def : names[0];
-      for (const u of keysUsed) for (const n of names) if (!has(locales[n], u.key)) missingKeys.push({ ...u, locale: n, isDefault: n === def });
+      for (const u of keysUsed) for (const n of names) if (!hasKey(locales[n], u.key)) missingKeys.push({ ...u, locale: n, isDefault: n === def });
     }
   }
 }

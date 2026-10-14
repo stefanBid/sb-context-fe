@@ -16,6 +16,7 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync, statSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { projectRoot, srcDirOf, cssDirOf, pluginDirOf, excludePluginDir } from './lib/project.mjs';
+import { dig, parseValue, setPath, parseI18nConfig, componentNaming, siteUrlOf, themePrefixOf } from './lib/settings.mjs';
 
 // always relative to the Nuxt project root, wherever the script is started from
 const root = projectRoot();
@@ -35,7 +36,6 @@ const settings = () => {
     process.exit(2);
   }
 };
-const dig = (o, path) => path.split('.').reduce((a, k) => (a == null ? undefined : a[k]), o);
 
 const excludeFromGit = () => excludePluginDir(root);
 
@@ -53,22 +53,7 @@ if (cmd === 'set') {
     console.error("Usage: project-settings.mjs set <dotted.path> '<json value>' [--source user|detected]");
     process.exit(2);
   }
-  let value;
-  try {
-    value = JSON.parse(raw);
-  } catch {
-    value = raw; // a bare word is a string
-  }
-  const s = settings();
-  const keys = path.split('.');
-  let o = s;
-  for (const k of keys.slice(0, -1)) o = o[k] = typeof o[k] === 'object' && o[k] !== null ? o[k] : {};
-  o[keys.at(-1)] = value;
-  const section = (s[keys[0]] = typeof s[keys[0]] === 'object' && s[keys[0]] !== null ? s[keys[0]] : {});
-  if (keys.length > 1) {
-    section.source = flag('--source') ?? 'user';
-    section.updatedAt = new Date().toISOString().slice(0, 10);
-  }
+  const s = setPath(settings(), path, parseValue(raw), { source: flag('--source') ?? 'user', date: new Date().toISOString().slice(0, 10) });
   mkdirSync(dirname(file), { recursive: true });
   writeFileSync(file, JSON.stringify(s, null, 2) + '\n');
   excludeFromGit();
@@ -111,12 +96,7 @@ const modules = {
 };
 
 // i18n facts
-const i18nBlock = cfg.match(/i18n\s*:\s*\{([\s\S]*?)\n\s{0,2}\}/)?.[1] ?? '';
-const localeBlock = i18nBlock.match(/locales\s*:\s*\[([\s\S]*?)\]/)?.[1] ?? '';
-const codes = [...localeBlock.matchAll(/code\s*:\s*['"]([\w-]+)['"]/g)].map((m) => m[1]);
-const plain = codes.length ? codes : [...localeBlock.matchAll(/['"]([a-z]{2}(?:-[A-Za-z]{2})?)['"]/g)].map((m) => m[1]);
-const defaultLocale = i18nBlock.match(/defaultLocale\s*:\s*['"]([\w-]+)['"]/)?.[1] ?? null;
-const langDirCfg = i18nBlock.match(/(?:langDir|restructureDir)\s*:\s*['"]([^'"]+)['"]/)?.[1] ?? null;
+const { defaultLocale, locales: plain, langDir: langDirCfg } = parseI18nConfig(cfg);
 const localeDirs = ['i18n/locales', 'i18n/lang', 'locales', 'lang', `${srcDir}/locales`, `${srcDir}/i18n`].filter((d) => existsSync(join(root, d)) && statSync(join(root, d)).isDirectory());
 const localeFiles = localeDirs.flatMap((d) => readdirSync(join(root, d)).filter((f) => /\.(json|ya?ml|ts|js)$/.test(f)).map((f) => `${d}/${f}`));
 
@@ -132,13 +112,7 @@ const walk = (dir, out = []) => {
 };
 const compDir = join(root, srcDir, 'components');
 const comps = walk(compDir).map((p) => p.slice(compDir.length + 1));
-const prefixCount = {};
-for (const c of comps) {
-  const base = c.split('/').pop().replace('.vue', '');
-  const m = base.match(/^(Base|App|Ui|The|U|Custom|Shared)(?=[A-Z])/);
-  prefixCount[m ? m[1] : 'none'] = (prefixCount[m ? m[1] : 'none'] ?? 0) + 1;
-}
-const subfolders = [...new Set(comps.filter((c) => c.includes('/')).map((c) => c.split('/')[0]))];
+const { prefixes: prefixCount, subfolders } = componentNaming(comps);
 
 const facts = {
   packageManager,
@@ -170,12 +144,12 @@ if (need.includes('naming') && unset('naming.componentPrefix')) missing.push({ k
 
 if (need.includes('style')) {
   const themeCss = [join(cssDirOf(root), 'theme.css')].find((p) => existsSync(p));
-  const prefix = themeCss ? read(themeCss).match(/--([a-z]{2,4})-bg\s*:/)?.[1] ?? null : null;
+  const prefix = themeCss ? themePrefixOf(read(themeCss)) : null;
   facts.style = { aligned: Boolean(themeCss), prefix };
   if (unset('style.prefix')) missing.push({ key: 'style.prefix', why: 'prefix of the global style tokens and utilities (`--{p}-bg`, `{p}-h1`): 2-4 lowercase letters', detected: prefix });
 }
 if (need.includes('seo')) {
-  const siteUrl = cfg.match(/(?:siteUrl|baseUrl|site\.url|url)\s*:\s*['"](https?:\/\/[^'"]+)['"]/)?.[1] ?? null;
+  const siteUrl = siteUrlOf(cfg);
   facts.seo = { siteUrl, sitemapModule: modules.sitemap };
   if (unset('seo.siteUrl')) missing.push({ key: 'seo.siteUrl', why: 'production URL: robots, sitemap and canonical links must use it', detected: siteUrl });
 }

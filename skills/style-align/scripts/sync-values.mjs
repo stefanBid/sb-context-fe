@@ -23,6 +23,7 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { resolve, join, dirname } from 'node:path';
 import { projectRoot, cssDirOf, pluginDirOf, excludePluginDir } from '../../../scripts/lib/project.mjs';
+import { nHex, nShadow, nFamily, toRem, same, remStr, blockOf, findSlot, writeSlots, refreshMobileComments, parseMapArg, byRole as byRoleOf } from './lib/sync.mjs';
 
 const argv = process.argv.slice(2);
 const get = (n) => {
@@ -77,17 +78,17 @@ if (has('--map')) {
   const args = argv.slice(argv.indexOf('--map') + 1).filter((a, i, all) => !a.startsWith('--') && all.slice(0, i).every((x) => !x.startsWith('--')));
   const m = readMap();
   for (const a of args) {
-    const mm = /^(colors|type)\.(.+)=(.+)$/.exec(a);
+    const mm = parseMapArg(a);
     if (!mm) {
       console.error(`Bad mapping "${a}". Use colors.<design name>=<role> or type.<design name>=<role>; <role> may be null.`);
       process.exit(2);
     }
-    const [, kind, name, role] = mm;
+    const { kind, name, role } = mm;
     if (!(name in (kind === 'colors' ? S.colors : S.type))) {
       console.error(`The snapshot has no ${kind} "${name}".`);
       process.exit(2);
     }
-    m[kind][name] = role === 'null' ? null : role;
+    m[kind][name] = role;
   }
   m.confirmedAt = new Date().toISOString().slice(0, 10);
   m.snapshotSha = S.source.tokensSha256;
@@ -119,83 +120,26 @@ if (rm.status === 'identity') {
   Object.assign(typeMap, m.type);
 }
 const byRole = (map, src) => {
-  const out = {};
-  for (const [n, r] of Object.entries(map)) {
-    if (!r) continue;
-    if (out[r]) {
-      console.error(`Two design names map to the same role "${r}" (${out[r].__name} and ${n}). Fix the mapping with --map.`);
-      process.exit(4);
-    }
-    out[r] = { ...src[n], __name: n };
+  try {
+    return byRoleOf(map, src);
+  } catch (e) {
+    console.error(e.message);
+    process.exit(4);
   }
-  return out;
 };
 const colorByRole = byRole(colorMap, S.colors);
 const typeByRole = byRole(typeMap, S.type ?? {});
 const unmapped = [...Object.entries(colorMap), ...Object.entries(typeMap)].filter(([, r]) => !r).map(([n]) => n);
 
 // ---------------------------------------------------------------------------
-// Normalizers
-// ---------------------------------------------------------------------------
-const nHex = (v) => {
-  v = String(v).trim().toLowerCase();
-  const m = /^#([0-9a-f]{3})$/.exec(v);
-  return m ? '#' + [...m[1]].map((c) => c + c).join('') : v;
-};
-const nShadow = (v) =>
-  String(v)
-    .toLowerCase()
-    .replace(/\s+/g, ' ')
-    .replace(/(\d*\.\d+)/g, (x) => String(parseFloat(x)))
-    .replace(/\s*,\s*/g, ',')
-    .replace(/\(\s+/g, '(')
-    .replace(/\s+\)/g, ')')
-    .trim();
-const nFamily = (v) =>
-  String(v || '')
-    .split(',')[0]
-    .trim()
-    .replace(/^["']|["']$/g, '')
-    .toLowerCase();
-const toRem = (v) => {
-  if (v == null) return null;
-  const m = /^(-?[\d.]+)(px|rem|em)?$/.exec(String(v).trim());
-  if (!m) return String(v).trim();
-  const n = parseFloat(m[1]);
-  return m[2] === 'px' ? n / 16 : n; // rem and em stay as they are
-};
-const same = (a, b) => (typeof a === 'number' && typeof b === 'number' ? Math.abs(a - b) < 1e-6 : a === b);
-const pxLabel = (v) => (typeof v === 'number' ? `${Math.round(v * 16 * 100) / 100}px` : String(v));
-
-// ---------------------------------------------------------------------------
 // Read the project's values (declaration → value, with its position)
 // ---------------------------------------------------------------------------
-function blockOf(text, selectorRe) {
-  const m = selectorRe.exec(text);
-  if (!m) return null;
-  const open = text.indexOf('{', m.index);
-  let depth = 0;
-  for (let i = open; i < text.length; i++) {
-    if (text[i] === '{') depth++;
-    else if (text[i] === '}' && --depth === 0) return { start: open + 1, end: i };
-  }
-  return null;
-}
 const themeBlocks = {
   [light]: blockOf(src.theme, /:root\s*,\s*\[data-theme="light"\]\s*\{/) || blockOf(src.theme, /:root\s*\{/),
   ...(dark ? { [dark]: blockOf(src.theme, /\[data-theme="dark"\]\s*\{/) } : {}),
 };
-const declRe = (name) => new RegExp(`(${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*:\\s*)([^;]+?)(\\s*;)([ \\t]*)(\\/\\*[^*]*\\*\\/)?`);
-
-// A "slot" is where a value lives: file, name, the regex that finds it inside a range.
-function slot(file, name, range) {
-  const text = src[file];
-  const hay = range ? text.slice(range.start, range.end) : text;
-  const m = declRe(name).exec(hay);
-  if (!m) return null;
-  const abs = (range ? range.start : 0) + m.index;
-  return { file, name, value: m[2].trim(), comment: m[5] ?? null, index: abs, length: m[0].length, pre: m[1], post: m[3], gap: m[4] ?? '' };
-}
+// A "slot" is where a value lives: file, name, position (see lib/sync.mjs).
+const slot = (file, name, range) => findSlot(src[file], name, range, file);
 
 const diffs = []; // { area, token, theme?, current, wanted, apply: slot|null, note? }
 const undecided = []; // { area, token, note }
@@ -257,10 +201,6 @@ for (const [name, r] of Object.entries(S.radius ?? {})) {
 }
 
 // ---- typography ----------------------------------------------------------
-const remStr = (v) => {
-  const n = toRem(v);
-  return typeof n === 'number' ? `${+n.toFixed(4)}rem` : String(v);
-};
 const projectRoles = new Set([...src.typography.matchAll(/--text-([a-z0-9-]+?)(?:--(?:line-height|font-weight|letter-spacing))?\s*:/g)].map((m) => m[1]));
 for (const [role, s] of Object.entries(typeByRole)) {
   if (!projectRoles.has(role)) {
@@ -305,18 +245,6 @@ for (const [role, want] of [['display', S.fonts?.display], ['body', S.fonts?.bod
   const sl = slot('typography', `--font-${role}`);
   if (!want || !sl) continue;
   if (nFamily(sl.value) !== nFamily(want)) undecided.push({ area: 'font', token: role, note: `family changed: ${sl.value.split(',')[0]} → ${want.split(',')[0]}. Update the stack here and \`fonts.families\` (weights) in nuxt.config.ts` });
-}
-
-// "/* mobile 30 / 36 */" next to the mobile font-size must say what the code says
-function refreshMobileComments(text) {
-  for (const role of ['display', 'h1', 'h2']) {
-    const m = typeByRole[role]?.mobile;
-    if (!m) continue;
-    const num = (v) => +(parseFloat(v) * (/rem$/.test(v) ? 16 : 1)).toFixed(2);
-    const re = new RegExp(`(@utility\\s+${prefix}-${role}\\s*\\{[^}]*?font-size:\\s*[^;]+;[ \\t]*)/\\*\\s*mobile\\s*[\\d.]+\\s*/\\s*[\\d.]+\\s*\\*/`);
-    text = text.replace(re, `$1/* mobile ${num(m.size)} / ${num(m.lineHeight)} */`);
-  }
-  return text;
 }
 
 // ---------------------------------------------------------------------------
@@ -369,19 +297,9 @@ if (has('--apply')) {
   const byFile = {};
   for (const d of diffs) (byFile[d.slot.file] ??= []).push(d);
   for (const [file, list] of Object.entries(byFile)) {
-    let text = src[file];
-    for (const d of list.sort((a, b) => b.slot.index - a.slot.index)) {
-      const s = d.slot;
-      const val = d.make();
-      let comment = s.comment ? `${s.gap || ' '}${s.comment}` : '';
-      // keep px comments honest: "/* 56 */", "/* 56 / 60 */"
-      if (s.comment && /^\/\*\s*\d/.test(s.comment) && /--text-|font-size|line-height/.test(s.name)) {
-        const px = pxLabel(toRem(val)).replace('px', '');
-        comment = `${s.gap || ' '}${s.comment.replace(/\d+(\.\d+)?/, px)}`;
-      }
-      text = text.slice(0, s.index) + `${s.pre}${val}${s.post}${comment}` + text.slice(s.index + s.length);
-    }
-    if (file === 'typography') text = refreshMobileComments(text);
+    // values written from the end of the file; px comments ("/* 56 */") follow the new value
+    let text = writeSlots(src[file], list.map((d) => ({ slot: d.slot, value: d.make() })));
+    if (file === 'typography') text = refreshMobileComments(text, prefix, typeByRole);
     writeFileSync(files[file], text);
   }
   record();
