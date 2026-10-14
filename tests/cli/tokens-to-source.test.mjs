@@ -57,7 +57,7 @@ describe('tokens-to-source.mjs', () => {
     assert.ok(d.overrides.includes('README: "Use eyebrows and kickers sparingly." → "Use sparingly."'));
   });
 
-  test('a removed eyebrow does not leave a dangling conjunction', { todo: 'clean() strips "eyebrows" but keeps the "and" before it: "Body text and ."' }, () => {
+  test('a removed eyebrow does not leave a dangling conjunction', () => {
     p = makeProject();
     extract(p);
     assert.equal(machine(p.read(SOURCE)).colors.ink.usage, 'Body text.');

@@ -18,9 +18,14 @@ describe('eyebrowCleaner', () => {
     ]);
   });
 
-  test('an eyebrow at the end leaves no dangling conjunction', { todo: 'only the conjunction AFTER the word is removed: "Labels and eyebrows." → "Labels and ."' }, () => {
-    const { clean } = eyebrowCleaner([]);
+  test('an eyebrow at the end leaves no dangling conjunction', () => {
+    const { clean, cleanBlock } = eyebrowCleaner([]);
     assert.equal(clean('Labels and eyebrows.', 'x'), 'Labels.');
+    assert.equal(clean('Labels, eyebrows and kickers', 'x'), 'Labels');
+    assert.equal(clean('Titoli e occhielli; sempre brevi.', 'x'), 'Titoli; sempre brevi.');
+    assert.equal(clean('Labels and eyebrows above titles.', 'x'), 'Labels above titles.');
+    assert.equal(clean('Use eyebrows and kickers sparingly.', 'x'), 'Use sparingly.');
+    assert.equal(cleanBlock('- Badges and kickers\n- Rest', 'x'), '- Badges\n- Rest');
   });
 
   test('cleanBlock works line by line and keeps the other lines', () => {
