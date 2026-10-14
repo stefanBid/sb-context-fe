@@ -45,7 +45,7 @@ test('parsers never throw on arbitrary input', () => {
   }
 });
 
-test('a parsed color has channels and alpha in 0..1', { todo: 'parseColor reads unitless hsl saturation/lightness (valid CSS Color 4: hsl(358 12 78)) as 0..1 fractions, r = 68.76; and it never clamps: rgb(300 0 0) gives r = 1.18' }, () => {
+test('a parsed color has channels and alpha in 0..1', () => {
   const r = rng();
   const n = () => r.pick([`${r.int(-50, 400)}`, `${r.int(-50, 150)}%`, `${(r.next() * 2 - 0.5).toFixed(2)}`]);
   for (let i = 0; i < N; i++) {
