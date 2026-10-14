@@ -62,7 +62,7 @@ const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
 
 /** Role preferences: among the nearest colors, those suited to the property come first. */
 export const PREF = {
-  text: ['ink', 'ink-muted', 'primary', 'accent-ink', 'on-primary', 'on-accent'],
+  text: ['ink', 'ink-muted', 'primary', 'accent-ink', 'on-primary', 'on-accent', 'on-error'],
   bg: ['bg', 'surface', 'surface-2', 'primary-soft'],
   bgAction: ['primary', 'primary-hover', 'accent', 'accent-hover'],
   border: ['border', 'border-strong', 'primary', 'focus-ring'],

@@ -78,6 +78,7 @@ export const STANDARD_PAIRS = [
   ['on-primary', 'primary-hover', TEXT, 'text on primary hover'],
   ['on-accent', 'accent', TEXT, 'text on accent fill'],
   ['on-accent', 'accent-hover', TEXT, 'text on accent hover'],
+  ['on-error', 'error', TEXT, 'text on error fill'],
   ['accent-ink', 'bg', TEXT, 'accent as text'],
   ['accent-ink', 'surface', TEXT, 'accent as text'],
   ...['success', 'error', 'warning', 'info'].flatMap((s) => [

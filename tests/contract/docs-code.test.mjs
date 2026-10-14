@@ -125,7 +125,7 @@ describe('roles', () => {
     assert.deepEqual(roles, ROLE_TYPES);
   });
 
-  test('the example style uses only fixed color roles', { todo: 'example/theme.css defines --sb-on-error, which is not a role of the method (method.md, ROLES)' }, () => {
+  test('the example style uses only fixed color roles', () => {
     const theme = read('skills/style-align/references/example/theme.css');
     const roles = new Set([...theme.matchAll(/--sb-([a-z0-9-]+)\s*:/g)].map((m) => m[1]).filter((r) => !r.startsWith('shadow-')));
     assert.deepEqual([...roles].filter((r) => !METHOD_COLORS.has(r)), []);

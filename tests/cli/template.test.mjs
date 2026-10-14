@@ -55,7 +55,7 @@ describe('template.mjs', () => {
       '6|2xl:p-4|broken|xl:p-4',
       '6|style="color: #00804a; font-size: 18px"|inline style|text-primary sb-lead',
       '7|bg-blue-600|broken|bg-primary-hover or bg-primary or bg-info',
-      '7|text-white|broken|text-on-primary or text-surface or text-on-error',
+      '7|text-white|broken|text-on-primary or text-on-error or text-surface',
     ]);
     assert.ok(!rows().some((r) => r.includes('own-thing')), 'defined in the file <style>');
     assert.ok(result.results[0].rows.filter((r) => r.line === 7).every((r) => r.dynamic));

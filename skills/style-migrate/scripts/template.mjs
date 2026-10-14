@@ -351,14 +351,14 @@ function suggest(cls, el) {
       }
       const tag = el.tag.toLowerCase();
       const action = tag === 'button' || (tag === 'a' && el.classes.some((x) => /^(px|py|p)-/.test(x)));
-      const pref = root === 'text' ? (/^(white|black)$/.test(raw) ? ['on-primary', 'on-accent', ...PREF.text] : PREF.text)
+      const pref = root === 'text' ? (/^(white|black)$/.test(raw) ? ['on-primary', 'on-accent', 'on-error', ...PREF.text] : PREF.text)
         : root === 'bg' ? (action ? PREF.bgAction : PREF.bg)
         : /^(border|divide|ring|outline)/.test(root) ? PREF.border : null;
       let names = nearestColors(c, 3, pref);
-      if (root === 'text' && /^(white|black)$/.test(raw)) names = [...new Set(['on-primary', 'on-accent', ...names])].filter((n) => themeColors.some((t) => t.name === n)).slice(0, 3);
+      if (root === 'text' && /^(white|black)$/.test(raw)) names = [...new Set(['on-primary', 'on-accent', 'on-error', ...names])].filter((n) => themeColors.some((t) => t.name === n)).slice(0, 3);
       out.proposal = names.map((n) => `${vprefix}${root}-${n}${isArbitrary ? '' : alpha}`).join(' or ');
       out.note = /^(white|black)$/.test(raw) && root === 'text'
-        ? 'Text on a fill: on-primary or on-accent, depending on the background.'
+        ? 'Text on a fill: on-primary, on-accent or on-error, depending on the background.'
         : 'Nearby theme colors, ordered by the role that suits the property: choose by role, not by similarity.';
       return out;
     }

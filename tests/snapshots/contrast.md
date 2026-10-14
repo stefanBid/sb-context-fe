@@ -22,6 +22,7 @@
 | --sb-primary | --sb-primary-soft | 4.51:1 | 4.5 | ok | links and actions as text |
 | --sb-on-primary | --sb-primary | 5.02:1 | 4.5 | ok | text on primary fill |
 | --sb-on-primary | --sb-primary-hover | 6.19:1 | 4.5 | ok | text on primary hover |
+| --sb-on-error | --sb-error | 6.47:1 | 4.5 | ok | text on error fill |
 | --sb-success | --sb-surface | 7.13:1 | 4.5 | ok | success state as text |
 | --sb-success | --sb-success-soft | 6.29:1 | 4.5 | ok | success state on its tint |
 | --sb-error | --sb-surface | 6.47:1 | 4.5 | ok | error state as text |
@@ -59,6 +60,7 @@ Missing variables: --sb-on-accent, --sb-accent, --sb-accent-hover, --sb-accent-i
 | --sb-primary | --sb-primary-soft | 6.94:1 | 4.5 | ok | links and actions as text |
 | --sb-on-primary | --sb-primary | 8.8:1 | 4.5 | ok | text on primary fill |
 | --sb-on-primary | --sb-primary-hover | 10.99:1 | 4.5 | ok | text on primary hover |
+| --sb-on-error | --sb-error | 10.13:1 | 4.5 | ok | text on error fill |
 | --sb-success | --sb-surface | 10.16:1 | 4.5 | ok | success state as text |
 | --sb-success | --sb-success-soft | 5.23:1 | 4.5 | ok | success state on its tint |
 | --sb-error | --sb-surface | 9.33:1 | 4.5 | ok | error state as text |
@@ -98,4 +100,4 @@ Missing variables: --sb-on-accent, --sb-accent, --sb-accent-hover, --sb-accent-i
 | dark | primary-soft | #0F2B1E | 0.263 | 0.042 | 161 |
 
 
-Pairs checked: 60, below minimum or unreadable: 0, warnings: 0.
+Pairs checked: 62, below minimum or unreadable: 0, warnings: 0.
