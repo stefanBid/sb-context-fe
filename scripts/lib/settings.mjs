@@ -13,15 +13,15 @@ export function parseValue(raw) {
 
 /**
  * Sets a dotted key, creating (or replacing scalars with) objects on the way.
- * A nested key stamps its top-level section with source and date.
+ * A nested key stamps its top-level section with source and date; a top-level key is left as it is.
  */
 export function setPath(settings, path, value, { source = 'user', date } = {}) {
   const keys = path.split('.');
   let o = settings;
   for (const k of keys.slice(0, -1)) o = o[k] = typeof o[k] === 'object' && o[k] !== null ? o[k] : {};
   o[keys.at(-1)] = value;
-  const section = (settings[keys[0]] = typeof settings[keys[0]] === 'object' && settings[keys[0]] !== null ? settings[keys[0]] : {});
   if (keys.length > 1) {
+    const section = settings[keys[0]];
     section.source = source;
     section.updatedAt = date;
   }

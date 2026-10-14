@@ -55,7 +55,7 @@ describe('project-settings.mjs', () => {
     assert.equal(s.stack.retries, 3);
   });
 
-  test('set on a top-level key does not stamp it', { todo: '`set flag 1` saves flag: {} (setPath forces the first key to an object)' }, () => {
+  test('set on a top-level key does not stamp it', () => {
     p = makeProject();
     settings('set', 'flag', '1');
     assert.deepEqual(p.json(FILE), { version: 1, flag: 1 });
