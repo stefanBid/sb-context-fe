@@ -42,6 +42,27 @@ for (const [label, { parseColor, contrast, luminance, over, toOklch, toHex, find
         assert.equal(parseColor('oklch(0.7 0.1 none)').a, 1, 'a non-numeric hue counts as 0');
       });
 
+      test('CSS Color 4: unitless hsl percentages, angle units, none', () => {
+        assert.deepEqual(parseColor('hsl(120 100 50)'), parseColor('hsl(120 100% 50%)'));
+        const ref = parseColor('hsl(180 50% 50%)');
+        for (const h of ['180deg', '0.5turn', '200grad', `${Math.PI}rad`]) {
+          const c = parseColor(`hsl(${h} 50% 50%)`);
+          close(c.r, ref.r, 1e-9); close(c.g, ref.g, 1e-9); close(c.b, ref.b, 1e-9);
+        }
+        assert.deepEqual(parseColor('oklch(0.6 0.1 0.25turn)'), parseColor('oklch(0.6 0.1 90)'));
+        assert.deepEqual(parseColor('rgb(none 0 0)'), { r: 0, g: 0, b: 0, a: 1 });
+      });
+
+      test('out-of-range values are clamped, as browsers do', () => {
+        assert.deepEqual(parseColor('rgb(300 -20 0 / 150%)'), { r: 1, g: 0, b: 0, a: 1 });
+        assert.equal(parseColor('hsl(0 200% 50%)').r, 1);
+        assert.deepEqual(parseColor('oklch(150% 0.1 30)'), parseColor('oklch(1 0.1 30)'));
+      });
+
+      test('unreadable numbers make the whole color unreadable', () => {
+        for (const v of ['rgb(a b c)', 'hsl(x 50% 50%)', 'hsl(10foo 50% 50%)', 'oklch(0.5 0.1 abc)']) assert.equal(parseColor(v), null, v);
+      });
+
       test('named colors it knows', () => {
         assert.deepEqual(parseColor('White'), { r: 1, g: 1, b: 1, a: 1 });
         assert.equal(parseColor('transparent').a, 0);

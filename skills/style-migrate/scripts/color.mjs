@@ -11,10 +11,22 @@ const clamp01 = (x) => Math.min(1, Math.max(0, x));
 const toLin = (c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
 const fromLin = (c) => (c <= 0.0031308 ? 12.92 * c : 1.055 * c ** (1 / 2.4) - 0.055);
 
+// CSS Color 4: `none` is 0; a percentage is a fraction of `scale`; a bare number is itself
 function num(token, scale = 1) {
   token = token.trim();
+  if (token === 'none') return 0;
   if (token.endsWith('%')) return (parseFloat(token) / 100) * scale;
   return parseFloat(token);
+}
+
+// a hue in degrees, from deg, rad, grad, turn or a bare number; `none` is 0; NaN when unreadable
+function hue(token) {
+  token = token.trim().toLowerCase();
+  if (token === 'none') return 0;
+  const m = token.match(/^(-?(?:\d+\.?\d*|\.\d+)(?:e-?\d+)?)(deg|rad|grad|turn)?$/);
+  if (!m) return NaN;
+  const n = parseFloat(m[1]);
+  return { deg: n, rad: (n * 180) / Math.PI, grad: n * 0.9, turn: n * 360 }[m[2] ?? 'deg'];
 }
 
 function splitArgs(inner) {
@@ -75,21 +87,26 @@ export function parseColor(value) {
   if (m[2].includes('var(') || m[2].includes('calc(')) return null;
   const { parts, alpha } = splitArgs(m[2]);
   if (parts.length < 3) return null;
-  const a = alpha === null ? 1 : num(alpha, 1);
+  // out-of-range values are clamped, as browsers do; anything unreadable makes the color unreadable
+  const a = alpha === null ? 1 : clamp01(num(alpha, 1));
+  const color = (r, g, b) => ([r, g, b, a].some(Number.isNaN) ? null : { r: clamp01(r), g: clamp01(g), b: clamp01(b), a });
   if (fn.startsWith('rgb')) {
-    const ch = (t) => (t.endsWith('%') ? num(t, 1) : parseFloat(t) / 255);
-    return { r: ch(parts[0]), g: ch(parts[1]), b: ch(parts[2]), a };
+    const ch = (t) => (t.endsWith('%') || t === 'none' ? num(t, 1) : parseFloat(t) / 255);
+    return color(ch(parts[0]), ch(parts[1]), ch(parts[2]));
   }
   if (fn.startsWith('hsl')) {
-    const [r, g, b] = hslToRgb(parseFloat(parts[0]), num(parts[1], 1), num(parts[2], 1));
-    return { r, g, b, a };
+    // saturation and lightness: a percentage, or (CSS Color 4) a bare number meaning the same percentage
+    const pct = (t) => (t.endsWith('%') ? num(t, 1) : num(t, 1) / 100);
+    const H = hue(parts[0]);
+    if (Number.isNaN(H)) return null;
+    return color(...hslToRgb(H, clamp01(pct(parts[1])), clamp01(pct(parts[2]))));
   }
-  // oklch: L as % or 0..1, C as number or % (100% = 0.4), H in degrees
-  const L = parts[0].endsWith('%') ? num(parts[0], 1) : parseFloat(parts[0]);
-  const C = parts[1].endsWith('%') ? num(parts[1], 0.4) : parseFloat(parts[1]);
-  const H = parseFloat(parts[2]) || 0;
-  const [r, g, b] = oklchToRgb(L, C, H);
-  return { r, g, b, a };
+  // oklch: L as % or 0..1, C as number or % (100% = 0.4), H as an angle
+  const L = clamp01(num(parts[0], 1));
+  const C = Math.max(0, num(parts[1], 0.4));
+  const H = hue(parts[2]);
+  if (Number.isNaN(H)) return null;
+  return color(...oklchToRgb(L, C, H));
 }
 
 /** Composites a color with alpha over an opaque background. */
