@@ -1,6 +1,6 @@
 # Typography structure: roles, tokens, utilities, breakpoints, clamp
 
-This file fixes the **structure** of the type system: which roles exist, how tokens are shaped, how utilities and the base layer are built. It does **not** fix the numbers. Sizes, line heights, tracking and weights come from `DESIGN.md` when it exists, otherwise from the project's own current values, normalized. They depend on the chosen faces: there is no universal px scale.
+This file fixes the **structure** of the type system: which roles exist, how tokens are shaped, how utilities and the base layer are built. It does **not** fix the numbers. Sizes, line heights, tracking and weights come from `design-source.md` when it exists, otherwise from the project's own current values, normalized. They depend on the chosen faces: there is no universal px scale.
 
 The only numbers that are fixed are the guard rails in §2.
 
@@ -20,7 +20,7 @@ The set of roles is closed:
 | `body-strong` | body | emphasis, values, button text |
 | `label` | body | field labels, chips |
 | `small` | body | help, errors, notes, footer, metadata |
-| `overline` | body | badges, tags, counters, table headers, metadata. **Never a kicker above a heading, even if `DESIGN.md` says so** |
+| `overline` | body | badges, tags, counters, table headers, metadata. **Never a kicker above a heading, even if `design-source.md` says so** |
 | `hero` (optional) | display | text larger than `display`, with `clamp()` (§4) |
 
 Token shape, one block per role, inside `@theme`:
@@ -34,7 +34,7 @@ Token shape, one block per role, inside `@theme`:
 
 The `--text-*` values are the **desktop** values. The set of weights is closed to the weights the chosen faces and roles actually use (`--font-weight-*: initial`, then one token per weight in use).
 
-Line height is tuned to the face, its width and the language, not to a fixed ratio. Take it from `DESIGN.md` or from the project; keep it unitless only for `hero`.
+Line height is tuned to the face, its width and the language, not to a fixed ratio. Take it from `design-source.md` or from the project; keep it unitless only for `hero`.
 
 ## 2. Guard rails
 
@@ -53,7 +53,7 @@ The only fixed numbers:
 - Sizes change **in steps** on a method breakpoint, never fluidly.
 - Only `display`, `h1` and `h2` change, and they change at `lg` (1024px). Other roles are the same on every screen.
 - The reduction lives **inside the utility** (`@variant lg`); the `--text-*` tokens hold the desktop values. That way the tag (base layer) and the class behave the same.
-- The mobile values come from `DESIGN.md` or from the project's current mobile values. If the project has none, derive them minimally and mark them **provisional**.
+- The mobile values come from `design-source.md` or from the project's current mobile values. If the project has none, derive them minimally and mark them **provisional**.
 - Media queries on widths that are not method breakpoints (900px, 1100px, 1440px…) move to the nearest method breakpoint and are flagged.
 
 ## 4. clamp(): only above `display`
@@ -64,7 +64,7 @@ The only fixed numbers:
 
 ### Building the clamp
 
-The reduction ratio is the project's own: `ratio = display mobile / display desktop` (from `DESIGN.md` or the project's `display` values). Interpolate between `sm` (40rem) and `xl` (80rem):
+The reduction ratio is the project's own: `ratio = display mobile / display desktop` (from `design-source.md` or the project's `display` values). Interpolate between `sm` (40rem) and `xl` (80rem):
 
 ```
 max   = the project's desktop size, rounded to 4px
@@ -111,7 +111,7 @@ The scale is **the project's**: the `--text-<role>` tokens when they exist, othe
 5. **Off scale and recurring**: aligned like the others; it does not become a role. Occurrences are grouped in the report.
 6. **Above `display`**: not aligned, it becomes the `hero` role (§4).
 7. **Inverted hierarchy** (an `h4` larger than an `h3`, a `small` larger than `body`): always corrected.
-8. **No `--text-*` tokens yet**: cluster the distinct sizes (the inventory proposes clusters), map each cluster to a role by element, and mark the resulting values **provisional** until the user approves them or `DESIGN.md` exists.
+8. **No `--text-*` tokens yet**: cluster the distinct sizes (the inventory proposes clusters), map each cluster to a role by element, and mark the resulting values **provisional** until the user approves them or `design-source.md` exists.
 
 Never introduce a value from the `example/` files.
 

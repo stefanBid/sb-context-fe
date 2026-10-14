@@ -40,7 +40,7 @@ BREAKING CHANGE: the prefix is now asked after the inventory, not before.
 
 ### Scopes
 
-Use the skill name when the change touches one skill: `style-align`, `style-migrate`, `design-import`, `component-adapt`, `gh-admin`, `gh-checks`, `onboard`, `lint-check`, `build-check`, `seo-check`, `dependency-check`, `docs-update`, `full-checkup`. Leave the scope out for changes that cut across the plugin.
+Use the skill name when the change touches one skill: `style-align`, `style-migrate`, `design-extract-style`, `design-extract-ui`, `gh-admin`, `gh-checks`, `onboard`, `lint-check`, `build-check`, `seo-check`, `dependency-check`, `docs-update`, `full-checkup`. Leave the scope out for changes that cut across the plugin.
 
 ### Examples
 

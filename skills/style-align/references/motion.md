@@ -1,6 +1,6 @@
 # Motion
 
-The skill fixes the **structure** of motion: which tokens exist, how animations and the standard transition are declared, how reduced motion works. Values and character come from `DESIGN.md` when it exists; the numbers below are defaults.
+The skill fixes the **structure** of motion: which tokens exist, how animations and the standard transition are declared, how reduced motion works. Values and character come from `design-source.md` when it exists; the numbers below are defaults.
 
 ## 1. Tokens
 

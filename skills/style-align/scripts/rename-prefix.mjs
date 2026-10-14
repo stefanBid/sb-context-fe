@@ -6,7 +6,7 @@
 //   node "${CLAUDE_SKILL_DIR}/scripts/rename-prefix.mjs" --to ps            dry run
 //   node "${CLAUDE_SKILL_DIR}/scripts/rename-prefix.mjs" --to ps --apply    write the changes
 //   --from sb      current prefix (default: detected from `@utility <p>-h1` / `<p>-body`)
-//   --root <dir>   project root (default: current folder)
+//   --root <dir>   project root (default: the Nuxt project found from the current folder upward)
 //
 // What it renames, and only this:
 //   - raw variables:  --sb-primary        → --ps-primary
@@ -18,13 +18,14 @@
 
 import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { join, resolve, relative, extname } from 'node:path';
+import { projectRoot } from '../../../scripts/lib/project.mjs';
 
 const argv = process.argv.slice(2);
 const get = (n) => {
   const i = argv.indexOf(n);
   return i === -1 ? null : argv[i + 1];
 };
-const root = resolve(get('--root') || process.cwd());
+const root = projectRoot(get('--root'));
 const to = get('--to');
 const apply = argv.includes('--apply');
 

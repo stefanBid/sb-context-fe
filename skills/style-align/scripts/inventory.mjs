@@ -18,6 +18,7 @@ import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from '
 import { join, resolve, dirname, relative, extname } from 'node:path';
 import { createRequire } from 'node:module';
 import { findColors, parseColor, toHex } from './color.mjs';
+import { projectRoot } from '../../../scripts/lib/project.mjs';
 
 // ---------------------------------------------------------------------------
 // Arguments
@@ -25,8 +26,9 @@ import { findColors, parseColor, toHex } from './color.mjs';
 const argv = process.argv.slice(2);
 const getAll = (n) => argv.flatMap((a, i) => (a === n ? [argv[i + 1]] : []));
 const get = (n) => getAll(n)[0] ?? null;
-const root = resolve(get('--root') || process.cwd());
 const explicitFiles = getAll('--file').map((f) => resolve(f));
+// --file mode analyzes loose files and may run outside a project; otherwise the Nuxt project root is required
+const root = projectRoot(get('--root'), { required: !explicitFiles.length });
 const outFile = get('--out');
 const scanClasses = argv.includes('--classes');
 

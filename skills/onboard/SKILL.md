@@ -29,9 +29,21 @@ Read `package.json`, the lockfile, `nuxt.config.*` and the project root. Report 
 
 Read `CLAUDE.md` if present and follow its rules (install policy, commit rules) for the rest of the run.
 
+## 1b. Project settings
+
+How this project is organized is saved once in `.sb-context-nuxt/project-settings.json` (format and rules: `${CLAUDE_SKILL_DIR}/../../references/project-settings.md`). This is the moment to settle it, so the skills called next do not ask piecemeal.
+
+```bash
+node "${CLAUDE_SKILL_DIR}/../../scripts/project-settings.mjs" detect
+```
+
+It prints what the stack already shows (modules, locales, locale files, component prefixes, package manager, global style prefix, site URL) and a `missing` list. **Ask all the missing questions together** (question tool if available), each with the detected value as the recommended answer, and save every answer with `project-settings.mjs set <key> '<json>'`: i18n (is it on, default locale, other locales and whether they are translated or fall back, messages folder, key style), icons, images, base-component prefix, global style prefix, production URL. Anything already saved is not asked. Say that text is never left inline: it goes to the locale files, and if `@nuxtjs/i18n` is missing it will be proposed (a write, with its own confirmation). Skip the questions that make no sense for this project (no images → no `@nuxt/image` question).
+
 ## 2. Align the global style
 
-If the user has a design made in Claude desktop and there is no `DESIGN.md`, ask for the artifact link and run `/sb-context-nuxt:design-import` first.
+If the user has a design made in Claude desktop and there is no `.sb-context-nuxt/design-source.md`, ask for the artifact link or the design's name and run `/sb-context-nuxt:design-extract-style` first.
+
+The prefix is read from `style.prefix` in the settings; `style-align` does not ask it again.
 
 Run `/sb-context-nuxt:style-align`. Follow its flow, including its questions (prefix), its report and its confirmation stop.
 
