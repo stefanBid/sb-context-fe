@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.1](https://github.com/stefanBid/sb-context-nuxt/compare/v0.5.0...v0.5.1) (2026-10-15)
+
+
+### Bug Fixes
+
+* **gh-admin:** keep the GitHub settings cache in sync after every write ([#40](https://github.com/stefanBid/sb-context-nuxt/issues/40)) ([9a7c002](https://github.com/stefanBid/sb-context-nuxt/commit/9a7c0029b6c2855af6c2003645a61ff3b02a8e9f))
+
 ## [0.5.0](https://github.com/stefanBid/sb-context-nuxt/compare/v0.4.9...v0.5.0) (2026-10-14)
 
 
