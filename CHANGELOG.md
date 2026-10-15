@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/stefanBid/sb-context-nuxt/compare/v0.5.1...v0.6.0) (2026-10-15)
+
+
+### Features
+
+* **setup:** add setup skill for projects already in progress or aligned ([#42](https://github.com/stefanBid/sb-context-nuxt/issues/42)) ([3b5473c](https://github.com/stefanBid/sb-context-nuxt/commit/3b5473c69a763c3a03769797ca33801987ff0593))
+
 ## [0.5.1](https://github.com/stefanBid/sb-context-nuxt/compare/v0.5.0...v0.5.1) (2026-10-15)
 
 
