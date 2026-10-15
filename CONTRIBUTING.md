@@ -40,7 +40,7 @@ BREAKING CHANGE: the prefix is now asked after the inventory, not before.
 
 ### Scopes
 
-Use the skill name when the change touches one skill: `style-align`, `style-migrate`, `design-extract-style`, `design-extract-ui`, `gh-admin`, `gh-checks`, `onboard`, `lint-check`, `build-check`, `seo-check`, `dependency-check`, `docs-update`, `full-checkup`. Leave the scope out for changes that cut across the plugin.
+Use the skill name when the change touches one skill: `style-align`, `style-migrate`, `design-extract-style`, `design-extract-ui`, `gh-admin`, `gh-checks`, `onboard`, `setup`, `lint-check`, `build-check`, `seo-check`, `dependency-check`, `docs-update`, `full-checkup`. Leave the scope out for changes that cut across the plugin.
 
 ### Examples
 
@@ -69,7 +69,7 @@ npm run validate            # claude plugin validate --strict on the marketplace
 
 | Layer | What it guarantees |
 | --- | --- |
-| `tests/unit` | the logic in the `lib/` modules: color math and WCAG contrast, CSS variable resolution, value normalizers and in-place rewrites, prefix rules, type scale and clusters, class anatomy, role maps, i18n heuristics, dependency notes, GitHub settings |
+| `tests/unit` | the logic in the `lib/` modules: color math and WCAG contrast, CSS variable resolution, value normalizers and in-place rewrites, prefix rules, type scale and clusters, class anatomy, role maps, i18n heuristics, dependency notes, GitHub settings, setup recommendations |
 | `tests/cli` | each script end to end on a real folder (`tests/helpers/fixture.mjs`): exit codes, JSON output, files written, idempotence of `--apply`, `.git/info/exclude` |
 | `tests/contract` | the files gh-admin and gh-checks apply to other projects (labels, ruleset, workflow template) are valid; every `${CLAUDE_SKILL_DIR}/…` path exists, every `/sb-context-nuxt:<skill>` names a skill, the two `color.mjs` copies are identical, manifests and CONTRIBUTING agree with the code |
 

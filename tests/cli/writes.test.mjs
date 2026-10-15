@@ -55,6 +55,7 @@ describe('what the scripts write', () => {
       [SCRIPTS.dependencyNotes, ['list']],
       [SCRIPTS.githubSettings, ['get']],
       [SCRIPTS.githubSettings, ['status']],
+      [SCRIPTS.setupState, []],
     ];
     for (const [script, args] of commands) assert.deepEqual(changed(p, () => p.run(script, args)), [], `${script.split('/').pop()} ${args.join(' ')}`);
   });
@@ -76,6 +77,12 @@ describe('what the scripts write', () => {
     ];
     // .git/info/exclude may be written too, by whichever command first excludes the folder
     assert.deepEqual([...new Set(all)].filter((f) => f !== '.git/info/exclude').sort(), ['.sb-context-nuxt/dependency-notes.json', '.sb-context-nuxt/design-applied.json', '.sb-context-nuxt/design-map.json', '.sb-context-nuxt/github_settings.json', '.sb-context-nuxt/project-settings.json']);
+  });
+
+  test('setup-state --init writes only the git exclude (the folder is empty)', () => {
+    p.write('.git/info/exclude', '');
+    assert.deepEqual(changed(p, () => p.run(SCRIPTS.setupState, ['--init'])), ['.git/info/exclude']);
+    assert.equal(p.exists('.sb-context-nuxt'), true);
   });
 
   test('a design extraction writes only the snapshot, its previous version and the git exclude', () => {

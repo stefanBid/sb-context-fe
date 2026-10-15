@@ -66,11 +66,15 @@ test('every /sb-context-nuxt:<skill> reference names an existing skill', () => {
 });
 
 test('subcommands used in the skills exist in the scripts', () => {
-  const commands = { 'dependency-notes.mjs': ['list', 'add', 'touch', 'resolve'], 'project-settings.mjs': ['detect', 'get', 'set'] };
+  const commands = { 'dependency-notes.mjs': ['list', 'add', 'touch', 'resolve'], 'project-settings.mjs': ['detect', 'get', 'set'], 'github-settings.mjs': ['get', 'status', 'set', 'refresh'] };
   for (const file of tracked.filter((f) => f.endsWith('.md'))) {
     for (const [script, valid] of Object.entries(commands)) {
-      const re = new RegExp(`${script.replace('.', '\\.')}"?\\s+([a-z]+)\\b`, 'g');
-      for (const [, cmd] of read(file).matchAll(re)) assert.ok(valid.includes(cmd), `${file}: ${script} ${cmd} is not a command`);
+      const text = read(file);
+      const re = new RegExp(`${script.replace('.', '\\.')}"?[ \\t]+([a-z]+)\\b`, 'g');
+      for (const [, cmd] of text.matchAll(re)) assert.ok(valid.includes(cmd), `${file}: ${script} ${cmd} is not a command`);
+      // a skill that names the script in a variable (GS="…/github-settings.mjs") calls it as node "$GS" <cmd>
+      for (const [, v] of text.matchAll(new RegExp(`\\b([A-Z]+)="[^"]*/${script.replace('.', '\\.')}"`, 'g')))
+        for (const [, cmd] of text.matchAll(new RegExp(`"\\$${v}"[ \\t]+([a-z]+)\\b`, 'g'))) assert.ok(valid.includes(cmd), `${file}: ${script} (as $${v}) ${cmd} is not a command`);
     }
   }
 });

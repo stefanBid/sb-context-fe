@@ -4,7 +4,7 @@ How the user wants **this project** to be built, saved so it is asked once and n
 
 Scripts find the Nuxt **project root** themselves (the folder with `nuxt.config.*`, searching upward from where they start; outside a Nuxt project they refuse), so the file is always `<root>/.sb-context-nuxt/project-settings.json`.
 
-Skills that use it today: `onboard` (asks everything missing in one go), `design-extract-ui`, `style-align` (prefix) and `seo-check` (i18n, site URL). Skills reach it with `${CLAUDE_SKILL_DIR}/../../scripts/project-settings.mjs` (`detect`, `get`, `set`); `scripts/check-i18n.mjs` checks for inline text.
+Skills that use it today: `setup` and `onboard` through it (ask everything missing in one go), `design-extract-ui`, `style-align` (prefix) and `seo-check` (i18n, site URL). Skills reach it with `${CLAUDE_SKILL_DIR}/../../scripts/project-settings.mjs` (`detect`, `get`, `set`); `scripts/check-i18n.mjs` checks for inline text.
 
 ## How a skill uses it
 

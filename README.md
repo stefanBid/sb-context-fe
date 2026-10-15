@@ -44,6 +44,7 @@ It does **not** judge or improve the design. That is the job of [Impeccable](#im
   - [design-extract-ui](#design-extract-ui)
 - [Skill reference: onboarding and checks](#skill-reference-onboarding-and-checks)
   - [onboard](#onboard)
+  - [setup](#setup)
   - [full-checkup](#full-checkup)
   - [lint-check](#lint-check)
   - [build-check](#build-check)
@@ -98,6 +99,8 @@ Open Claude Code in the Nuxt project and run:
 
 It checks the stack, settles the project settings, aligns the global style, migrates the templates, builds and recommends next steps. It stops at every confirmation. Details: [onboard](#onboard).
 
+Project **already aligned**, or you only want the plugin to know it? Run `/sb-context-nuxt:setup` instead: it creates the local folder, asks the missing settings and reports what to run next, without touching the style or the templates. Details: [setup](#setup).
+
 ---
 
 ## How the plugin works
@@ -130,6 +133,7 @@ Reading is free; writing asks first.
 | `gh-admin`, `gh-checks` | any write to the remote: rulesets, labels, settings, pushes, PRs, releases |
 | `dependency-check` | the scope (minor/patch or also major) and the approval of every major migration plan |
 | `onboard` | every confirmation of the skills it calls |
+| `setup` | nothing outside `.sb-context-nuxt/` is written; the settings are asked before they are saved |
 
 ### Where things live
 
@@ -159,6 +163,7 @@ Nothing from this plugin is ever committed to a project. Outside a Nuxt project 
 | Skill | Command | Invocation | Purpose |
 | --- | --- | --- | --- |
 | `onboard` | `/sb-context-nuxt:onboard` | command only | Join a project in progress: stack, settings, align, migrate, build, next steps |
+| `setup` | `/sb-context-nuxt:setup` | model or command | Light setup on a project already in progress or aligned: local folder, settings, state report, next steps |
 | `design-extract-style` | `/sb-context-nuxt:design-extract-style` | model or command | Extract the style of a Claude design into `.sb-context-nuxt/design-source.md` |
 | `style-align` | `/sb-context-nuxt:style-align` | model or command | Normalize the global style into four files; rename the prefix; sync values with the design |
 | `style-migrate` | `/sb-context-nuxt:style-migrate` | command only | Migrate Vue templates after the global style changed |
@@ -177,6 +182,7 @@ Nothing from this plugin is ever committed to a project. Outside a Nuxt project 
 | I want to… | Use |
 | --- | --- |
 | Start working on a Nuxt project I just joined | `onboard` |
+| Use the plugin on a project that is already aligned | `setup` |
 | Use the palette, fonts and radii of my design made in Claude | `design-extract-style`, then `style-align` |
 | Reorganize a messy global CSS / theme / dark mode | `style-align` |
 | Change the token prefix (`sb` → `ps`) | `style-align` (prefix rename) |
@@ -197,6 +203,7 @@ Phrases below are the ones written in the skill descriptions (**listed**) or req
 
 | Skill | Phrases that trigger it |
 | --- | --- |
+| `setup` | listed: "set up the plugin on this project", "the project is already aligned", "configura il plugin su questo progetto", "inizializza sb-context-nuxt" |
 | `design-extract-style` | matches: "extract the style from the design", "import the tokens / palette / typography from Claude", "take the colors from my design system", "importa lo stile dal design" |
 | `style-align` | matches: "align / normalize / unify the global style", "reorganize the global CSS", "fix the theme", "dark mode setup", "change the prefix to ps", "sync the style with the design" |
 | `design-extract-ui` | listed: "extract the Button component", "bring the Home page from the design", "build the main layout"; matches: "turn this Claude design into Nuxt code" |
@@ -226,7 +233,15 @@ Tips for good triggering:
 /sb-context-nuxt:onboard
 ```
 
-`onboard` runs, in order: stack check → project settings → (design snapshot) → `style-align` → `style-migrate` → build → next steps.
+`onboard` runs, in order: `setup` (stack check, local folder, project settings) → (design snapshot) → `style-align` → `style-migrate` → build → next steps.
+
+If the project is already aligned:
+
+```
+/sb-context-nuxt:setup
+```
+
+It only prepares `.sb-context-nuxt/`, asks the missing settings, checks that the style is really aligned (read-only) and lists the skills still worth running (`gh-admin`, `gh-checks`, `design-extract-style`…). Run it again any time: it asks only what is still unknown.
 
 ### Start from a design made in Claude
 
@@ -365,12 +380,27 @@ Text is never left inline: it goes to the locale files (see [The i18n stance](#t
 
 | Step | What |
 | --- | --- |
-| 1. Stack | table: Nuxt (must be 4), Tailwind (must be 4 with `@tailwindcss/vite`), package manager, `@nuxtjs/color-mode`, `@nuxt/fonts`, project docs (`DESIGN.md`, `PRODUCT.md`, `CLAUDE.md`). **Stops** on Nuxt < 4 or Tailwind < 4. Reads `CLAUDE.md` and follows its rules. |
-| 1b. Project settings | detects what the project shows, asks all missing questions together, saves answers |
+| 1. Setup | runs [`setup`](#setup): stack (**stops** on Nuxt < 4 or Tailwind < 4), `CLAUDE.md` rules, local folder, all missing project settings in one go |
 | 2. Align | asks for a design link first if you have one and there is no snapshot, then `style-align` |
 | 3. Migrate | `style-migrate`: summary, then the areas you pick |
 | 4. Build | the project's `build` script; reports errors and warnings |
 | 5. Next steps | recommendations only: Impeccable, `gh-admin`, `gh-checks`, `full-checkup` |
+
+### setup
+
+| | |
+| --- | --- |
+| **Command** | `/sb-context-nuxt:setup` (or natural language) |
+| **Does** | Prepares the plugin on a project already in progress or already aligned, without the style, template, build or GitHub work of `onboard`. Safe to run again |
+| **Writes** | `.sb-context-nuxt/` (the folder, `project-settings.json`) and the `.sb-context-nuxt/` line in `.git/info/exclude`. Nothing else |
+
+| Step | What |
+| --- | --- |
+| 1. Stack | Nuxt 4, Tailwind 4 with `@tailwindcss/vite`, package manager, color-mode, fonts. **Stops** on Nuxt < 4 or Tailwind < 4 |
+| 2. Local folder | `setup-state.mjs --init`: creates `.sb-context-nuxt/`, excludes it from git, reads the state of the project |
+| 3. Project settings | `project-settings.mjs detect`, all missing questions together, answers saved |
+| 4. Style check | if the four files exist, the `style-align` inventory (read-only): aligned or not, and why |
+| 5. Report | what the plugin knows (settings, style, design snapshot, GitHub, dependency notes, docs) and the next skills to run, as recommendations |
 
 ### full-checkup
 
@@ -538,7 +568,7 @@ It shares `github_settings.json` with `gh-admin`: once the workflow is merged an
 
 How the user wants **this project** built, asked **once** and saved in `.sb-context-nuxt/project-settings.json`. Skills ask only what is missing and only when it matters, with the detected value as the recommended answer. A setting changes only when you ask ("add German", "stop using the Base prefix").
 
-Skills that use it: `onboard` (asks everything missing in one go), `design-extract-ui`, `style-align` (prefix), `seo-check` (i18n, site URL).
+Skills that use it: `setup` and `onboard` (ask everything missing in one go), `design-extract-ui`, `style-align` (prefix), `seo-check` (i18n, site URL).
 
 ### Keys
 
@@ -616,7 +646,7 @@ At the project root, kept out of git (`.git/info/exclude`). Never committed.
 | --- | --- | --- |
 | `design-source.md` | `design-extract-style` | snapshot of the Claude design: values, brand guide, component index, provenance, gaps, machine block |
 | `design-applied.json` | `style-align` (sync) | which version of the snapshot is applied to the project |
-| `project-settings.json` | `onboard`, any skill that needs a setting | the [keys](#keys) above |
+| `project-settings.json` | `setup` (and `onboard` through it), any skill that needs a setting | the [keys](#keys) above |
 | `dependency-notes.json` | `dependency-check` | what was postponed or blocked (package, target, blockers with owner, what to recheck) |
 | `github_settings.json` | `gh-admin`, `gh-checks` | signature settings and the cache of what is known about the repo (slug, default branch, rulesets, labels, check names), refreshed after every write to the remote |
 
@@ -628,6 +658,7 @@ Skills call these; you rarely run them by hand.
 | --- | --- | --- |
 | `scripts/project-settings.mjs` (`detect`, `get`, `set`) | most skills | read and save project settings |
 | `scripts/dependency-notes.mjs` (`list`, `add`, `touch`, `resolve`) | `dependency-check` | read and write the dependency notes |
+| `scripts/setup-state.mjs` (`--init`) | `setup` | state of the project for the plugin and next steps; `--init` creates the folder |
 | `scripts/github-settings.mjs` (`get`, `status`, `set`, `refresh`) | `gh-admin`, `gh-checks` | read and write the signature choice and the repo cache; `refresh` prints what changed |
 | `scripts/check-i18n.mjs` | `full-checkup`, `seo-check`, `design-extract-ui` | find inline text and missing keys in the default locale |
 | `scripts/lib/project.mjs` | all scripts | find the Nuxt root and `srcDir` |
@@ -678,6 +709,7 @@ After alignment: `/impeccable document` records the aligned system in `DESIGN.md
 | It asks again for something I answered | answers live in `.sb-context-nuxt/project-settings.json`; if the file was deleted or the project contradicts it, it asks. |
 | `gh` cannot write rulesets or labels | needs `ADMIN` (labels: `WRITE`). The audit reports what the account can do. |
 | Where is the prefix used? | `--{p}-*` variables and `{p}-<role>` utilities. Change it with "change the prefix to xx" in `style-align`. |
+| The project is aligned but `.sb-context-nuxt/` does not exist | nothing was saved yet. Run `/sb-context-nuxt:setup`: it creates the folder and asks the settings once. |
 | Can I commit `.sb-context-nuxt/`? | no: it is local by design and excluded from git. |
 | Does the plugin fix my design? | no. Use Impeccable. |
 
