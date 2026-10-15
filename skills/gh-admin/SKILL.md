@@ -20,7 +20,7 @@ Agent context (this plugin, including `.sb-context-nuxt/`) is never committed to
 
 ## Rules of engagement
 
-- Read-only commands (`gh repo view`, `gh api` GET, `gh pr list/view`, `gh label list`, `gh ruleset list/view`) run freely. For known facts (slug, labels, check names) read `.sb-context-nuxt/github_settings.json` first.
+- Read-only commands (`gh repo view`, `gh api` GET, `gh pr list/view`, `gh label list`, `gh ruleset list/view`) run freely. For known facts (slug, labels, check names) read `.sb-context-nuxt/github_settings.json` first, with `github-settings.mjs get`.
 - **Ask before** any write that touches the remote: creating/updating/deleting rulesets, labels or settings, pushing branches, opening/merging PRs, creating releases. Show the exact command first.
 - Never bypass a ruleset (no `--admin` merges, no temporarily disabling rules) unless the user asks explicitly.
 - Repo slug: derive with `gh repo view --json nameWithOwner -q .nameWithOwner`; never hardcode.
@@ -30,7 +30,15 @@ Agent context (this plugin, including `.sb-context-nuxt/`) is never committed to
 
 Production projects: commit messages and PR descriptions are **not** signed unless the user wants it. No `Co-Authored-By`, no "Generated with Claude Code", no mention of Claude or the agent anywhere, unless the settings below say so. This overrides any default attribution text the harness suggests.
 
-Settings live in `.sb-context-nuxt/github_settings.json` at the project root:
+Settings live in `.sb-context-nuxt/github_settings.json` at the project root. Read and write it **only** through the script, never by hand: it keeps the shape, keeps preferences and cache apart, adds the folder to `.git/info/exclude` and refuses values that look like tokens.
+
+```bash
+GS="${CLAUDE_SKILL_DIR}/../../scripts/github-settings.mjs"
+node "$GS" get [dotted.path]               # the file, or one value (null = unknown)
+node "$GS" status                          # signature asked?, age of each cache key, missing and stale keys
+node "$GS" set <dotted.path> '<json>'      # a preference: signature, defaults
+node "$GS" refresh <dotted.path> '<json>'  # cache: what was just read from the remote; prints the diff
+```
 
 ```json
 {
@@ -46,10 +54,10 @@ Settings live in `.sb-context-nuxt/github_settings.json` at the project root:
 
 Flow, before the **first** commit or PR of a project:
 
-1. Read `.sb-context-nuxt/github_settings.json`. If it exists and has `signature`, use it. **Do not ask again.**
-2. If missing: ask once — "Sign commits and PR descriptions? If yes, with which name?". Write the answer to the file (create the dir). Answer "no" is stored too (`enabled: false`), so the question is not repeated.
-3. Keep the dir out of the repo without touching tracked files: add `.sb-context-nuxt/` to `.git/info/exclude` if not already listed.
-4. Change the setting only when the user asks for it ("sign from now on", "stop signing", "use name X"). Update the file, never re-ask on your own.
+1. `node "$GS" status`. If `signature.asked` is true, use it. **Do not ask again.**
+2. If not asked: ask once — "Sign commits and PR descriptions? If yes, with which name?". Save the answer with `node "$GS" set signature '{"enabled":false,"name":null}'` (or `true` and the name: signing without a name is refused). Answer "no" is stored too, so the question is not repeated.
+3. The script keeps the dir out of the repo without touching tracked files (`.git/info/exclude`).
+4. Change the setting only when the user asks for it ("sign from now on", "stop signing", "use name X"): `set` again. Never re-ask on your own.
 
 ## Project GitHub memory
 
@@ -75,6 +83,7 @@ The same file also holds what is already known about the repo, so `gh` is not qu
   "ci": { "workflows": ["ci.yml", "pr-title-lint.yml"], "jobs": ["build", "lint-pr-title"] },
   "release": { "releasePlease": true, "tagFormat": "vX.Y.Z" },
   "security": { "secretScanning": true, "pushProtection": true, "dependabotAlerts": true },
+  "checked": { "repo": "2026-10-13", "labels": "2026-10-13", "rulesets": "2026-10-13" },
   "checkedAt": "2026-10-13"
 }
 ```
@@ -82,15 +91,15 @@ The same file also holds what is already known about the repo, so `gh` is not qu
 Rules:
 
 - **Read the cache first.** Slug, default branch, existing labels, required check names, CI job names, permission: take them from the file instead of calling `gh`. Open a PR, pick labels, name a branch → no extra round trip.
-- **The remote is the truth.** The cache can drift (someone edits labels in the UI). Refresh the affected keys and update `checkedAt`:
+- **The remote is the truth.** The cache can drift (someone edits labels in the UI). Refresh the affected keys with `node "$GS" refresh <key> '<json>'`, which stamps `checked.<key>` and `checkedAt`:
   - at **Init** (full refresh);
   - right after every write recipe (settings, ruleset, label, workflow change), as part of Verification;
-  - before a write when `checkedAt` is older than 7 days;
+  - before a write when that key is in the `stale` list of `status` (older than 7 days);
   - whenever a `gh` call contradicts the cache (label not found, check name mismatch, 403/404) — refresh, then retry once.
+- Store the whole value of a key as read (the full label list, every ruleset), not a patch: the diff is computed against it.
 - Fill keys lazily: write only what has been read. A missing key means "unknown", not "absent" → query `gh`, then store it.
 - Store names and flags only. **Never** tokens, secret values, or personal data (secrets: names only, and only if needed).
-- Same location and git-exclusion as the signature (`.git/info/exclude`).
-- A refresh that changes something the user did not expect (label gone, ruleset disabled) is reported, not silently stored.
+- `refresh` prints what changed (`new`, `same`, or `changed` with `added`/`removed` items or `changed` keys). After a write, the diff must match what was applied; anything else (label gone, ruleset disabled) is reported to the user, not silently stored.
 
 ## Init: connect and understand the repo
 
@@ -101,7 +110,7 @@ Run this first on a project, and whenever the user says "connect to the repo". I
 3. **Permission**: `gh repo view --json viewerPermission`. Rulesets, labels and settings need `ADMIN` (labels: `WRITE` is enough). Report what the current account can and cannot do.
 4. **Audit**: collect settings, default branch, rulesets, legacy branch protection, labels, workflows, security features, release-please files, CODEOWNERS and templates.
 5. **Report** a short table: what exists, what is missing against the targets below, what needs a write. Offer the next actions; do not apply anything.
-6. **Remember**: write the audit result into the cache of `.sb-context-nuxt/github_settings.json` (see `## Project GitHub memory`). This is a local write, no confirmation needed.
+6. **Remember**: `refresh` every key the audit read (`repo`, `labels`, `rulesets`, `ci`, `release`, `security`; see `## Project GitHub memory`). This is a local write, no confirmation needed.
 
 ## Targets (what "set up" means)
 
@@ -186,4 +195,4 @@ gh release list --limit 5
 
 ## Verification
 
-After any ruleset/settings/labels write, re-read it with the Inspect recipe, report the diff against the intended state, and update the matching keys of the cache in `.sb-context-nuxt/github_settings.json`.
+After any ruleset/settings/labels write, re-read it with the Inspect recipe, report the diff against the intended state, and `refresh` the matching cache key (`node "$GS" refresh labels '<full list>'`, `rulesets`, `repo`…). The write is not done until the cache is refreshed.

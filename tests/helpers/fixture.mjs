@@ -17,6 +17,7 @@ export const EXAMPLE_CSS = join(REPO, 'skills/style-align/references/example');
 export const SCRIPTS = {
   dependencyNotes: join(REPO, 'scripts/dependency-notes.mjs'),
   projectSettings: join(REPO, 'scripts/project-settings.mjs'),
+  githubSettings: join(REPO, 'scripts/github-settings.mjs'),
   checkI18n: join(REPO, 'scripts/check-i18n.mjs'),
   tokensToSource: join(REPO, 'skills/design-extract-style/scripts/tokens-to-source.mjs'),
   contrast: join(REPO, 'skills/style-align/scripts/contrast.mjs'),

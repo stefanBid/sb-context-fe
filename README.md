@@ -512,6 +512,7 @@ Recipes: **Init** (connect and audit, read only), **Inspect**, **Repo settings**
 Rules of engagement:
 
 - Read-only commands run freely; known facts come from `.sb-context-nuxt/github_settings.json` first.
+- **After every write** (labels, rulesets, settings) it re-reads the remote and refreshes the matching key of `github_settings.json`; anything that changed beyond what was applied is reported.
 - **Asks before** any write to the remote, showing the exact command.
 - Never bypasses a ruleset (no `--admin` merges) unless you ask explicitly.
 - Never prints or stores tokens; secrets are listed by name only.
@@ -528,6 +529,8 @@ Rules of engagement:
 | **Job name** | `lint-pr-title` (`amannn/action-semantic-pull-request`, on `opened`, `reopened`, `edited`, `synchronize` PRs into `main`) |
 
 Flow: read the project → adapt and add the workflow (through a branch and a PR, never a direct push) → make it required **after the workflow is on `main`** → verify.
+
+It shares `github_settings.json` with `gh-admin`: once the workflow is merged and the check is required, it refreshes `ci` and `rulesets` in the cache.
 
 ---
 
@@ -615,7 +618,7 @@ At the project root, kept out of git (`.git/info/exclude`). Never committed.
 | `design-applied.json` | `style-align` (sync) | which version of the snapshot is applied to the project |
 | `project-settings.json` | `onboard`, any skill that needs a setting | the [keys](#keys) above |
 | `dependency-notes.json` | `dependency-check` | what was postponed or blocked (package, target, blockers with owner, what to recheck) |
-| `github_settings.json` | `gh-admin` | signature settings and the cache of what is known about the repo (slug, default branch, rulesets, labels, check names) |
+| `github_settings.json` | `gh-admin`, `gh-checks` | signature settings and the cache of what is known about the repo (slug, default branch, rulesets, labels, check names), refreshed after every write to the remote |
 
 ### Scripts
 
@@ -625,6 +628,7 @@ Skills call these; you rarely run them by hand.
 | --- | --- | --- |
 | `scripts/project-settings.mjs` (`detect`, `get`, `set`) | most skills | read and save project settings |
 | `scripts/dependency-notes.mjs` (`list`, `add`, `touch`, `resolve`) | `dependency-check` | read and write the dependency notes |
+| `scripts/github-settings.mjs` (`get`, `status`, `set`, `refresh`) | `gh-admin`, `gh-checks` | read and write the signature choice and the repo cache; `refresh` prints what changed |
 | `scripts/check-i18n.mjs` | `full-checkup`, `seo-check`, `design-extract-ui` | find inline text and missing keys in the default locale |
 | `scripts/lib/project.mjs` | all scripts | find the Nuxt root and `srcDir` |
 | `skills/design-extract-style/scripts/tokens-to-source.mjs` | `design-extract-style` | convert the artifact's tokens into the snapshot, with coverage check |

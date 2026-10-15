@@ -53,6 +53,8 @@ describe('what the scripts write', () => {
       [SCRIPTS.projectSettings, ['detect']],
       [SCRIPTS.projectSettings, ['get']],
       [SCRIPTS.dependencyNotes, ['list']],
+      [SCRIPTS.githubSettings, ['get']],
+      [SCRIPTS.githubSettings, ['status']],
     ];
     for (const [script, args] of commands) assert.deepEqual(changed(p, () => p.run(script, args)), [], `${script.split('/').pop()} ${args.join(' ')}`);
   });
@@ -67,11 +69,13 @@ describe('what the scripts write', () => {
       ...changed(p, () => p.run(SCRIPTS.projectSettings, ['set', 'i18n.enabled', 'true'])),
       ...changed(p, () => p.run(SCRIPTS.dependencyNotes, ['add', 'nuxt', '--target', '5.0.0', '--summary', 's', '--recheck', 'r'])),
       ...changed(p, () => p.run(SCRIPTS.dependencyNotes, ['resolve', 'nuxt@5.0.0', '--resolution', 'done'])),
+      ...changed(p, () => p.run(SCRIPTS.githubSettings, ['set', 'signature', '{"enabled":false,"name":null}'])),
+      ...changed(p, () => p.run(SCRIPTS.githubSettings, ['refresh', 'labels', '["feat"]'])),
       ...changed(p, () => p.run(SCRIPTS.syncValues, ['--record'])),
       ...changed(p, () => p.run(SCRIPTS.syncValues, ['--map', 'colors.bg=bg'])),
     ];
     // .git/info/exclude may be written too, by whichever command first excludes the folder
-    assert.deepEqual([...new Set(all)].filter((f) => f !== '.git/info/exclude').sort(), ['.sb-context-nuxt/dependency-notes.json', '.sb-context-nuxt/design-applied.json', '.sb-context-nuxt/design-map.json', '.sb-context-nuxt/project-settings.json']);
+    assert.deepEqual([...new Set(all)].filter((f) => f !== '.git/info/exclude').sort(), ['.sb-context-nuxt/dependency-notes.json', '.sb-context-nuxt/design-applied.json', '.sb-context-nuxt/design-map.json', '.sb-context-nuxt/github_settings.json', '.sb-context-nuxt/project-settings.json']);
   });
 
   test('a design extraction writes only the snapshot, its previous version and the git exclude', () => {
