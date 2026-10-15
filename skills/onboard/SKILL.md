@@ -1,6 +1,6 @@
 ---
 name: onboard
-description: Modus operandi for joining a Nuxt 4 + Tailwind 4 project already in progress. Checks the stack, aligns the global style, migrates the templates, builds, and recommends next steps. Command only.
+description: Modus operandi for joining a Nuxt 4 + Tailwind 4 project already in progress. Runs setup (stack, local folder, settings), aligns the global style, migrates the templates, builds, and recommends next steps. Command only. For a project already aligned, setup alone is enough.
 disable-model-invocation: true
 ---
 
@@ -8,36 +8,17 @@ disable-model-invocation: true
 
 The plugin's way of joining a Nuxt 4 + Tailwind 4 project that is already underway. This skill does no work itself: it runs the steps below in order and **stops at every confirmation** the called skills require.
 
+If the project is already aligned and the user only wants the plugin to know it, `/sb-context-nuxt:setup` alone is enough: say so before starting.
+
 The plugin aligns the style structure and then maintains the project. It does not judge the design: that is Impeccable's job, a separate optional plugin (see step 5).
 
 **Language**: this file is in English, but talk to the user in their language.
 
-## 1. Check the stack
+## 1. Set up: stack, local folder, project settings
 
-Read `package.json`, the lockfile, `nuxt.config.*` and the project root. Report a 6-line table:
+Run `/sb-context-nuxt:setup`. It checks the stack (**stop** on Nuxt < 4 or Tailwind < 4), reads `CLAUDE.md` (follow its rules for the rest of the run), creates `.sb-context-nuxt/` out of git, asks **all** the missing project settings in one go (so the skills called next do not ask piecemeal) and reports what the plugin knows. Format of the settings: `${CLAUDE_SKILL_DIR}/../../references/project-settings.md`.
 
-| Item | Check |
-| --- | --- |
-| Nuxt | version, must be 4 |
-| Tailwind | version, must be 4, with `@tailwindcss/vite` |
-| Package manager | npm, pnpm, yarn or bun (from the lockfile) |
-| `@nuxtjs/color-mode` | installed and in `modules` |
-| `@nuxt/fonts` | installed and in `modules` |
-| Project docs | presence of `DESIGN.md`, `PRODUCT.md`, `CLAUDE.md` |
-
-**Stop** on Nuxt < 4 or Tailwind < 4, and say so. Missing color-mode or fonts is not a stop: `style-align` installs them.
-
-Read `CLAUDE.md` if present and follow its rules (install policy, commit rules) for the rest of the run.
-
-## 1b. Project settings
-
-How this project is organized is saved once in `.sb-context-nuxt/project-settings.json` (format and rules: `${CLAUDE_SKILL_DIR}/../../references/project-settings.md`). This is the moment to settle it, so the skills called next do not ask piecemeal.
-
-```bash
-node "${CLAUDE_SKILL_DIR}/../../scripts/project-settings.mjs" detect
-```
-
-It prints what the stack already shows (modules, locales, locale files, component prefixes, package manager, global style prefix, site URL) and a `missing` list. **Ask all the missing questions together** (question tool if available), each with the detected value as the recommended answer, and save every answer with `project-settings.mjs set <key> '<json>'`: i18n (is it on, default locale, other locales and whether they are translated or fall back, messages folder, key style), icons, images, base-component prefix, global style prefix, production URL. Anything already saved is not asked. Say that text is never left inline: it goes to the locale files, and if `@nuxtjs/i18n` is missing it will be proposed (a write, with its own confirmation). Skip the questions that make no sense for this project (no images → no `@nuxt/image` question).
+Keep its report; its list of next steps is replaced by the steps below. Missing color-mode or fonts is not a stop: `style-align` installs them.
 
 ## 2. Align the global style
 
