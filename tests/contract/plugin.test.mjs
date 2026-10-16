@@ -77,7 +77,7 @@ describe('skills', () => {
 });
 
 test('every /<plugin>:<skill> reference names an existing skill', () => {
-  for (const file of tracked.filter((f) => f.endsWith('.md') && f !== 'CHANGELOG.md')) {
+  for (const file of tracked.filter((f) => f.endsWith('.md') && !f.endsWith('CHANGELOG.md'))) {
     for (const [, id] of read(file).matchAll(/\/(sb-[a-z]+:[a-z][a-z-]*[a-z])\b/g)) assert.ok(IDS.has(id), `${file}: unknown skill "/${id}"`);
   }
 });
@@ -85,7 +85,7 @@ test('every /<plugin>:<skill> reference names an existing skill', () => {
 test('the 0.x names appear only where the migration documents them', () => {
   const allowed = new Set(['CHANGELOG.md', 'README.md', 'plugins/sb-core/skills/migration/SKILL.md', 'plugins/sb-core/skills/setup/SKILL.md', 'plugins/sb-core/README.md', 'plugins/sb-core/scripts/lib/migration.mjs', 'plugins/sb-core/scripts/migrate-v1.mjs', '.claude-plugin/marketplace.json']);
   const problems = [];
-  for (const f of tracked.filter((x) => /\.(md|mjs|json)$/.test(x) && !x.startsWith('tests/') && !x.includes('/core/') && !x.startsWith('core/') && !allowed.has(x) && !['package.json', 'package-lock.json'].includes(x)))
+  for (const f of tracked.filter((x) => /\.(md|mjs|json)$/.test(x) && !x.startsWith('tests/') && !x.endsWith('CHANGELOG.md') && !x.includes('/core/') && !x.startsWith('core/') && !allowed.has(x) && !['package.json', 'package-lock.json'].includes(x)))
     for (const [m] of read(f).matchAll(/sb-context-nuxt:[a-z-]+|\.sb-context-nuxt\b|project-settings\.json|github_settings\.json/g)) problems.push(`${f}: ${m}`);
   assert.deepEqual(problems, []);
 });
@@ -115,8 +115,9 @@ describe('core', () => {
     execFileSync(process.execPath, [join(REPO, 'scripts/sync-core.mjs'), '--check'], { cwd: REPO, encoding: 'utf8' });
   });
 
-  test('the bundle carries nothing but its manifest', () => {
-    assert.deepEqual(tracked.filter((f) => f.startsWith(`plugins/${BUNDLE}/`)), [`plugins/${BUNDLE}/.claude-plugin/plugin.json`]);
+  test('the bundle carries nothing but its manifest (and the changelog release-please writes)', () => {
+    const files = tracked.filter((f) => f.startsWith(`plugins/${BUNDLE}/`) && f !== `plugins/${BUNDLE}/CHANGELOG.md`);
+    assert.deepEqual(files, [`plugins/${BUNDLE}/.claude-plugin/plugin.json`]);
   });
 });
 
@@ -147,6 +148,14 @@ describe('manifests', () => {
     assert.equal(market.name, 'sb-context-fe');
     assert.deepEqual(market.plugins.map((p) => p.name).sort(), [...PLUGINS].sort());
     for (const p of market.plugins) assert.equal(p.source, `./plugins/${p.name}`, p.name);
+  });
+
+  test('release-please releases every plugin with tags it can parse back', () => {
+    const cfg = JSON.parse(read('release-please-config.json'));
+    assert.deepEqual(Object.keys(cfg.packages).sort(), PLUGINS.map((p) => `plugins/${p}`).sort());
+    for (const [path, pkg] of Object.entries(cfg.packages)) assert.equal(pkg.component, path.split('/')[1], path);
+    // release-please splits a tag on a one-character separator: with "--" it reads the component as "sb-core-" and loses every release
+    assert.ok(!cfg['tag-separator'] || cfg['tag-separator'].length === 1, `tag-separator "${cfg['tag-separator']}" cannot be parsed back`);
   });
 
   test('users of sb-context-nuxt are moved to the bundle', () => {
