@@ -1,6 +1,6 @@
 {
   "name": "sb-core",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Core of sb-context-fe: project setup and the shared .sb-context/ folder (project settings), migration from sb-context-nuxt 0.x, onboarding.",
   "author": {
     "name": "stefanBid"
