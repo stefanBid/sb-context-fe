@@ -1,6 +1,6 @@
 {
   "name": "sb-context-fe",
-  "version": "0.6.0",
+  "version": "1.0.0",
   "description": "Installs the whole sb-context-fe kit in one step: sb-core, sb-github, sb-health and sb-design.",
   "author": {
     "name": "stefanBid"
