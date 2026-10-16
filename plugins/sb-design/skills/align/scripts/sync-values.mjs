@@ -22,7 +22,7 @@
 
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { resolve, join } from 'node:path';
-import { projectRoot, cssDirOf, contextDirOf, ensureContextDir, relPath } from '../../../core/lib/project.mjs';
+import { projectRoot, requireStack, cssDirOf, contextDirOf, ensureContextDir, relPath } from '../../../core/lib/project.mjs';
 import { nHex, nShadow, nFamily, toRem, same, remStr, blockOf, findSlot, writeSlots, refreshMobileComments, parseMapArg, byRole as byRoleOf } from './lib/sync.mjs';
 
 const argv = process.argv.slice(2);
@@ -32,6 +32,7 @@ const get = (n) => {
 };
 const has = (n) => argv.includes(n);
 const root = projectRoot();
+requireStack(root, { adapters: ['nuxt'], kinds: ['app'], what: 'The design sync of /sb-design:align' });
 const snapPath = resolve(get('--snapshot') || join(contextDirOf(root), 'design-source.md'));
 
 // ---------------------------------------------------------------------------

@@ -18,7 +18,7 @@ import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from '
 import { join, resolve, dirname, relative, extname, basename, isAbsolute } from 'node:path';
 import { createRequire } from 'node:module';
 import { findColors, parseColor, toHex } from './color.mjs';
-import { projectRoot } from '../../../core/lib/project.mjs';
+import { projectRoot, srcDirOf, requireStack } from '../../../core/lib/project.mjs';
 import { prefixFromUtilities } from '../../../scripts/lib/prefix.mjs';
 import { toPx as toPxRaw, parseFontShorthand, nearestStep, scaleFromTokens, clusterSizes, scaleFromClusters, mediaWidths, commonDir } from './lib/scale.mjs';
 
@@ -31,6 +31,8 @@ const get = (n) => getAll(n)[0] ?? null;
 const explicitFiles = getAll('--file').map((f) => resolve(f));
 // --file mode analyzes loose files and may run outside a project; otherwise the Nuxt project root is required
 const root = projectRoot(get('--root'), { required: !explicitFiles.length });
+// sb-design knows the Nuxt structure only, and aligns apps, not libraries
+if (!explicitFiles.length) requireStack(root, { adapters: ['nuxt'], kinds: ['app'], what: 'The style inventory of /sb-design:align' });
 const outFile = get('--out');
 const scanClasses = argv.includes('--classes');
 
@@ -101,8 +103,7 @@ const cssEntries = [];
 if (configPath && !explicitFiles.length) {
   const cfg = readFileSync(configPath, 'utf8');
   project.config = rel(configPath);
-  const sd = cfg.match(/srcDir\s*:\s*['"`]([^'"`]+)['"`]/);
-  srcDir = sd ? resolve(root, sd[1]) : existsSync(join(root, 'app')) ? join(root, 'app') : root;
+  srcDir = srcDirOf(root);
   const cssArr = cfg.match(/\bcss\s*:\s*\[([\s\S]*?)\]/);
   if (cssArr) for (const m of cssArr[1].matchAll(/['"`]([^'"`]+)['"`]/g)) cssEntries.push(m[1]);
   const mods = cfg.match(/\bmodules\s*:\s*\[([\s\S]*?)\]/);

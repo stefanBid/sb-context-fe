@@ -41,6 +41,7 @@ It **does not touch** components, pages, layouts, `<style scoped>` or `<style mo
 
 ## Requirements (blocking)
 
+- **An app on a stack sb-design has an adapter for** (today Nuxt): `node "${CLAUDE_SKILL_DIR}/../../core/scripts/profile.mjs" get` must show `adapter: "nuxt"` and `kind: "app"`. A library, or a Vue + Vite app, is out of scope for now: say so and stop (the scripts refuse it too). Format: `${CLAUDE_SKILL_DIR}/../../core/references/profile.md`.
 - **Tailwind 4** with `@tailwindcss/vite`, and **Nuxt 4**. With Tailwind 3 (`tailwind.config.*`, `@tailwind`, `@config`, `@nuxtjs/tailwindcss`), Nuxt 3 or global CSS in SCSS, the skill stops and says so (P1, P2, P5). No adaptation.
 - **`@nuxtjs/color-mode`** and **`@nuxt/fonts`** are required. If missing, the skill installs them during the write phase (`npx nuxi module add color-mode`, `npx nuxi module add fonts`; use the project's package manager: `facts.packageManager` of `project-settings.mjs detect --need stack`, or `stack.packageManager` in the settings).
 
