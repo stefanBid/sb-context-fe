@@ -1,6 +1,6 @@
 {
   "name": "sb-health",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Project health checks: build, lint, dependencies (with major-version migrations), README, SEO, and a full checkup.",
   "author": {
     "name": "stefanBid"
