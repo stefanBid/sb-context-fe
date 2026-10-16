@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { makeProject, SCRIPTS } from '../helpers/fixture.mjs';
 
 const today = new Date().toISOString().slice(0, 10);
-const NOTES = '.sb-context-nuxt/dependency-notes.json';
+const NOTES = '.sb-context/dependency-notes.json';
 
 describe('dependency-notes.mjs', () => {
   let p;
@@ -117,11 +117,11 @@ describe('dependency-notes.mjs', () => {
     assert.match(notes('list').stderr, /no "notes" list/);
   });
 
-  test('the plugin folder is added to .git/info/exclude once', () => {
+  test('the notes are committable: the folder gets its .gitignore, the git exclude is not touched', () => {
     add();
     notes('touch', 'nuxt@5.0.0');
-    const lines = p.read('.git/info/exclude').split('\n').filter((l) => l === '.sb-context-nuxt/');
-    assert.equal(lines.length, 1);
+    assert.doesNotMatch(p.read('.sb-context/.gitignore'), /dependency-notes/);
+    assert.equal(p.exists('.git/info/exclude'), false);
   });
 
   test('unknown command prints the usage', () => {

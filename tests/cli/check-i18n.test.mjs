@@ -16,7 +16,7 @@ describe('check-i18n.mjs', () => {
   test('a fully internationalized file is clean (exit 0)', () => {
     p = makeProject({
       ...LOCALES,
-      '.sb-context-nuxt/project-settings.json': { i18n: { defaultLocale: 'it' } },
+      '.sb-context/settings.json': { i18n: { defaultLocale: 'it' } },
       'app/pages/index.vue': `<template>
   <div>
     <h1>{{ $t('home.title') }}</h1>
@@ -101,7 +101,7 @@ const route = { to: '/home', icon: 'i-lucide-home' }
     const def = out.json().missingKeys.filter((k) => k.isDefault).map((k) => k.locale);
     assert.deepEqual(def, ['en'], 'without settings the first file (alphabetical) is the default');
 
-    p.write('.sb-context-nuxt/project-settings.json', { i18n: { defaultLocale: 'it' } });
+    p.write('.sb-context/settings.json', { i18n: { defaultLocale: 'it' } });
     out = check('app');
     assert.deepEqual(out.json().missingKeys.filter((k) => k.isDefault).map((k) => k.locale), ['it']);
   });
@@ -110,7 +110,7 @@ const route = { to: '/home', icon: 'i-lucide-home' }
     p = makeProject({ 'lang-files/it.json': { a: 'x' }, 'app/a.vue': "<template><p>{{ $t('a') }}</p></template>" });
     assert.equal(check('app').json().note, 'no locale folder found: keys not checked');
     assert.equal(check('app', '--locales', 'lang-files').code, 0);
-    p.write('.sb-context-nuxt/project-settings.json', { i18n: { messagesDir: 'lang-files' } });
+    p.write('.sb-context/settings.json', { i18n: { messagesDir: 'lang-files' } });
     assert.equal(check('app').json().note, null);
   });
 

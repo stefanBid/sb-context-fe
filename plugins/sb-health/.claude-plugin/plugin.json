@@ -1,0 +1,12 @@
+{
+  "name": "sb-health",
+  "version": "0.6.0",
+  "description": "Project health checks: build, lint, dependencies (with major-version migrations), README, SEO, and a full checkup.",
+  "author": {
+    "name": "stefanBid"
+  },
+  "repository": "https://github.com/stefanBid/sb-context-fe",
+  "dependencies": [
+    "sb-core"
+  ]
+}

@@ -7,35 +7,50 @@ describe('setup-state.mjs', () => {
   const state = (...args) => p.run(SCRIPTS.setupState, args);
   afterEach(() => p?.cleanup());
 
-  test('a bare project: nothing known, writes nothing, recommends style-align first', () => {
+  test('a bare project: nothing known, writes nothing, recommends /sb-design:align first', () => {
     p = makeProject();
     const s = state().json();
-    assert.deepEqual(s.folder, { path: '.sb-context-nuxt', exists: false, excluded: false, initialized: null });
+    assert.deepEqual(s.folder, { path: '.sb-context', exists: false, gitignore: false, ignoredByProject: false, initialized: null });
     assert.equal(Object.values(s.files).some(Boolean), false);
     assert.equal(s.style.cssDir, 'assets/css');
     assert.equal(s.style.prefix, null);
     assert.equal(s.github.remote, null);
-    assert.equal(s.next[0].skill, 'style-align');
-    assert.equal(p.exists('.sb-context-nuxt'), false);
+    assert.equal(s.next[0].skill, '/sb-design:align');
+    assert.equal(p.exists('.sb-context'), false);
     assert.equal(p.exists('.git/info/exclude'), false);
   });
 
-  test('--init creates the folder and excludes it from git, once', () => {
+  test('--init creates the folder with its .gitignore, and never writes the git exclude', () => {
     p = makeProject();
     const s = state('--init').json();
     assert.equal(s.folder.exists, true);
-    assert.equal(s.folder.excluded, true);
-    assert.equal(s.folder.initialized, 'added to .git/info/exclude');
-    state('--init');
-    assert.equal(p.read('.git/info/exclude').split('\n').filter((l) => l === '.sb-context-nuxt/').length, 1);
+    assert.equal(s.folder.gitignore, true);
+    assert.equal(s.folder.initialized, 'created');
+    assert.match(p.read('.sb-context/.gitignore'), /^github\.json$/m);
+    assert.equal(state('--init').json().folder.initialized, 'exists');
+    assert.equal(p.exists('.git/info/exclude'), false);
   });
 
-  test('--init without git creates the folder and says so', () => {
+  test('--init without git creates the folder too', () => {
     p = makeProject({}, { git: false });
     const s = state('--init').json();
     assert.equal(s.git, false);
     assert.equal(s.folder.exists, true);
-    assert.equal(s.folder.initialized, 'not a git repo');
+    assert.equal(s.folder.initialized, 'created');
+  });
+
+  test('the project keeping the whole folder local is reported, not changed', () => {
+    p = makeProject({ '.gitignore': 'node_modules\n.sb-context/\n' });
+    assert.equal(state().json().folder.ignoredByProject, true);
+    assert.equal(p.read('.gitignore'), 'node_modules\n.sb-context/\n');
+  });
+
+  test('a project still on sb-context-nuxt 0.x is refused until it is migrated', () => {
+    p = makeProject({ '.sb-context-nuxt/project-settings.json': '{}' });
+    const r = state('--init');
+    assert.equal(r.code, 2);
+    assert.match(r.stderr, /\/sb-core:migration/);
+    assert.equal(p.exists('.sb-context'), false);
   });
 
   test('an aligned project with GitHub, snapshot and checks: style read, next steps only for what is missing', () => {
@@ -45,9 +60,9 @@ describe('setup-state.mjs', () => {
       'CLAUDE.md': '# rules',
     }));
     p.write('.git/config', '[remote "origin"]\n\turl = git@github.com:a/b.git\n');
-    p.write('.sb-context-nuxt/design-source.md', '# snapshot');
-    p.write('.sb-context-nuxt/github_settings.json', { signature: { enabled: false, name: null } });
-    p.write('.sb-context-nuxt/dependency-notes.json', { version: 1, notes: [{ id: 'a@2', status: 'deferred' }, { id: 'b@2', status: 'resolved' }] });
+    p.write('.sb-context/design-source.md', '# snapshot');
+    p.write('.sb-context/github.json', { signature: { enabled: false, name: null } });
+    p.write('.sb-context/dependency-notes.json', { version: 1, notes: [{ id: 'a@2', status: 'deferred' }, { id: 'b@2', status: 'resolved' }] });
     const s = state().json();
     assert.equal(s.style.cssDir, 'app/assets/css');
     assert.equal(Object.values(s.style.files).every(Boolean), true);
@@ -58,14 +73,14 @@ describe('setup-state.mjs', () => {
     assert.equal(s.github.releasePlease, true);
     assert.equal(s.dependencyNotes.open, 1);
     assert.equal(s.docs['CLAUDE.md'], true);
-    assert.deepEqual(s.next.map((n) => n.skill), ['style-align', 'dependency-check']);
+    assert.deepEqual(s.next.map((n) => n.skill), ['/sb-design:align', '/sb-health:deps']);
     assert.match(s.next[0].why, /never applied/);
   });
 
   test('corrupted local files do not stop the report', () => {
     p = makeProject();
-    p.write('.sb-context-nuxt/github_settings.json', '{ nope');
-    p.write('.sb-context-nuxt/dependency-notes.json', '[]');
+    p.write('.sb-context/github.json', '{ nope');
+    p.write('.sb-context/dependency-notes.json', '[]');
     const r = state();
     assert.equal(r.code, 0);
     assert.equal(r.json().github.signatureAsked, false);

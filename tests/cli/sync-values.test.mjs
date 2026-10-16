@@ -5,7 +5,7 @@ import { extract, tokens } from '../helpers/design.mjs';
 
 const THEME = 'app/assets/css/theme.css';
 const TYPO = 'app/assets/css/typography.css';
-const APPLIED = '.sb-context-nuxt/design-applied.json';
+const APPLIED = '.sb-context/design-applied.json';
 
 /** A project with the reference style and a snapshot of the sample design (optionally changed). */
 function setup(change = () => {}) {
@@ -138,7 +138,7 @@ describe('sync-values.mjs', () => {
     assert.match(r.stderr, /Two design names map to the same role "ink"/);
 
     assert.equal(sync('--map', 'colors.surface=bg').code, 0);
-    const map = p.json('.sb-context-nuxt/design-map.json');
+    const map = p.json('.sb-context/design-map.json');
     assert.equal(map.colors.surface, 'bg');
     r = sync('--json');
     const d = r.json().differences.filter((x) => x.token === 'bg');

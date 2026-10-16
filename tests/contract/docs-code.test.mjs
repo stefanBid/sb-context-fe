@@ -8,14 +8,15 @@ import { readFileSync } from 'node:fs';
 import { join, basename } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { REPO } from '../helpers/fixture.mjs';
-import { ROLES, ROLE_TYPES } from '../../skills/design-extract-style/scripts/lib/tokens.mjs';
-import { STANDARD_PAIRS } from '../../skills/style-align/scripts/lib/theme-vars.mjs';
-import { PREF } from '../../skills/style-migrate/scripts/lib/classes.mjs';
+import { ROLES, ROLE_TYPES } from '../../plugins/sb-design/skills/extract-style/scripts/lib/tokens.mjs';
+import { STANDARD_PAIRS } from '../../plugins/sb-design/skills/align/scripts/lib/theme-vars.mjs';
+import { PREF } from '../../plugins/sb-design/skills/migrate/scripts/lib/classes.mjs';
 
 // LF even where git checks files out with CRLF (Windows)
 const read = (p) => readFileSync(join(REPO, p), 'utf8').replaceAll('\r\n', '\n');
 const tracked = execFileSync('git', ['ls-files'], { cwd: REPO, encoding: 'utf8' }).split('\n').filter(Boolean);
-const SCRIPTS = tracked.filter((f) => /^(scripts|skills\/[^/]+\/scripts)\/[^/]+\.mjs$/.test(f));
+// the scripts a doc can name: core/scripts, each plugin's scripts and each skill's scripts (not the copies of core/)
+const SCRIPTS = tracked.filter((f) => /^(scripts|core\/scripts|plugins\/[^/]+\/scripts|plugins\/[^/]+\/skills\/[^/]+\/scripts)\/[^/]+\.mjs$/.test(f));
 const DOCS = tracked.filter((f) => f.endsWith('.md') && f !== 'CHANGELOG.md' && !f.startsWith('tests/'));
 const byName = Object.fromEntries(SCRIPTS.map((f) => [basename(f), f]));
 
@@ -88,7 +89,7 @@ describe('exit codes', () => {
 
   test('tokens-to-source.mjs: exit 4 (coverage mismatch) is documented', () => {
     assert.ok(exitsOf(split(byName['tokens-to-source.mjs']).code).has(4));
-    assert.match(read('skills/design-extract-style/references/design-source.md'), /exits with code 4/);
+    assert.match(read('plugins/sb-design/skills/extract-style/references/design-source.md'), /exits with code 4/);
   });
 
   test('the README table of sync-values codes matches the script', () => {
@@ -100,7 +101,7 @@ describe('exit codes', () => {
 });
 
 describe('roles', () => {
-  const method = read('skills/style-align/references/method.md');
+  const method = read('plugins/sb-design/skills/align/references/method.md');
   const table = method.split('| Group | Roles | What they are for |')[1].split('\n\n')[0];
   const METHOD_COLORS = new Set(
     table.split('\n').flatMap((row) => {
@@ -120,19 +121,19 @@ describe('roles', () => {
   });
 
   test('the typography reference lists the type roles of the design extraction', () => {
-    const typo = read('skills/style-align/references/typography.md').split('| Role | Family | Purpose |')[1].split('\n\n')[0];
+    const typo = read('plugins/sb-design/skills/align/references/typography.md').split('| Role | Family | Purpose |')[1].split('\n\n')[0];
     const roles = [...typo.matchAll(/^\| `([a-z0-9-]+)`/gm)].map((m) => m[1]).filter((r) => r !== 'hero');
     assert.deepEqual(roles, ROLE_TYPES);
   });
 
   test('the example style uses only fixed color roles', () => {
-    const theme = read('skills/style-align/references/example/theme.css');
+    const theme = read('plugins/sb-design/skills/align/references/example/theme.css');
     const roles = new Set([...theme.matchAll(/--sb-([a-z0-9-]+)\s*:/g)].map((m) => m[1]).filter((r) => !r.startsWith('shadow-')));
     assert.deepEqual([...roles].filter((r) => !METHOD_COLORS.has(r)), []);
   });
 
   test('the example typography defines every type role', () => {
-    const typo = read('skills/style-align/references/example/typography.css');
+    const typo = read('plugins/sb-design/skills/align/references/example/typography.css');
     const roles = new Set([...typo.matchAll(/--text-([a-z0-9-]+?)\s*:/g)].map((m) => m[1]));
     assert.deepEqual(ROLE_TYPES.filter((r) => !roles.has(r)), []);
   });

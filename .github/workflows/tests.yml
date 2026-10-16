@@ -49,7 +49,8 @@ jobs:
           echo "releasable=$releasable" >> "$GITHUB_OUTPUT"
           echo "Title: $TITLE → releasable: $releasable"
 
-  # the scripts run on the user's machine: every Node version Nuxt 4 supports, and the three OSes
+  # the scripts run on the user's machine: every Node version Nuxt 4 supports, and the three OSes.
+  # The copies of core/ inside the plugins must match core/ (tests/contract checks it with sync-core --check).
   test:
     name: test (${{ matrix.os }}, node ${{ matrix.node }})
     needs: scope
@@ -85,9 +86,9 @@ jobs:
       - name: Run tests
         run: npm test
 
-  # Claude Code's own schema check of the marketplace, the plugin manifest and every skill
-  # (frontmatter, unknown fields), actionlint on every workflow (ours and gh-checks' template),
-  # plus the plugin's projected token cost in the job summary.
+  # Claude Code's own schema check of the marketplace, every plugin manifest and every skill
+  # (frontmatter, unknown fields), actionlint on every workflow (ours and the sb-github checks template),
+  # plus each plugin's projected token cost in the job summary.
   # No model call, no credentials.
   plugin-check:
     name: plugin validate
@@ -109,21 +110,24 @@ jobs:
       - name: Validate the plugin
         run: npm run validate
 
-      # the repo's workflows and the one gh-checks copies into other projects
+      # the repo's workflows and the one /sb-github:checks copies into other projects
       - name: Lint the workflows
         env:
           ACTIONLINT_VERSION: 1.7.7
         run: |
           bash <(curl -sSfL "https://raw.githubusercontent.com/rhysd/actionlint/v${ACTIONLINT_VERSION}/scripts/download-actionlint.bash") "$ACTIONLINT_VERSION" "$RUNNER_TEMP"
-          "$RUNNER_TEMP/actionlint" -color .github/workflows/*.yml skills/gh-checks/workflows/*.yml
+          "$RUNNER_TEMP/actionlint" -color .github/workflows/*.yml plugins/sb-github/skills/checks/workflows/*.yml
 
       - name: Token cost
         run: |
           {
             echo '### Plugin token cost'
-            echo '```'
-            claude --plugin-dir . plugin details sb-context-nuxt
-            echo '```'
+            for p in sb-core sb-github sb-health sb-design; do
+              echo "#### $p"
+              echo '```'
+              claude --plugin-dir "plugins/$p" plugin details "$p"
+              echo '```'
+            done
           } >> "$GITHUB_STEP_SUMMARY"
 
   # main only: measures coverage and publishes the README badges (shields.io endpoint JSON)

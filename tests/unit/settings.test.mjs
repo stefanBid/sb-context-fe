@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { dig, parseValue, setPath, parseI18nConfig, componentNaming, siteUrlOf, themePrefixOf } from '../../scripts/lib/settings.mjs';
+import { dig, parseValue, setPath, parseI18nConfig, componentNaming, siteUrlOf, themePrefixOf } from '../../core/lib/settings.mjs';
 
 describe('dotted paths', () => {
   test('dig', () => {

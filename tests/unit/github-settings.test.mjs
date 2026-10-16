@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { setPreference, refreshCache, diffValue, status, PREFERENCES, CACHE, STALE_DAYS } from '../../scripts/lib/github-settings.mjs';
+import { setPreference, refreshCache, diffValue, status, PREFERENCES, CACHE, STALE_DAYS } from '../../plugins/sb-github/scripts/lib/github-settings.mjs';
 
 const DAY = 86400000;
 const NOW = Date.parse('2026-10-15');

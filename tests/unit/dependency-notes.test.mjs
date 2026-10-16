@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseBlocker, daysSince, view, upsertNote, recordCheck } from '../../scripts/lib/dependency-notes.mjs';
+import { parseBlocker, daysSince, view, upsertNote, recordCheck } from '../../plugins/sb-health/scripts/lib/dependency-notes.mjs';
 
 describe('parseBlocker', () => {
   test('splits package, range and owner', () => {

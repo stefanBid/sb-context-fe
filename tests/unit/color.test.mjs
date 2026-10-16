@@ -1,7 +1,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import * as alignColor from '../../skills/style-align/scripts/color.mjs';
-import * as migrateColor from '../../skills/style-migrate/scripts/color.mjs';
+import * as alignColor from '../../plugins/sb-design/skills/align/scripts/color.mjs';
+import * as migrateColor from '../../plugins/sb-design/skills/migrate/scripts/color.mjs';
 
 // a tiny seeded PRNG: random inputs, same every run
 const rng = (seed) => () => ((seed = (seed * 1664525 + 1013904223) % 2 ** 32) / 2 ** 32);

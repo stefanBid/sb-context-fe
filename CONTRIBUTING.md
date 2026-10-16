@@ -1,6 +1,20 @@
 # Contributing
 
-`main` is protected: every change goes through a pull request, merged with **squash**. The PR title becomes the commit on `main`, and [release-please](https://github.com/googleapis/release-please) reads it to decide the next version, the tag and the changelog. A title outside the format means a missing or wrong release, so the `lint-pr-title` check blocks the merge.
+`main` is protected: every change goes through a pull request, merged with **squash**. The PR title becomes the commit on `main`, and [release-please](https://github.com/googleapis/release-please) reads it to decide the next version, the tag and the changelog of **each plugin the commit touches**. A title outside the format means a missing or wrong release, so the `lint-pr-title` check blocks the merge.
+
+## Layout
+
+```
+.claude-plugin/marketplace.json   the marketplace: one entry per plugin, renames from 0.x
+core/                             shared code and references: the only place to edit them
+plugins/<plugin>/                 one plugin each: .claude-plugin/plugin.json, skills/, scripts/, README.md
+plugins/<plugin>/core/            generated copy of core/ (node scripts/sync-core.mjs), never edited by hand
+plugins/sb-context-fe/            the bundle: only a manifest whose dependencies are the four plugins
+scripts/sync-core.mjs             copies core/ into every plugin; --check fails on a stale copy
+tests/                            unit, cli and contract tests for all the plugins
+```
+
+A plugin is installed alone into Claude Code's cache, so nothing in it may point outside its own folder: a skill reaches shared code through its plugin's copy (`${CLAUDE_SKILL_DIR}/../../core/…`), and a step that needs another plugin calls that plugin's **skill** by name (`/sb-design:check`), never its files. The contract tests enforce both.
 
 ## Commit / PR title format
 
@@ -24,32 +38,31 @@ Lowercase type, no trailing period, description under about 70 characters.
 | `ci` | GitHub Actions and repo automation | none | no |
 | `chore` | anything else that is not shipped | none | no |
 
-A change that edits what a skill **does** (`skills/**`) is a `feat` or a `fix`, even when only a `SKILL.md` changes: that file is the product.
+A change that edits what a skill **does** (`plugins/**`, `core/**`) is a `feat` or a `fix`, even when only a `SKILL.md` changes: that file is the product.
 
-Until `1.0.0`, a breaking change bumps the **minor** version, not the major.
 
 ### Breaking changes
 
 Add `!` after the type, and explain in the PR body:
 
 ```
-feat(style-align)!: rename the token prefix question
+feat(sb-design)!: rename the token prefix question
 
 BREAKING CHANGE: the prefix is now asked after the inventory, not before.
 ```
 
 ### Scopes
 
-Use the skill name when the change touches one skill: `style-align`, `style-migrate`, `design-extract-style`, `design-extract-ui`, `gh-admin`, `gh-checks`, `onboard`, `setup`, `lint-check`, `build-check`, `seo-check`, `dependency-check`, `docs-update`, `full-checkup`. Leave the scope out for changes that cut across the plugin.
+Use the plugin when the change touches one plugin: `sb-core`, `sb-github`, `sb-health`, `sb-design`, `sb-context-fe` (the bundle); `core` for the shared code in `core/`. Leave the scope out for changes that cut across the marketplace. The scope is for people: release-please decides which plugins to release from the paths the commit touches.
 
 ### Examples
 
 ```
-feat(gh-admin): add security audit recipe
-fix(style-align): report the comment that justifies a drift
+feat(sb-github): add security audit recipe to admin
+fix(sb-design): report the comment that justifies a drift in align
+fix(core): find the project root from a nested folder
 docs: list the new skills in the README
-ci: add release-please
-refactor(style-migrate): split the mapping table
+refactor(sb-design): split the mapping table of migrate
 ```
 
 ## Tests
@@ -64,16 +77,17 @@ npm run test:cli       # each script run on a throwaway Nuxt project (tests/cli)
 npm run test:contract  # SKILL.md paths, cross-skill references, manifests, docs (tests/contract)
 npm run test:coverage
 npm run test:coverage:lcov  # same, and writes lcov.info (used for the README badges)
-npm run validate            # claude plugin validate --strict on the marketplace, the manifest and the skills (needs Claude Code installed)
+npm run validate            # claude plugin validate --strict on the marketplace and every plugin (needs Claude Code installed)
+node scripts/sync-core.mjs  # after editing core/: refresh the copies in the plugins
 ```
 
 | Layer | What it guarantees |
 | --- | --- |
 | `tests/unit` | the logic in the `lib/` modules: color math and WCAG contrast, CSS variable resolution, value normalizers and in-place rewrites, prefix rules, type scale and clusters, class anatomy, role maps, i18n heuristics, dependency notes, GitHub settings, setup recommendations |
-| `tests/cli` | each script end to end on a real folder (`tests/helpers/fixture.mjs`): exit codes, JSON output, files written, idempotence of `--apply`, `.git/info/exclude` |
-| `tests/contract` | the files gh-admin and gh-checks apply to other projects (labels, ruleset, workflow template) are valid; every `${CLAUDE_SKILL_DIR}/…` path exists, every `/sb-context-nuxt:<skill>` names a skill, the two `color.mjs` copies are identical, manifests and CONTRIBUTING agree with the code |
+| `tests/cli` | each script end to end on a real folder (`tests/helpers/fixture.mjs`): exit codes, JSON output, files written, idempotence of `--apply`, the `.sb-context/` folder and the 0.x migration |
+| `tests/contract` | the files gh-admin and gh-checks apply to other projects (labels, ruleset, workflow template) are valid; every `${CLAUDE_SKILL_DIR}/…` path exists inside its own plugin, every `/<plugin>:<skill>` names a skill, every import stays inside its plugin, the copies of `core/` are up to date, the two `color.mjs` copies are identical, manifests, release config and CONTRIBUTING agree with the code |
 
-How scripts are written so they can be tested: the logic lives in `lib/` modules next to the script (`scripts/lib/`, `skills/<skill>/scripts/lib/`) as pure exported functions; the script itself reads arguments and files, calls them, prints, and exits. A new algorithm goes in `lib/` with its unit tests; a new script gets a test in `tests/cli`.
+How scripts are written so they can be tested: the logic lives in `lib/` modules next to the script (`core/lib/`, `plugins/<plugin>/scripts/lib/`, `plugins/<plugin>/skills/<skill>/scripts/lib/`) as pure exported functions; the script itself reads arguments and files, calls them, prints, and exits. A new algorithm goes in `lib/` with its unit tests; a new script gets a test in `tests/cli`.
 
 Outputs that other skills or the model read as a format (`design-source.md`, the inventory, template, contrast and sync reports) are pinned as golden files in `tests/snapshots/`. A change to them must be a decision: run `UPDATE_SNAPSHOTS=1 npm test`, review the diff and commit it with the change.
 
@@ -103,13 +117,14 @@ On every push to `main` the `coverage badge` job measures line and branch covera
 
 ## Releases
 
-Never edit `version` by hand. release-please keeps a release PR (`chore(main): release X.Y.Z`) open and up to date. Merging it bumps `.claude-plugin/plugin.json`, writes `CHANGELOG.md` and creates the `vX.Y.Z` tag and the GitHub Release.
+Never edit `version` by hand. release-please keeps one release PR (`chore(main): release …`) open and up to date for every plugin with releasable changes. Merging it bumps each plugin's `.claude-plugin/plugin.json`, writes its `plugins/<plugin>/CHANGELOG.md` and creates its tag and GitHub Release. Tags are `<plugin>--v<version>` (`sb-core--v1.0.0`), the convention Claude Code uses to resolve plugin dependencies. A change to `core/` touches every plugin's copy, so it releases all of them.
 
-Other projects receive it with:
+The changelog of the 0.x releases (the single `sb-context-nuxt` plugin) stays in the root `CHANGELOG.md`.
+
+Other projects receive a release with:
 
 ```
-/plugin marketplace update sb-context-nuxt
-/plugin update sb-context-nuxt@sb-context-nuxt
+/plugin marketplace update sb-context-fe
 /reload-plugins
 ```
 

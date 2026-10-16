@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { textRules, literalOf, keysIn, scriptLineText, hasKey } from '../../scripts/lib/i18n-text.mjs';
+import { textRules, literalOf, keysIn, scriptLineText, hasKey } from '../../core/lib/i18n-text.mjs';
 
 const rules = textRules();
 

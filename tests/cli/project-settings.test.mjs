@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { makeProject, SCRIPTS } from '../helpers/fixture.mjs';
 
 const today = new Date().toISOString().slice(0, 10);
-const FILE = '.sb-context-nuxt/project-settings.json';
+const FILE = '.sb-context/settings.json';
 
 const I18N_CONFIG = `export default defineNuxtConfig({
   modules: ['@nuxtjs/i18n', '@nuxt/icon'],
@@ -41,7 +41,8 @@ describe('project-settings.mjs', () => {
     assert.equal(s.i18n.source, 'detected');
     assert.equal(s.i18n.updatedAt, today);
     assert.equal(settings('get', 'i18n.locales').json()[1], 'en');
-    assert.match(p.read('.git/info/exclude'), /^\.sb-context-nuxt\/$/m);
+    assert.equal(p.exists('.sb-context/.gitignore'), true);
+    assert.equal(p.exists('.git/info/exclude'), false);
   });
 
   test('set reads JSON when it can and keeps a bare word as a string', () => {
