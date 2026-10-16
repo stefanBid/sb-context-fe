@@ -20,6 +20,8 @@ export const SCRIPTS = {
   githubSettings: join(REPO, 'plugins/sb-github/scripts/github-settings.mjs'),
   setupState: join(REPO, 'plugins/sb-core/scripts/setup-state.mjs'),
   migrate: join(REPO, 'plugins/sb-core/scripts/migrate-v1.mjs'),
+  profile: join(REPO, 'core/scripts/profile.mjs'),
+  projectPlugins: join(REPO, 'plugins/sb-core/scripts/project-plugins.mjs'),
   checkI18n: join(REPO, 'core/scripts/check-i18n.mjs'),
   tokensToSource: join(REPO, 'plugins/sb-design/skills/extract-style/scripts/tokens-to-source.mjs'),
   contrast: join(REPO, 'plugins/sb-design/skills/align/scripts/contrast.mjs'),

@@ -3,7 +3,8 @@
 // on a project that is already in progress (or already aligned), where onboard would do too much.
 //
 // Usage (from anywhere inside a Nuxt project):
-//   node setup-state.mjs           the state as JSON: the .sb-context folder and its files, the four
+//   node setup-state.mjs           the state as JSON: the project profile (saved or not, confirmed values that drifted),
+//                                  the .sb-context folder and its files, the four
 //                                  global style files, the design snapshot, the GitHub side, project docs,
 //                                  and the recommended next skills. Writes nothing.
 //   node setup-state.mjs --init    also creates .sb-context/ and its .gitignore (personal and throwaway files)
@@ -15,6 +16,7 @@ import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { projectRoot, cssDirOf, contextDirOf, ensureContextDir, relPath, CONTEXT_DIR } from '../core/lib/project.mjs';
 import { themePrefixOf } from '../core/lib/settings.mjs';
+import { loadProfile } from '../core/lib/profile.mjs';
 import { LOCAL_FILES, STYLE_FILES, githubRemoteOf, recommend } from './lib/setup.mjs';
 
 const root = projectRoot();
@@ -59,9 +61,18 @@ const workflows = existsSync(workflowsDir) ? readdirSync(workflowsDir).filter((f
 const github = readJson(join(dir, 'github.json'));
 const notes = readJson(join(dir, 'dependency-notes.json'));
 
+const prof = loadProfile(root);
 const state = {
   root,
   git,
+  profile: {
+    saved: Boolean(prof.saved),
+    framework: prof.profile?.framework ?? null,
+    adapter: prof.profile?.adapter ?? null,
+    kind: prof.profile?.kind ?? null,
+    confirmed: prof.profile?.confirmed ?? [],
+    drift: prof.drift.filter((d) => d.confirmed).map((d) => d.key),
+  },
   folder: { path: relPath(root, dir), exists: existsSync(dir), gitignore: existsSync(join(dir, '.gitignore')), ignoredByProject, initialized },
   files,
   style: { cssDir: relPath(root, cssDir), files: styleFiles, prefix: themePrefixOf(read(join(cssDir, 'theme.css'))) },

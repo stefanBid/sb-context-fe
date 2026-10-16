@@ -21,7 +21,7 @@ import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from '
 import { join, resolve, dirname, relative, extname } from 'node:path';
 import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
-import { projectRoot } from '../../../core/lib/project.mjs';
+import { projectRoot, srcDirOf, requireStack } from '../../../core/lib/project.mjs';
 import { prefixFromUtilities } from '../../../scripts/lib/prefix.mjs';
 import { parseColor, findColors } from './color.mjs';
 import { splitVariants, rootOf, COLOR_ROOTS, classesFromExpression, remPx, lab, PREF, nearestColors as nearestOf, nearestTextRole as nearestRoleOf, headingIssues } from './lib/classes.mjs';
@@ -35,6 +35,7 @@ const opt = (n) => {
   return i === -1 ? null : argv[i + 1];
 };
 const root = projectRoot(opt('--root'));
+requireStack(root, { adapters: ['nuxt'], kinds: ['app'], what: '/sb-design:migrate' });
 const summaryOnly = argv.includes('--summary');
 const outFile = opt('--out');
 const valued = new Set(['--css', '--root', '--out']);
@@ -89,8 +90,7 @@ const twDir = dirname(locate('tailwindcss/package.json')?.path ?? need('tailwind
 // ---------------------------------------------------------------------------
 const configPath = ['nuxt.config.ts', 'nuxt.config.js', 'nuxt.config.mjs'].map((f) => join(root, f)).find(existsSync);
 const cfg = configPath ? readFileSync(configPath, 'utf8') : '';
-const sd = cfg.match(/srcDir\s*:\s*['"`]([^'"`]+)['"`]/);
-const srcDir = sd ? resolve(root, sd[1]) : existsSync(join(root, 'app')) ? join(root, 'app') : root;
+const srcDir = srcDirOf(root);
 const firstCss = cfg.match(/\bcss\s*:\s*\[\s*['"`]([^'"`]+)['"`]/)?.[1];
 const aliasPath = (e) => (/^~~\/|^@@\//.test(e) ? join(root, e.slice(3)) : /^~\/|^@\//.test(e) ? join(srcDir, e.slice(2)) : resolve(root, e));
 const cssEntry = opt('--css') ? resolve(root, opt('--css')) : firstCss ? aliasPath(firstCss) : join(srcDir, 'assets/css/main.css');

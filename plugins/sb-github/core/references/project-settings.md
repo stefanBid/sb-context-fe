@@ -2,7 +2,9 @@
 
 How the user wants **this project** to be built, saved so it is asked once and never again. File: `.sb-context/settings.json` at the project root, with the plugins' other files (`design-source.md`, `dependency-notes.json`…). The folder can be committed, so the settings travel with the project; its own `.gitignore` keeps only `github.json` and `*.prev.md` out. To keep it all local, add `.sb-context/` to the project's `.gitignore`.
 
-Scripts find the Nuxt **project root** themselves (the folder with `nuxt.config.*`, searching upward from where they start; outside a Nuxt project they refuse), so the file is always `<root>/.sb-context/settings.json`.
+Scripts find the **project root** themselves (the folder with `nuxt.config.*`, or a `package.json` that depends on nuxt or vue, searching upward from where they start; outside one they refuse), so the file is always `<root>/.sb-context/settings.json`.
+
+The settings hold **choices**. The facts about the project (framework, kind, paths, styling, libraries) are in the profile, `.sb-context/profile.json`: `profile.md` next to this file. A setting is never asked when the profile already answers it.
 
 Skills that use it today: `/sb-core:setup` and `/sb-core:onboard` through it (ask everything missing in one go), `/sb-design:extract-ui`, `/sb-design:align` (prefix) and `/sb-health:seo` (i18n, site URL). Skills reach it with `${CLAUDE_SKILL_DIR}/../../core/scripts/project-settings.mjs` (`detect`, `get`, `set`); `scripts/check-i18n.mjs` checks for inline text.
 

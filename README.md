@@ -4,7 +4,7 @@
 [![Coverage](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2FstefanBid%2Fsb-context-fe%2Fbadges%2Fcoverage.json)](#reliability)
 [![Branch coverage](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2FstefanBid%2Fsb-context-fe%2Fbadges%2Fcoverage-branches.json)](#reliability)
 
-A Claude Code **marketplace of everyday plugins for frontend projects**. Today the skills target **Nuxt 4 + Tailwind 4 projects already in progress**; Vue + Vite apps and libraries come next. This README is the user guide: every plugin and skill, when to use it, what to say to trigger it, what it reads and writes.
+A Claude Code **marketplace of everyday plugins for frontend projects**. `sb-core`, `sb-github` and `sb-health` work on **Nuxt 4** and **Vue 3 + Vite** projects, apps and libraries; `sb-design` aligns the style of **Nuxt 4 + Tailwind 4 apps** (Vue + Vite apps come next). This README is the user guide: every plugin and skill, when to use it, what to say to trigger it, what it reads and writes.
 
 The plugins do two things:
 
@@ -61,6 +61,7 @@ They do **not** judge or improve the design. That is the job of [Impeccable](#im
 - [Skill reference: sb-github](#skill-reference-sb-github)
   - [/sb-github:admin](#admin)
   - [/sb-github:checks](#checks)
+- [Project profile](#project-profile)
 - [Project settings](#project-settings)
   - [Keys](#keys)
   - [The i18n stance](#the-i18n-stance)
@@ -203,15 +204,17 @@ Reading is free; writing asks first.
 | --- | --- |
 | Global style (the only place `sb-design` writes CSS) | `<srcDir>/assets/css/` (`app/assets/css/` in Nuxt 4) |
 | The plugins' files in the project | `<root>/.sb-context/`: it can be committed; its own `.gitignore` keeps `github.json` and `*.prev.md` out. To keep it all local, add `.sb-context/` to the project's `.gitignore` |
-| Project root | the folder with `nuxt.config.*`, found from wherever a script starts |
+| Project root | the folder with `nuxt.config.*`, or a `package.json` that depends on nuxt or vue, found from wherever a script starts |
+| What the project is | `.sb-context/profile.json`: framework, kind (app or library), paths, styling, libraries. See [Project profile](#project-profile) |
 
-The plugins never commit anything themselves. Outside a Nuxt project their scripts refuse to run.
+The plugins never commit anything themselves. Outside a Nuxt or Vue project their scripts refuse to run.
 
 ### Requirements
 
 | Need | Required by |
 | --- | --- |
-| Nuxt 4 | everything (stops on Nuxt < 4) |
+| Nuxt 4, or Vue 3 (with Vite) | everything; `/sb-core:setup` stops on Nuxt < 4 and Vue < 3 |
+| A Nuxt app | `sb-design` (its scripts refuse a Vue + Vite project and libraries for now) |
 | Tailwind 4 with `@tailwindcss/vite` | `sb-design` (stops on Tailwind 3: `tailwind.config.*`, `@tailwind`, `@nuxtjs/tailwindcss`, SCSS global CSS) |
 | `@nuxtjs/color-mode`, `@nuxt/fonts` | `/sb-design:align` installs them if missing |
 | `@nuxtjs/i18n` | proposed when text is found inline (a write, with its own confirmation) |
@@ -467,16 +470,17 @@ Text is never left inline: it goes to the locale files (see [The i18n stance](#t
 | | |
 | --- | --- |
 | **Command** | `/sb-core:setup` (or natural language) |
-| **Does** | Prepares the plugins on a project already in progress or already aligned, without the style, template, build or GitHub work of `/sb-core:onboard`. Safe to run again |
-| **Writes** | `.sb-context/` (the folder, its `.gitignore`, `settings.json`). Nothing else |
+| **Does** | The way into any project: learns what it is, turns on only the plugins it needs, settles the project settings. No style, template, build or GitHub work. Safe to run again |
+| **Writes** | `.sb-context/` (the folder, its `.gitignore`, `profile.json`, `settings.json`); `.claude/settings.local.json` only to turn plugins off or on for this project, after your yes |
 
 | Step | What |
 | --- | --- |
-| 1. Stack | Nuxt 4, Tailwind 4 with `@tailwindcss/vite`, package manager, color-mode, fonts. **Stops** on Nuxt < 4; the rest matters only to `sb-design` |
+| 1. Profile | `profile.mjs detect`: framework, kind, rendering, paths, styling. Asks the **type of project** (app or library) once, plus what the files cannot tell; **stops** on Nuxt < 4 or Vue < 3 |
 | 2. Folder | `setup-state.mjs --init`: creates `.sb-context/` and its `.gitignore`, reads the state of the project |
-| 3. Project settings | `project-settings.mjs detect`, all missing questions together, answers saved |
-| 4. Style check | if the four files exist and `sb-design` is installed, `/sb-design:check` (read-only): aligned or not, in sync or not |
-| 5. Report | what the plugins know (settings, style, design snapshot, GitHub, dependency notes, docs) and the next skills to run, as recommendations |
+| 3. Plugins and skills | `project-plugins.mjs plan`: which plugins this project needs and why (e.g. no `sb-design` on a library), the install command for the missing ones, and, on your yes, the unneeded ones turned off **for this project only** |
+| 4. Project settings | `project-settings.mjs detect`, only the questions that apply to this project, all together |
+| 5. Style check | when sb-design applies and the four files exist, `/sb-design:check` (read-only) |
+| 6. Report | profile, plugins, settings, style, design snapshot, GitHub, dependency notes, docs; the skills for this project and the next steps, as recommendations |
 
 ### migration
 
@@ -657,6 +661,27 @@ It shares `github.json` with `/sb-github:admin`: once the workflow is merged and
 
 ---
 
+## Project profile
+
+What the project **is**, in `.sb-context/profile.json`: detected from its files every time, confirmed by you once. Every skill and script reads it instead of assuming a Nuxt layout. The settings below are your **choices**; the profile holds the **facts**.
+
+| Key | Example (Nuxt app) | Example (Vue library) |
+| --- | --- | --- |
+| `framework`, `bundler` | `nuxt 4`, `vite` | `vue 3`, `vite 7` |
+| `adapter` | `nuxt` | `vue-vite` |
+| `kind`, `rendering` | `app`, `ssr` | `library`, `null` |
+| `paths.src`, `paths.styles` | `app`, `app/assets/css` | `src`, `src/assets/css` |
+| `entries` | config `nuxt.config.ts`, css `nuxt.config.ts` | config `vite.config.ts`, lib `src/index.ts` |
+| `styling.engine` | `tailwind4` via `@tailwindcss/vite` | `null` |
+| `features` | router `nuxt`, i18n `@nuxtjs/i18n` | typecheck `vue-tsc` |
+| `library` | `null` | name, formats, types, peers |
+
+- **Re-detected on every read**: a moved folder or a new dependency shows up by itself.
+- **Confirmed values win**: what you confirm or correct (`profile.mjs set kind '"library"'`) is listed in `confirmed` and never overwritten by a detection.
+- **Drift is asked**: when the files contradict a confirmed value, `/sb-core:setup` asks which one is right.
+
+All the keys: [core/references/profile.md](core/references/profile.md).
+
 ## Project settings
 
 How the user wants **this project** built, asked **once** and saved in `.sb-context/settings.json`. Skills ask only what is missing and only when it matters, with the detected value as the recommended answer. A setting changes only when you ask ("add German", "stop using the Base prefix").
@@ -737,6 +762,7 @@ At the project root, shared by all the plugins. It can be committed with the pro
 
 | File | Written by | Content | In git |
 | --- | --- | --- | --- |
+| `profile.json` | `/sb-core:setup` (`profile.mjs set`, `write`) | what the project is: the [profile](#project-profile) | yes |
 | `settings.json` | `/sb-core:setup` (and `/sb-core:onboard` through it), any skill that needs a setting | the [keys](#keys) above | yes |
 | `design-source.md` | `/sb-design:extract-style` | snapshot of the Claude design: values, brand guide, component index, provenance, gaps, machine block | yes |
 | `design-source.prev.md` | `/sb-design:extract-style` | the previous snapshot, kept on re-extraction | no |
@@ -752,7 +778,9 @@ Skills call these; you rarely run them by hand. Paths are relative to the repo: 
 | --- | --- | --- |
 | `core/scripts/project-settings.mjs` (`detect`, `get`, `set`) | most skills | read and save project settings |
 | `plugins/sb-health/scripts/dependency-notes.mjs` (`list`, `add`, `touch`, `resolve`) | `/sb-health:deps` | read and write the dependency notes |
-| `plugins/sb-core/scripts/setup-state.mjs` (`--init`) | `/sb-core:setup` | state of the project for the plugin and next steps; `--init` creates the folder |
+| `core/scripts/profile.mjs` (`detect`, `get`, `set`, `write`) | `/sb-core:setup`, the skills that check the stack | detect, read and confirm the project profile |
+| `plugins/sb-core/scripts/project-plugins.mjs` (`plan`, `disable`, `enable`, `reset`) | `/sb-core:setup` | which plugins the project needs; turns them off or on in `.claude/settings.local.json` |
+| `plugins/sb-core/scripts/setup-state.mjs` (`--init`) | `/sb-core:setup` | state of the project for the plugins and next steps; `--init` creates the folder |
 | `plugins/sb-github/scripts/github-settings.mjs` (`get`, `status`, `set`, `refresh`) | `/sb-github:admin`, `/sb-github:checks` | read and write the signature choice and the repo cache; `refresh` prints what changed |
 | `core/scripts/check-i18n.mjs` | `/sb-health:checkup`, `/sb-health:seo`, `/sb-design:extract-ui` | find inline text and missing keys in the default locale |
 | `core/lib/project.mjs` | all scripts | find the Nuxt root and `srcDir`, the `.sb-context/` folder |
@@ -797,7 +825,9 @@ After alignment: `/impeccable document` records the aligned system in `DESIGN.md
 | "The skill stops: Tailwind 3 / Nuxt 3" | style skills require Nuxt 4 and Tailwind 4 with `@tailwindcss/vite`. No adaptation: upgrade first. |
 | A script says the project was set up with sb-context-nuxt 0.x | run `/sb-core:migration`: it moves `.sb-context-nuxt/` to `.sb-context/`. |
 | A step says a plugin is not installed | the skill needs another plugin of the marketplace: `/plugin install <plugin>@sb-context-fe`, or the bundle `sb-context-fe`. |
-| A script says it is not in a Nuxt project | it looks for `nuxt.config.*` upward from where it starts; run Claude Code inside the project. |
+| A script says it is not in a Nuxt or Vue project | it looks upward for `nuxt.config.*` or a `package.json` that depends on nuxt or vue; run Claude Code inside the project. |
+| An sb-design script says it supports nuxt projects for now | sb-design has no adapter yet for this stack (Vue + Vite), or the project is a library. `/sb-core:setup` can turn sb-design off for this project. |
+| The profile says the wrong kind or folder | correct it once: `/sb-core:setup` asks, or `profile.mjs set kind '"app"'`. A confirmed value is never overwritten. |
 | `/sb-design:extract-ui` refuses to start | the style is not aligned or not in sync with the design. Run `/sb-design:extract-style` (it realigns) or `/sb-design:align`. |
 | `sync-values.mjs --check` exits `4` | the design's role names are not mapped to plugin roles. `/sb-design:align` maps them with you. |
 | `sync-values.mjs --check` exits `10` | values differ from the snapshot: run the sync flow, review the table, confirm. |

@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { recommend, githubRemoteOf, STYLE_FILES } from '../../plugins/sb-core/scripts/lib/setup.mjs';
+import { recommend, githubRemoteOf, STYLE_FILES, pluginPlan, skillsFor, pluginIdError, withPlugin } from '../../plugins/sb-core/scripts/lib/setup.mjs';
 
 const allStyle = Object.fromEntries(STYLE_FILES.map((f) => [f, true]));
 const base = () => ({
@@ -63,5 +63,61 @@ describe('githubRemoteOf', () => {
     assert.equal(githubRemoteOf(''), null);
     assert.equal(githubRemoteOf('[remote "origin"]\n\turl = https://gitlab.com/a/b.git\n'), null);
     assert.equal(githubRemoteOf('[remote "origin"]\n\turl = https://gitlab.com/a/b.git\n[remote "up"]\n\turl = https://github.com/a/b.git\n'), null);
+  });
+});
+
+describe('plugins and skills for a project', () => {
+  const nuxtApp = { kind: 'app', adapter: 'nuxt', rendering: 'ssr' };
+  const vueApp = { kind: 'app', adapter: 'vue-vite', rendering: 'csr' };
+  const lib = { kind: 'library', adapter: 'vue-vite', rendering: null };
+  const need = (plan) => Object.fromEntries(plan.map((p) => [p.plugin, p.recommended]));
+
+  test('a Nuxt app on GitHub needs all four', () => {
+    assert.deepEqual(need(pluginPlan(nuxtApp, { github: true })), { 'sb-core': true, 'sb-github': true, 'sb-health': true, 'sb-design': true });
+  });
+
+  test('a library and an app without a design adapter do not need sb-design, and say why', () => {
+    const l = pluginPlan(lib);
+    assert.equal(need(l)['sb-design'], false);
+    assert.match(l.find((p) => p.plugin === 'sb-design').why, /library/);
+    assert.match(pluginPlan(vueApp).find((p) => p.plugin === 'sb-design').why, /no adapter for vue-vite/);
+    assert.match(pluginPlan({ kind: null }).find((p) => p.plugin === 'sb-design').why, /unknown/);
+    assert.equal(need(l)['sb-github'], false, 'no GitHub remote');
+  });
+
+  test('skillsFor lists the skills of the needed plugins, without seo for a library or a CSR app, without onboard outside a Nuxt app', () => {
+    const libSkills = skillsFor(pluginPlan(lib, { github: true }), lib);
+    assert.ok(libSkills.includes('/sb-health:deps'));
+    assert.ok(libSkills.includes('/sb-github:admin'));
+    assert.equal(libSkills.some((s) => s.startsWith('/sb-design:')), false);
+    assert.equal(libSkills.includes('/sb-health:seo'), false);
+    assert.equal(libSkills.includes('/sb-core:onboard'), false);
+    const nuxtSkills = skillsFor(pluginPlan(nuxtApp, { github: true }), nuxtApp);
+    assert.ok(nuxtSkills.includes('/sb-health:seo'));
+    assert.ok(nuxtSkills.includes('/sb-core:onboard'));
+    assert.ok(nuxtSkills.includes('/sb-design:align'));
+  });
+
+  test('pluginIdError accepts only name@marketplace ids of the four plugins', () => {
+    assert.equal(pluginIdError('sb-design@sb-context-fe'), null);
+    assert.equal(pluginIdError('sb-design@sb-context-nuxt'), null, 'a marketplace registered under its old name');
+    assert.match(pluginIdError('sb-design'), /not a plugin id/);
+    assert.match(pluginIdError('caveman@caveman'), /not one of/);
+    assert.match(pluginIdError('sb-context-fe@sb-context-fe'), /not one of/, 'the bundle is not toggled');
+  });
+
+  test('withPlugin sets, overrides and removes one entry, keeping everything else', () => {
+    const start = { permissions: { allow: ['Bash(npm test)'] }, enabledPlugins: { 'x@y': true } };
+    const off = withPlugin(start, 'sb-design@m', false);
+    assert.deepEqual(off, { permissions: { allow: ['Bash(npm test)'] }, enabledPlugins: { 'x@y': true, 'sb-design@m': false } });
+    assert.deepEqual(start.enabledPlugins, { 'x@y': true }, 'the input is not changed');
+    assert.deepEqual(withPlugin(off, 'sb-design@m', null), start);
+    assert.deepEqual(withPlugin({}, 'sb-design@m', null), {});
+  });
+
+  test('recommend leaves the style steps out where sb-design does not apply', () => {
+    const state = { profile: lib, style: { files: {} }, design: { source: false, applied: false }, github: {}, dependencyNotes: { open: 0 } };
+    assert.deepEqual(recommend(state), []);
+    assert.equal(recommend({ ...state, profile: nuxtApp })[0].skill, '/sb-design:align');
   });
 });

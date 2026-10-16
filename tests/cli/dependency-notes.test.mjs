@@ -131,12 +131,12 @@ describe('dependency-notes.mjs', () => {
   });
 });
 
-test('dependency-notes.mjs refuses to run outside a Nuxt project', () => {
+test('dependency-notes.mjs refuses to run outside a Nuxt or Vue project', () => {
   const p = makeProject({}, { nuxtConfig: false });
   try {
     const r = p.run(SCRIPTS.dependencyNotes, ['list']);
     assert.equal(r.code, 2);
-    assert.match(r.stderr, /Not inside a Nuxt project/);
+    assert.match(r.stderr, /Not inside a Nuxt or Vue project/);
   } finally {
     p.cleanup();
   }

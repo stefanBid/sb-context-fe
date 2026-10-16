@@ -30,6 +30,7 @@ If the request is ambiguous ("Home" may be a component or a page), ask which. If
 
 ## Requirements
 
+- **An app on a stack sb-design has an adapter for** (today Nuxt): `node "${CLAUDE_SKILL_DIR}/../../core/scripts/profile.mjs" get` must show `adapter: "nuxt"` and `kind: "app"`. A library, or a Vue + Vite app, is out of scope for now: say so and stop (the scripts refuse it too). Format: `${CLAUDE_SKILL_DIR}/../../core/references/profile.md`.
 - Nuxt 4 + Tailwind 4 with `@tailwindcss/vite`, and a global style already aligned **and in sync with the design** (`/sb-design:align`: four files under `assets/css`, `{p}-<role>` utilities; step 0 checks the sync). Without it, stop and run `/sb-design:extract-style`, which realigns the style. Do not build against default Tailwind values.
 - The `Artifact` tool, connected to the Claude account that owns the design. Read-only: never publish, edit or delete an artifact from this skill.
 

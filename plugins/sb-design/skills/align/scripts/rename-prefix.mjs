@@ -18,7 +18,7 @@
 
 import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { join, resolve, relative, extname } from 'node:path';
-import { projectRoot } from '../../../core/lib/project.mjs';
+import { projectRoot, srcDirOf, requireStack } from '../../../core/lib/project.mjs';
 import { prefixError } from '../../../scripts/lib/prefix.mjs';
 import { detectPrefix, prefixInUse, utilityNames, renamer } from './lib/rename.mjs';
 
@@ -28,6 +28,7 @@ const get = (n) => {
   return i === -1 ? null : argv[i + 1];
 };
 const root = projectRoot(get('--root'));
+requireStack(root, { adapters: ['nuxt'], kinds: ['app'], what: 'The prefix rename of /sb-design:align' });
 const to = get('--to');
 const apply = argv.includes('--apply');
 
@@ -51,10 +52,7 @@ function walk(dir, exts, out = []) {
   return out;
 }
 
-const cfgPath = ['nuxt.config.ts', 'nuxt.config.js', 'nuxt.config.mjs'].map((f) => join(root, f)).find(existsSync);
-const cfg = cfgPath ? readFileSync(cfgPath, 'utf8') : '';
-const sd = cfg.match(/srcDir\s*:\s*['"`]([^'"`]+)['"`]/);
-const srcDir = sd ? resolve(root, sd[1]) : existsSync(join(root, 'app')) ? join(root, 'app') : root;
+const srcDir = srcDirOf(root);
 
 // CSS files of the global style
 const cssFiles = walk(join(srcDir, 'assets'), ['.css']);

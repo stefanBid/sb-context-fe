@@ -13,6 +13,8 @@ The reference is **the project's current global style**, not a fixed list: a cla
 
 **Language**: this file and its references are in English, but talk to the user in their language: questions, proposals and summary.
 
+Like every sb-design skill, it works on a Nuxt app only: `node "${CLAUDE_SKILL_DIR}/../../core/scripts/profile.mjs" get` must show `adapter: "nuxt"` and `kind: "app"`; otherwise say so and stop.
+
 ## Requirements
 
 - Nuxt 4 and Tailwind 4 with `@tailwindcss/vite` (the script resolves `@tailwindcss/node`, `vue/compiler-sfc` and `postcss` from the project root, then from `@tailwindcss/vite` and `nuxt`, so it also works with pnpm). Otherwise stop and say so.

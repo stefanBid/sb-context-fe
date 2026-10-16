@@ -58,6 +58,9 @@ describe('what the scripts write', () => {
       [SCRIPTS.githubSettings, ['status']],
       [SCRIPTS.setupState, []],
       [SCRIPTS.migrate, []],
+      [SCRIPTS.profile, ['detect']],
+      [SCRIPTS.profile, ['get']],
+      [SCRIPTS.projectPlugins, ['plan', '--installed', 'sb-design@sb-context-fe']],
     ];
     for (const [script, args] of commands) assert.deepEqual(changed(p, () => p.run(script, args)), [], `${script.split('/').pop()} ${args.join(' ')}`);
   });
@@ -80,6 +83,16 @@ describe('what the scripts write', () => {
     ];
     // the first command also writes the folder's .gitignore; none writes the git exclude
     assert.deepEqual([...new Set(all)].sort(), ['.sb-context/.gitignore', '.sb-context/dependency-notes.json', '.sb-context/design-applied.json', '.sb-context/design-map.json', '.sb-context/github.json', '.sb-context/settings.json']);
+  });
+
+  test('profile set and write touch only profile.json (and the folder\'s .gitignore)', () => {
+    rmSync(p.path('.sb-context/.gitignore'), { force: true });
+    assert.deepEqual(changed(p, () => p.run(SCRIPTS.profile, ['set', 'kind', '"app"'])), ['.sb-context/.gitignore', '.sb-context/profile.json']);
+    assert.deepEqual(changed(p, () => p.run(SCRIPTS.profile, ['write'])), [], 'nothing changed in the project: the same file');
+  });
+
+  test('project-plugins disable writes only .claude/settings.local.json', () => {
+    assert.deepEqual(changed(p, () => p.run(SCRIPTS.projectPlugins, ['disable', 'sb-design@sb-context-fe'])), ['.claude/settings.local.json']);
   });
 
   test('setup-state --init writes only the folder\'s .gitignore', () => {
