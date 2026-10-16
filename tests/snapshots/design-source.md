@@ -1,6 +1,6 @@
 # Design source — Sample Brand
 
-> Written by `/sb-context-nuxt:design-extract-style`. This file belongs to the sb-context-nuxt plugin: it is the bridge between a Claude design (the artifact stays the source of truth) and the project. `style-align` reads it for the **values**, `design-extract-ui` for the component index. It is **not** a `DESIGN.md` (that file is Impeccable's and is never read or written here). Do not edit by hand: re-extract. Kept out of git.
+> Written by `/sb-design:extract-style`. This file belongs to the sb-context-fe plugins: it is the bridge between a Claude design (the artifact stays the source of truth) and the project. `/sb-design:align` reads it for the **values**, `/sb-design:extract-ui` for the component index. It is **not** a `DESIGN.md` (that file is Impeccable's and is never read or written here). Do not edit by hand: re-extract. It can be committed with the project.
 >
 > How to read it: the sections below are the human view; the last section, **Machine data**, holds the same information complete and normalized (aliases resolved, both themes, mobile sizes, component index without the README texts, which are only in the Components section). When a table and the machine block disagree, the machine block wins.
 
@@ -13,7 +13,7 @@
 | Pointed from | the design system itself |
 | Extracted on | <today> |
 | tokens.json sha256 | 4162c32c0eeac028… |
-| Suggested prefix | `sb` (a proposal: style-align always asks, the answer wins) |
+| Suggested prefix | `sb` (a proposal: /sb-design:align always asks, the answer wins) |
 | Themes | light, dark |
 
 ## Colors
@@ -102,7 +102,7 @@ The plugin fixes sm 640 / md 768 / lg 1024 / xl 1280; the design's own values ar
 
 ## Motion
 
-None in the design. `style-align` applies its defaults (provisional).
+None in the design. `/sb-design:align` applies its defaults (provisional).
 
 ## Brand guide
 
@@ -118,7 +118,7 @@ Use sparingly.
 
 ## Components
 
-2 documented components. `design-extract-ui` matches the requested name against this list, then reads the markup in `project/components/<Name>/preview.html` from the artifact. Styles are in `project/bundle.css`.
+2 documented components. `/sb-design:extract-ui` matches the requested name against this list, then reads the markup in `project/components/<Name>/preview.html` from the artifact. Styles are in `project/bundle.css`.
 
 | Component | Group | Summary | Classes in the preview |
 | --- | --- | --- | --- |
@@ -147,11 +147,11 @@ _No README._
 - breakpoint 2xl (1536px): only sm, md, lg, xl exist
 - README: "Use eyebrows and kickers sparingly." → "Use sparingly."
 
-## Gaps to resolve in style-align
+## Gaps to resolve in /sb-design:align
 
-- Motion: the design system has no motion family. Defaults from `style-align` references/motion.md apply, marked provisional.
+- Motion: the design system has no motion family. Defaults from `/sb-design:align` references/motion.md apply, marked provisional.
 - Component `Card` has no README: usage rules unknown, read its preview.
-- Token group `zIndex` (1) is not part of the fixed style: kept in the machine data under `extra`, not applied. Decide in style-align where it belongs (a token, a component constant) or drop it.
+- Token group `zIndex` (1) is not part of the fixed style: kept in the machine data under `extra`, not applied. Decide in /sb-design:align where it belongs (a token, a component constant) or drop it.
 
 ## Machine data
 
@@ -703,9 +703,9 @@ _No README._
     "README: \"Use eyebrows and kickers sparingly.\" → \"Use sparingly.\""
   ],
   "gaps": [
-    "Motion: the design system has no motion family. Defaults from `style-align` references/motion.md apply, marked provisional.",
+    "Motion: the design system has no motion family. Defaults from `/sb-design:align` references/motion.md apply, marked provisional.",
     "Component `Card` has no README: usage rules unknown, read its preview.",
-    "Token group `zIndex` (1) is not part of the fixed style: kept in the machine data under `extra`, not applied. Decide in style-align where it belongs (a token, a component constant) or drop it."
+    "Token group `zIndex` (1) is not part of the fixed style: kept in the machine data under `extra`, not applied. Decide in /sb-design:align where it belongs (a token, a component constant) or drop it."
   ]
 }
 ```

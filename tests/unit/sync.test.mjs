@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { nHex, nShadow, nFamily, toRem, same, pxLabel, remStr, blockOf, findSlot, writeSlot, writeSlots, refreshMobileComments, parseMapArg, byRole } from '../../skills/style-align/scripts/lib/sync.mjs';
+import { nHex, nShadow, nFamily, toRem, same, pxLabel, remStr, blockOf, findSlot, writeSlot, writeSlots, refreshMobileComments, parseMapArg, byRole } from '../../plugins/sb-design/skills/align/scripts/lib/sync.mjs';
 
 describe('normalizers', () => {
   test('nHex expands short hex and lowercases; other values are only trimmed and lowercased', () => {

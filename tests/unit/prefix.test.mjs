@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { RESERVED, prefixError, suggestPrefix, prefixFromUtilities } from '../../scripts/lib/prefix.mjs';
+import { RESERVED, prefixError, suggestPrefix, prefixFromUtilities } from '../../plugins/sb-design/scripts/lib/prefix.mjs';
 
 test('prefixError accepts 2–4 lowercase letters or digits starting with a letter', () => {
   for (const ok of ['ps', 'sb', 'abcd', 'a1', 'x2y3']) assert.equal(prefixError(ok), null, ok);

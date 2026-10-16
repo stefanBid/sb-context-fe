@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseBlocks, themeOf, themeVars, resolveVars, STANDARD_PAIRS, standardPairs, customPairs, evaluate, surfaces, surfaceNotes } from '../../skills/style-align/scripts/lib/theme-vars.mjs';
+import { parseBlocks, themeOf, themeVars, resolveVars, STANDARD_PAIRS, standardPairs, customPairs, evaluate, surfaces, surfaceNotes } from '../../plugins/sb-design/skills/align/scripts/lib/theme-vars.mjs';
 
 test('parseBlocks keeps the chain of preludes and ignores comments', () => {
   const blocks = parseBlocks('/* :root { --x: 1; } */ :root { --a: 1; --b: var(--a, 2) } @media (x) { .y { --c: 3; } }');

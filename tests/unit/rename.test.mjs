@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { detectPrefix, prefixInUse, utilityNames, renamer } from '../../skills/style-align/scripts/lib/rename.mjs';
+import { detectPrefix, prefixInUse, utilityNames, renamer } from '../../plugins/sb-design/skills/align/scripts/lib/rename.mjs';
 
 const CSS = `/* Prefix "sb". */
 :root { --sb-bg: #fff; --sb-body-size: 1rem; }

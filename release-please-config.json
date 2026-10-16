@@ -1,14 +1,59 @@
 {
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
   "bootstrap-sha": "06a05d38f55669c530287cc6b3a88d32ee0fb314",
+  "release-type": "simple",
+  "include-v-in-tag": true,
+  "include-component-in-tag": true,
+  "tag-separator": "--",
+  "separate-pull-requests": false,
   "packages": {
-    ".": {
-      "release-type": "simple",
-      "package-name": "sb-context-nuxt",
-      "bump-minor-pre-major": true,
-      "bump-patch-for-minor-pre-major": false,
-      "include-v-in-tag": true,
-      "include-component-in-tag": false,
+    "plugins/sb-context-fe": {
+      "package-name": "sb-context-fe",
+      "component": "sb-context-fe",
+      "extra-files": [
+        {
+          "type": "json",
+          "path": ".claude-plugin/plugin.json",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
+    "plugins/sb-core": {
+      "package-name": "sb-core",
+      "component": "sb-core",
+      "extra-files": [
+        {
+          "type": "json",
+          "path": ".claude-plugin/plugin.json",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
+    "plugins/sb-github": {
+      "package-name": "sb-github",
+      "component": "sb-github",
+      "extra-files": [
+        {
+          "type": "json",
+          "path": ".claude-plugin/plugin.json",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
+    "plugins/sb-health": {
+      "package-name": "sb-health",
+      "component": "sb-health",
+      "extra-files": [
+        {
+          "type": "json",
+          "path": ".claude-plugin/plugin.json",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
+    "plugins/sb-design": {
+      "package-name": "sb-design",
+      "component": "sb-design",
       "extra-files": [
         {
           "type": "json",

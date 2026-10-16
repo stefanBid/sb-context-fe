@@ -10,11 +10,11 @@ import { REPO } from '../helpers/fixture.mjs';
 
 // LF even where git checks files out with CRLF (Windows)
 const read = (p) => readFileSync(join(REPO, p), 'utf8').replaceAll('\r\n', '\n');
-const LINT = read('skills/gh-checks/workflows/pr-title-lint.yml');
+const LINT = read('plugins/sb-github/skills/checks/workflows/pr-title-lint.yml');
 const LINT_TYPES = LINT.match(/types: \|\n((?:\s+[a-z]+\n)+)/)[1].trim().split(/\s+/);
 
 describe('gh-admin labels', () => {
-  const labels = JSON.parse(read('skills/gh-admin/labels/labels.json'));
+  const labels = JSON.parse(read('plugins/sb-github/skills/admin/labels/labels.json'));
 
   test('every label is what GitHub accepts', () => {
     assert.ok(Array.isArray(labels) && labels.length);
@@ -39,7 +39,7 @@ describe('gh-admin labels', () => {
 });
 
 describe('gh-admin ruleset template', () => {
-  const r = JSON.parse(read('skills/gh-admin/rulesets/main.json'));
+  const r = JSON.parse(read('plugins/sb-github/skills/admin/rulesets/main.json'));
   // keys of the GitHub REST rulesets API that this template may use, per rule type
   const PARAMS = {
     deletion: [],
@@ -73,7 +73,7 @@ describe('gh-admin ruleset template', () => {
     const contexts = by.required_status_checks.required_status_checks.map((c) => c.context);
     assert.ok(contexts.every((c) => typeof c === 'string' && c.trim()));
     // SKILL.md tells the model to adapt `build` to the real CI job before applying: it must be what the template has
-    assert.match(read('skills/gh-admin/SKILL.md'), new RegExp(`required status check \`${contexts[0]}\``));
+    assert.match(read('plugins/sb-github/skills/admin/SKILL.md'), new RegExp(`required status check \`${contexts[0]}\``));
   });
 });
 
@@ -83,7 +83,7 @@ describe('gh-checks title lint template', () => {
     for (const t of ['opened', 'reopened', 'edited', 'synchronize']) assert.match(LINT, new RegExp(`^\\s+- ${t}$`, 'm'), `trigger ${t}`);
     assert.match(LINT, /^permissions:\n {2}pull-requests: read$/m);
     assert.match(LINT, /uses: amannn\/action-semantic-pull-request@v\d+/);
-    assert.match(read('skills/gh-checks/SKILL.md'), /job name `lint-pr-title`/);
+    assert.match(read('plugins/sb-github/skills/checks/SKILL.md'), /job name `lint-pr-title`/);
   });
 
   test('it accepts exactly the types release-please understands', () => {

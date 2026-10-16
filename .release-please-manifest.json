@@ -1,3 +1,7 @@
 {
-  ".": "0.6.0"
+  "plugins/sb-context-fe": "0.6.0",
+  "plugins/sb-core": "0.6.0",
+  "plugins/sb-github": "0.6.0",
+  "plugins/sb-health": "0.6.0",
+  "plugins/sb-design": "0.6.0"
 }

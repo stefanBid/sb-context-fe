@@ -12,20 +12,21 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 export const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
-export const EXAMPLE_CSS = join(REPO, 'skills/style-align/references/example');
+export const EXAMPLE_CSS = join(REPO, 'plugins/sb-design/skills/align/references/example');
 
 export const SCRIPTS = {
-  dependencyNotes: join(REPO, 'scripts/dependency-notes.mjs'),
-  projectSettings: join(REPO, 'scripts/project-settings.mjs'),
-  githubSettings: join(REPO, 'scripts/github-settings.mjs'),
-  setupState: join(REPO, 'scripts/setup-state.mjs'),
-  checkI18n: join(REPO, 'scripts/check-i18n.mjs'),
-  tokensToSource: join(REPO, 'skills/design-extract-style/scripts/tokens-to-source.mjs'),
-  contrast: join(REPO, 'skills/style-align/scripts/contrast.mjs'),
-  inventory: join(REPO, 'skills/style-align/scripts/inventory.mjs'),
-  renamePrefix: join(REPO, 'skills/style-align/scripts/rename-prefix.mjs'),
-  syncValues: join(REPO, 'skills/style-align/scripts/sync-values.mjs'),
-  template: join(REPO, 'skills/style-migrate/scripts/template.mjs'),
+  dependencyNotes: join(REPO, 'plugins/sb-health/scripts/dependency-notes.mjs'),
+  projectSettings: join(REPO, 'core/scripts/project-settings.mjs'),
+  githubSettings: join(REPO, 'plugins/sb-github/scripts/github-settings.mjs'),
+  setupState: join(REPO, 'plugins/sb-core/scripts/setup-state.mjs'),
+  migrate: join(REPO, 'plugins/sb-core/scripts/migrate-v1.mjs'),
+  checkI18n: join(REPO, 'core/scripts/check-i18n.mjs'),
+  tokensToSource: join(REPO, 'plugins/sb-design/skills/extract-style/scripts/tokens-to-source.mjs'),
+  contrast: join(REPO, 'plugins/sb-design/skills/align/scripts/contrast.mjs'),
+  inventory: join(REPO, 'plugins/sb-design/skills/align/scripts/inventory.mjs'),
+  renamePrefix: join(REPO, 'plugins/sb-design/skills/align/scripts/rename-prefix.mjs'),
+  syncValues: join(REPO, 'plugins/sb-design/skills/align/scripts/sync-values.mjs'),
+  template: join(REPO, 'plugins/sb-design/skills/migrate/scripts/template.mjs'),
 };
 
 // Windows: scripts print paths with backslashes and git checks files out with CRLF. Both are legit

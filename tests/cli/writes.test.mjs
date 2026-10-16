@@ -1,3 +1,4 @@
+import { rmSync } from 'node:fs';
 import { test, describe, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { readdirSync, readFileSync, lstatSync } from 'node:fs';
@@ -56,6 +57,7 @@ describe('what the scripts write', () => {
       [SCRIPTS.githubSettings, ['get']],
       [SCRIPTS.githubSettings, ['status']],
       [SCRIPTS.setupState, []],
+      [SCRIPTS.migrate, []],
     ];
     for (const [script, args] of commands) assert.deepEqual(changed(p, () => p.run(script, args)), [], `${script.split('/').pop()} ${args.join(' ')}`);
   });
@@ -65,7 +67,8 @@ describe('what the scripts write', () => {
     assert.deepEqual(changed(p, () => p.run(SCRIPTS.template, ['--summary', '--out', 'tpl.json'])), ['tpl.json']);
   });
 
-  test('settings, notes and the role map stay in .sb-context-nuxt', () => {
+  test('settings, notes and the role map stay in .sb-context', () => {
+    rmSync(p.path('.sb-context/.gitignore'), { force: true });
     const all = [
       ...changed(p, () => p.run(SCRIPTS.projectSettings, ['set', 'i18n.enabled', 'true'])),
       ...changed(p, () => p.run(SCRIPTS.dependencyNotes, ['add', 'nuxt', '--target', '5.0.0', '--summary', 's', '--recheck', 'r'])),
@@ -75,21 +78,21 @@ describe('what the scripts write', () => {
       ...changed(p, () => p.run(SCRIPTS.syncValues, ['--record'])),
       ...changed(p, () => p.run(SCRIPTS.syncValues, ['--map', 'colors.bg=bg'])),
     ];
-    // .git/info/exclude may be written too, by whichever command first excludes the folder
-    assert.deepEqual([...new Set(all)].filter((f) => f !== '.git/info/exclude').sort(), ['.sb-context-nuxt/dependency-notes.json', '.sb-context-nuxt/design-applied.json', '.sb-context-nuxt/design-map.json', '.sb-context-nuxt/github_settings.json', '.sb-context-nuxt/project-settings.json']);
+    // the first command also writes the folder's .gitignore; none writes the git exclude
+    assert.deepEqual([...new Set(all)].sort(), ['.sb-context/.gitignore', '.sb-context/dependency-notes.json', '.sb-context/design-applied.json', '.sb-context/design-map.json', '.sb-context/github.json', '.sb-context/settings.json']);
   });
 
-  test('setup-state --init writes only the git exclude (the folder is empty)', () => {
-    p.write('.git/info/exclude', '');
-    assert.deepEqual(changed(p, () => p.run(SCRIPTS.setupState, ['--init'])), ['.git/info/exclude']);
-    assert.equal(p.exists('.sb-context-nuxt'), true);
+  test('setup-state --init writes only the folder\'s .gitignore', () => {
+    rmSync(p.path('.sb-context/.gitignore'), { force: true });
+    assert.deepEqual(changed(p, () => p.run(SCRIPTS.setupState, ['--init'])), ['.sb-context/.gitignore']);
+    assert.equal(p.exists('.sb-context'), true);
   });
 
-  test('a design extraction writes only the snapshot, its previous version and the git exclude', () => {
+  test('a design extraction writes only the snapshot, its previous version and the folder\'s .gitignore', () => {
     const t = tokens();
     t.color.tokens[0].value.light = '#000000';
-    p.write('.git/info/exclude', '');
-    assert.deepEqual(changed(p, () => extract(p, t)), ['.git/info/exclude', '.sb-context-nuxt/design-source.md', '.sb-context-nuxt/design-source.prev.md', 'design/tokens.json']);
+    rmSync(p.path('.sb-context/.gitignore'), { force: true });
+    assert.deepEqual(changed(p, () => extract(p, t)), ['.sb-context/.gitignore', '.sb-context/design-source.md', '.sb-context/design-source.prev.md', 'design/tokens.json']);
   });
 
   test('sync-values --apply edits only theme.css and typography.css, plus its record', () => {
@@ -97,7 +100,7 @@ describe('what the scripts write', () => {
     t.color.tokens.find((c) => c.name === 'primary').value.light = '#123456';
     t.type.groups[0].styles[1].fontSize = '42px';
     extract(p, t);
-    assert.deepEqual(changed(p, () => p.run(SCRIPTS.syncValues, ['--apply'])), ['.sb-context-nuxt/design-applied.json', 'app/assets/css/theme.css', 'app/assets/css/typography.css']);
+    assert.deepEqual(changed(p, () => p.run(SCRIPTS.syncValues, ['--apply'])), ['.sb-context/design-applied.json', 'app/assets/css/theme.css', 'app/assets/css/typography.css']);
   });
 
   test('rename-prefix --apply edits exactly the files its dry run listed', () => {

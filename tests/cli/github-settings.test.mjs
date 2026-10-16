@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { makeProject, SCRIPTS } from '../helpers/fixture.mjs';
 
 const today = new Date().toISOString().slice(0, 10);
-const FILE = '.sb-context-nuxt/github_settings.json';
+const FILE = '.sb-context/github.json';
 
 describe('github-settings.mjs', () => {
   let p;
@@ -19,7 +19,7 @@ describe('github-settings.mjs', () => {
     assert.equal(s.file, FILE);
     assert.deepEqual(s.signature, { asked: false });
     assert.equal(s.missing.length, 6);
-    assert.equal(p.exists('.sb-context-nuxt'), false);
+    assert.equal(p.exists('.sb-context'), false);
   });
 
   test('set saves the signature; "no" is stored too', () => {
@@ -92,11 +92,11 @@ describe('github-settings.mjs', () => {
     }
   });
 
-  test('the plugin folder is added to .git/info/exclude once', () => {
+  test('github.json stays out of git through the folder\'s .gitignore; the git exclude is not touched', () => {
     gs('set', 'signature', '{"enabled":false,"name":null}');
     gs('refresh', 'labels', '[]');
-    const lines = p.read('.git/info/exclude').split('\n').filter((l) => l === '.sb-context-nuxt/');
-    assert.equal(lines.length, 1);
+    assert.match(p.read('.sb-context/.gitignore'), /^github\.json$/m);
+    assert.equal(p.exists('.git/info/exclude'), false);
   });
 
   test('missing arguments and unknown commands print the usage', () => {

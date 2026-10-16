@@ -1,7 +1,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { splitVariants, rootOf, COLOR_ROOTS, classesFromExpression, remPx, lab, PREF, nearestColors, nearestTextRole, headingIssues } from '../../skills/style-migrate/scripts/lib/classes.mjs';
-import { parseColor } from '../../skills/style-migrate/scripts/color.mjs';
+import { splitVariants, rootOf, COLOR_ROOTS, classesFromExpression, remPx, lab, PREF, nearestColors, nearestTextRole, headingIssues } from '../../plugins/sb-design/skills/migrate/scripts/lib/classes.mjs';
+import { parseColor } from '../../plugins/sb-design/skills/migrate/scripts/color.mjs';
 
 test('splitVariants: variants, important marks, colons inside arbitrary values', () => {
   assert.deepEqual(splitVariants('p-4'), { variants: [], utility: 'p-4' });

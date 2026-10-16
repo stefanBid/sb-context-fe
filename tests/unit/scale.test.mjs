@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import { join, resolve, sep } from 'node:path';
 import assert from 'node:assert/strict';
-import { toPx, parseFontShorthand, nearestStep, scaleFromTokens, clusterSizes, scaleFromClusters, mediaWidths, commonDir } from '../../skills/style-align/scripts/lib/scale.mjs';
+import { toPx, parseFontShorthand, nearestStep, scaleFromTokens, clusterSizes, scaleFromClusters, mediaWidths, commonDir } from '../../plugins/sb-design/skills/align/scripts/lib/scale.mjs';
 
 test('toPx: every unit at 16px per rem/em, unitless as a ratio', () => {
   assert.deepEqual(toPx('18px'), { px: 18, unit: 'px' });

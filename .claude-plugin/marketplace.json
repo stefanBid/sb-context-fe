@@ -1,12 +1,37 @@
 {
-  "name": "sb-context-nuxt",
-  "description": "Marketplace for sb-context-nuxt: aligns the global style of Nuxt 4 + Tailwind 4 projects in progress and maintains them (template migration, GitHub admin).",
-  "owner": { "name": "stefanBid" },
+  "name": "sb-context-fe",
+  "description": "Everyday Claude Code plugins for frontend projects (Nuxt, Vue + Vite): project context, GitHub admin, health checks, and global style alignment.",
+  "owner": {
+    "name": "stefanBid"
+  },
   "plugins": [
     {
-      "name": "sb-context-nuxt",
-      "source": "./",
-      "description": "Aligns the global style of a Nuxt 4 + Tailwind 4 project to a fixed four-file structure, migrates templates, and manages the GitHub repository. Design taste is left to DESIGN.md / Impeccable."
+      "name": "sb-context-fe",
+      "source": "./plugins/sb-context-fe",
+      "description": "Installs the whole sb-context-fe kit in one step: sb-core, sb-github, sb-health and sb-design."
+    },
+    {
+      "name": "sb-core",
+      "source": "./plugins/sb-core",
+      "description": "Core of sb-context-fe: project setup and the shared .sb-context/ folder (project settings), migration from sb-context-nuxt 0.x, onboarding."
+    },
+    {
+      "name": "sb-github",
+      "source": "./plugins/sb-github",
+      "description": "GitHub side of a project with the GitHub CLI: repo audit and settings, rulesets, labels, pull requests, release-please and PR title checks."
+    },
+    {
+      "name": "sb-health",
+      "source": "./plugins/sb-health",
+      "description": "Project health checks: build, lint, dependencies (with major-version migrations), README, SEO, and a full checkup."
+    },
+    {
+      "name": "sb-design",
+      "source": "./plugins/sb-design",
+      "description": "Global style of an app: normalizes it into a fixed four-file Tailwind 4 structure, migrates templates, and extracts style and UI from a Claude design."
     }
-  ]
+  ],
+  "renames": {
+    "sb-context-nuxt": "sb-context-fe"
+  }
 }

@@ -1,5 +1,7 @@
 # Changelog
 
+History of `sb-context-nuxt` 0.x, the single plugin this marketplace started from. From 1.0 each plugin has its own changelog: `plugins/<plugin>/CHANGELOG.md`.
+
 ## [0.6.0](https://github.com/stefanBid/sb-context-nuxt/compare/v0.5.1...v0.6.0) (2026-10-15)
 
 

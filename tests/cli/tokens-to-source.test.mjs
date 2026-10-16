@@ -7,12 +7,12 @@ describe('tokens-to-source.mjs', () => {
   let p;
   afterEach(() => p?.cleanup());
 
-  test('writes the snapshot in .sb-context-nuxt with full coverage and an identity role map', () => {
+  test('writes the snapshot in .sb-context with full coverage and an identity role map', () => {
     p = makeProject();
     const r = extract(p);
     assert.equal(r.code, 0, r.stderr);
     assert.match(r.stdout, /Coverage \(read → written\): colors 20\/20 · type styles 11\/11 .* ✓/);
-    assert.match(r.stdout, /Git: \.sb-context-nuxt\/ added to \.git\/info\/exclude/);
+    assert.match(r.stdout, /Folder: \.sb-context\/ created, \*\.prev\.md kept out of git by its \.gitignore/);
     const d = machine(p.read(SOURCE));
     assert.equal(d.schema, 'design-source/1');
     assert.equal(d.name, 'Sample Brand');
@@ -93,7 +93,7 @@ describe('tokens-to-source.mjs', () => {
   test('README headings never reach the level of the file\'s own sections', () => {
     p = makeProject();
     extract(p);
-    const own = ['Provenance', 'Colors', 'Typography', 'Spacing', 'Radii', 'Shadows', 'Breakpoints', 'Motion', 'Brand guide', 'Components', 'Overrides applied during extraction', 'Gaps to resolve in style-align', 'Machine data'];
+    const own = ['Provenance', 'Colors', 'Typography', 'Spacing', 'Radii', 'Shadows', 'Breakpoints', 'Motion', 'Brand guide', 'Components', 'Overrides applied during extraction', 'Gaps to resolve in /sb-design:align', 'Machine data'];
     const h2 = [...p.read(SOURCE).matchAll(/^## (.+)$/gm)].map((m) => m[1]);
     assert.deepEqual(h2, own);
   });
@@ -153,7 +153,7 @@ describe('tokens-to-source.mjs', () => {
     t.radius.tokens.push({ name: 'radius-xl', value: '30px' });
     r = extract(p, t);
     assert.match(r.stdout, /Changes: 2\n {2}~ color primary\n {2}\+ radius xl/);
-    assert.equal(machine(p.read('.sb-context-nuxt/design-source.prev.md')).colors.primary.light, '#00804a');
+    assert.equal(machine(p.read('.sb-context/design-source.prev.md')).colors.primary.light, '#00804a');
   });
 
   test('refuses tokens that are not a Design System and writes nothing', () => {
@@ -170,7 +170,7 @@ describe('tokens-to-source.mjs', () => {
     p = makeProject({}, { nuxtConfig: false });
     const r = extract(p, TOKENS, ['--out', 'snap/ds.md']);
     assert.equal(r.code, 0, r.stderr);
-    assert.match(r.stdout, /output is outside \.sb-context-nuxt\/: not touched/);
+    assert.match(r.stdout, /Folder: \.sb-context\/ not used \(the output is outside it\)/);
     assert.equal(machine(p.read('snap/ds.md')).name, 'Sample Brand');
   });
 

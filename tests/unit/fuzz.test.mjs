@@ -1,13 +1,13 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { rng } from '../helpers/random.mjs';
-import { parseColor, contrast, toOklch } from '../../skills/style-align/scripts/color.mjs';
-import { parseBlocks, themeVars, resolveVars } from '../../skills/style-align/scripts/lib/theme-vars.mjs';
-import { blockOf, findSlot, toRem, nShadow } from '../../skills/style-align/scripts/lib/sync.mjs';
-import { toPx, parseFontShorthand, clusterSizes, mediaWidths } from '../../skills/style-align/scripts/lib/scale.mjs';
-import { splitVariants, rootOf, classesFromExpression } from '../../skills/style-migrate/scripts/lib/classes.mjs';
-import { textRules, literalOf, keysIn, scriptLineText } from '../../scripts/lib/i18n-text.mjs';
-import { suggestPrefix, prefixError } from '../../scripts/lib/prefix.mjs';
+import { parseColor, contrast, toOklch } from '../../plugins/sb-design/skills/align/scripts/color.mjs';
+import { parseBlocks, themeVars, resolveVars } from '../../plugins/sb-design/skills/align/scripts/lib/theme-vars.mjs';
+import { blockOf, findSlot, toRem, nShadow } from '../../plugins/sb-design/skills/align/scripts/lib/sync.mjs';
+import { toPx, parseFontShorthand, clusterSizes, mediaWidths } from '../../plugins/sb-design/skills/align/scripts/lib/scale.mjs';
+import { splitVariants, rootOf, classesFromExpression } from '../../plugins/sb-design/skills/migrate/scripts/lib/classes.mjs';
+import { textRules, literalOf, keysIn, scriptLineText } from '../../core/lib/i18n-text.mjs';
+import { suggestPrefix, prefixError } from '../../plugins/sb-design/scripts/lib/prefix.mjs';
 
 // Inputs built from the characters these parsers care about, so the odd cases come up often.
 const ALPHABET = ['{', '}', ';', ':', '/*', '*/', '(', ')', ',', '/', '%', '#', '-', '--', 'var(', 'calc(', '@media ', ':root', '[data-theme="dark"]', '.dark', ' ', '\n', 'a', 'f', '0', '1', '9', '.', 'rgb(', 'hsl(', 'oklch(', 'px', 'rem', '!', '[', ']', "'", '"', '`', '$', '{{', 't(', 'é'];

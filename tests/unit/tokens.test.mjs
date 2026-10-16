@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { ROLES, ROLE_TYPES, eyebrowCleaner, normalizeColors, splitMobile, weightsOf, sizePx, buildRoleMap, demote } from '../../skills/design-extract-style/scripts/lib/tokens.mjs';
+import { ROLES, ROLE_TYPES, eyebrowCleaner, normalizeColors, splitMobile, weightsOf, sizePx, buildRoleMap, demote } from '../../plugins/sb-design/skills/extract-style/scripts/lib/tokens.mjs';
 
 describe('eyebrowCleaner', () => {
   test('removes the wording in English and Italian, recapitalizes, records the override', () => {

@@ -1,8 +1,8 @@
 {
-  "name": "sb-context-nuxt",
+  "name": "sb-context-fe",
   "private": true,
   "type": "module",
-  "description": "Development tooling for the sb-context-nuxt Claude Code plugin (tests only: the plugin itself has no runtime dependencies).",
+  "description": "Development tooling for the sb-context-fe Claude Code plugins (tests only: the plugins themselves have no runtime dependencies).",
   "engines": {
     "node": ">=20"
   },
@@ -11,9 +11,10 @@
     "test:unit": "node --test \"tests/unit/**/*.test.mjs\"",
     "test:cli": "node --test \"tests/cli/**/*.test.mjs\"",
     "test:contract": "node --test \"tests/contract/**/*.test.mjs\"",
-    "test:coverage": "node --test --experimental-test-coverage --test-coverage-include=\"scripts/**\" --test-coverage-include=\"skills/**\" \"tests/**/*.test.mjs\"",
-    "test:coverage:lcov": "node --test --experimental-test-coverage --test-coverage-include=\"scripts/**\" --test-coverage-include=\"skills/**\" --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=lcov.info \"tests/**/*.test.mjs\"",
-    "validate": "claude plugin validate . --strict && claude plugin validate .claude-plugin/plugin.json --strict && claude plugin validate skills --strict"
+    "test:coverage": "node --test --experimental-test-coverage --test-coverage-include=\"core/**\" --test-coverage-include=\"plugins/**\" --test-coverage-exclude=\"plugins/*/core/**\" \"tests/**/*.test.mjs\"",
+    "test:coverage:lcov": "node --test --experimental-test-coverage --test-coverage-include=\"core/**\" --test-coverage-include=\"plugins/**\" --test-coverage-exclude=\"plugins/*/core/**\" --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=lcov.info \"tests/**/*.test.mjs\"",
+    "sync-core": "node scripts/sync-core.mjs",
+    "validate": "claude plugin validate . --strict && for p in plugins/*/; do claude plugin validate \"$p\" --strict || exit 1; if [ -d \"$p/skills\" ]; then claude plugin validate \"$p/skills\" --strict || exit 1; fi; done"
   },
   "devDependencies": {
     "@tailwindcss/node": "^4.3.3",

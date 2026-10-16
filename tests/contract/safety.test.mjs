@@ -9,7 +9,7 @@ import { execFileSync } from 'node:child_process';
 import { REPO } from '../helpers/fixture.mjs';
 
 const tracked = execFileSync('git', ['ls-files'], { cwd: REPO, encoding: 'utf8' }).split('\n').filter(Boolean);
-const SCRIPTS = tracked.filter((f) => /^(scripts|skills)\/.*\.mjs$/.test(f));
+const SCRIPTS = tracked.filter((f) => /^(scripts|core|plugins)\/.*\.mjs$/.test(f));
 const FORBIDDEN = ['node:http', 'node:https', 'node:http2', 'node:net', 'node:tls', 'node:dgram', 'node:dns', 'node:child_process', 'node:cluster', 'node:worker_threads', 'node:vm', 'node:inspector'];
 
 test('no script reaches the network or starts another program', () => {

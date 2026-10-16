@@ -2,7 +2,7 @@ import { test, describe, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdirSync } from 'node:fs';
 import { join, sep } from 'node:path';
-import { isNuxtRoot, findProjectRoot, srcDirOf, cssDirOf, pluginDirOf, excludePluginDir, relPath, isInside } from '../../scripts/lib/project.mjs';
+import { isNuxtRoot, findProjectRoot, srcDirOf, cssDirOf, contextDirOf, legacyDirOf, ensureContextDir, GITIGNORE, relPath, isInside } from '../../core/lib/project.mjs';
 import { makeProject } from '../helpers/fixture.mjs';
 
 describe('lib/project.mjs', () => {
@@ -41,30 +41,25 @@ describe('lib/project.mjs', () => {
     assert.equal(cssDirOf(p.root), p.path('app/assets/css'));
     p.write('nuxt.config.ts', "export default defineNuxtConfig({ srcDir: 'src/' })");
     assert.equal(srcDirOf(p.root), p.path('src'));
-    assert.equal(pluginDirOf(p.root), p.path('.sb-context-nuxt'));
+    assert.equal(contextDirOf(p.root), p.path('.sb-context'));
+    assert.equal(legacyDirOf(p.root), p.path('.sb-context-nuxt'));
   });
 
-  test('excludePluginDir appends once, on its own line', () => {
+  test('ensureContextDir creates the folder and its .gitignore, and never touches git', () => {
     p = makeProject();
     p.write('.git/info/exclude', '# local\n*.log');
-    assert.equal(excludePluginDir(p.root), 'added to .git/info/exclude');
-    excludePluginDir(p.root);
-    assert.equal(p.read('.git/info/exclude'), '# local\n*.log\n.sb-context-nuxt/\n');
+    assert.equal(ensureContextDir(p.root), 'created');
+    assert.equal(p.read('.sb-context/.gitignore'), GITIGNORE);
+    assert.match(GITIGNORE, /^github\.json$/m);
+    assert.match(GITIGNORE, /^\*\.prev\.md$/m);
+    assert.equal(ensureContextDir(p.root), 'exists');
+    assert.equal(p.read('.git/info/exclude'), '# local\n*.log', 'the git exclude is not the plugin\'s any more');
   });
 
-  test('excludePluginDir creates .git/info when missing and skips non-git folders', () => {
-    p = makeProject({}, { git: false });
-    assert.equal(excludePluginDir(p.root), 'not a git repo');
-    mkdirSync(p.path('.git'));
-    excludePluginDir(p.root);
-    assert.equal(p.read('.git/info/exclude'), '.sb-context-nuxt/\n');
-  });
-
-  test('excludePluginDir respects an entry written without the slash', () => {
-    p = makeProject();
-    p.write('.git/info/exclude', '.sb-context-nuxt\n');
-    excludePluginDir(p.root);
-    assert.equal(p.read('.git/info/exclude'), '.sb-context-nuxt\n');
+  test('ensureContextDir keeps a .gitignore the user edited', () => {
+    p = makeProject({ '.sb-context/.gitignore': '*\n' }, { git: false });
+    assert.equal(ensureContextDir(p.root), 'exists');
+    assert.equal(p.read('.sb-context/.gitignore'), '*\n');
   });
 
   test('relPath gives / separators on every OS; isInside needs a real child', () => {
@@ -72,11 +67,11 @@ describe('lib/project.mjs', () => {
     assert.equal(relPath(root, join(root, 'app', 'assets', 'css')), 'app/assets/css');
     assert.equal(relPath(root, root), '.');
     assert.equal(relPath(root, join(sep, 'other', 'x')), '../other/x');
-    const dir = join(root, '.sb-context-nuxt');
+    const dir = join(root, '.sb-context');
     assert.equal(isInside(dir, join(dir, 'design-source.md')), true);
     assert.equal(isInside(dir, join(dir, 'a', 'b.md')), true);
     assert.equal(isInside(dir, dir), false);
-    assert.equal(isInside(dir, join(root, '.sb-context-nuxt-old', 'x.md')), false, 'a sibling with the same prefix is outside');
+    assert.equal(isInside(dir, join(root, '.sb-context-old', 'x.md')), false, 'a sibling with the same prefix is outside');
     assert.equal(isInside(dir, join(root, 'snap', 'x.md')), false);
   });
 });
