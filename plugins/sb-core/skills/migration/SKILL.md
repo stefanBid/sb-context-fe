@@ -51,9 +51,16 @@ Report the `done` list. If references were left (`refsLeft`), list them: the use
 
 The script does not touch Claude Code's own configuration. Tell the user, as commands to run themselves:
 
-- if `sb-context-nuxt` is still installed and was not moved to the bundle automatically: `/plugin install sb-context-fe@sb-context-fe`, then `/plugin uninstall sb-context-nuxt@sb-context-nuxt`;
-- if the marketplace is still registered under its old name: `/plugin marketplace add stefanBid/sb-context-fe`;
-- then `/reload-plugins`.
+After an update, the marketplace renames the old plugin to the bundle but keeps itself registered under its old name (`sb-context-nuxt`), and the bundle still has to be installed. Registering it again keeps every name as the docs write it, once per machine:
+
+```
+/plugin marketplace remove sb-context-nuxt
+/plugin marketplace add stefanBid/sb-context-fe
+/plugin install sb-context-fe@sb-context-fe
+/reload-plugins
+```
+
+Skip this if the user already runs the 1.0 plugins (this skill itself is one of them, so check which marketplace it comes from with `/plugin`).
 
 ## 4. Check
 

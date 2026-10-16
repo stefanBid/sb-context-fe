@@ -137,7 +137,7 @@ Project **already aligned**, or you only want the plugins to know it? Run `/sb-c
 
 | 0.x | 1.0 |
 | --- | --- |
-| plugin `sb-context-nuxt@sb-context-nuxt` | bundle `sb-context-fe@sb-context-fe` (the marketplace moves existing installs to it) |
+| plugin `sb-context-nuxt@sb-context-nuxt` | bundle `sb-context-fe@sb-context-fe`, which installs the four plugins |
 | `/sb-context-nuxt:style-align`, `style-migrate`, `design-extract-style`, `design-extract-ui` | `/sb-design:align`, `/sb-design:migrate`, `/sb-design:extract-style`, `/sb-design:extract-ui` |
 | `/sb-context-nuxt:setup`, `onboard` | `/sb-core:setup`, `/sb-core:onboard` |
 | `/sb-context-nuxt:full-checkup`, `build-check`, `lint-check`, `dependency-check`, `docs-update`, `seo-check` | `/sb-health:checkup`, `/sb-health:build`, `/sb-health:lint`, `/sb-health:deps`, `/sb-health:docs`, `/sb-health:seo` |
@@ -153,7 +153,14 @@ In each project set up with 0.x run:
 
 It shows the plan first, then moves the folder, renames the files, removes the old line from `.git/info/exclude` and, if you approve, rewrites the old commands in the project's docs and Claude settings. Until a project is migrated, the 1.0 scripts refuse to run there. Details: [/sb-core:migration](#migration).
 
-If the plugin was not moved automatically: `/plugin marketplace add stefanBid/sb-context-fe`, `/plugin install sb-context-fe@sb-context-fe`, `/plugin uninstall sb-context-nuxt@sb-context-nuxt`, `/reload-plugins`.
+The plugins themselves, once per machine. After an update the marketplace renames the old plugin to the bundle, but it keeps the marketplace registered under its old name and the bundle still has to be installed; registering it again keeps every name as this README writes it:
+
+```
+/plugin marketplace remove sb-context-nuxt
+/plugin marketplace add stefanBid/sb-context-fe
+/plugin install sb-context-fe@sb-context-fe
+/reload-plugins
+```
 
 ---
 
