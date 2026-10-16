@@ -24,6 +24,8 @@ A plugin is installed alone into Claude Code's cache, so nothing in it may point
 
 Lowercase type, no trailing period, description under about 70 characters.
 
+No angle-bracket placeholders (`<plugin>`, `<skill>`) in the title or in a `BREAKING CHANGE:` footer: release-please copies them into the release PR body, reads that body as HTML, and an unclosed `<plugin>` swallows the release notes of the plugins after it (only the first plugin gets released). Write `/plugin:skill` or name the real plugin.
+
 | Type | Use it for | Version bump | In the changelog |
 | --- | --- | --- | --- |
 | `feat` | a new skill, or a new capability of an existing one | minor (`0.3.0` → `0.4.0`) | yes |
@@ -117,7 +119,7 @@ On every push to `main` the `coverage badge` job measures line and branch covera
 
 ## Releases
 
-Never edit `version` by hand. release-please keeps one release PR (`chore(main): release …`) open and up to date for every plugin with releasable changes. Merging it bumps each plugin's `.claude-plugin/plugin.json`, writes its `plugins/<plugin>/CHANGELOG.md` and creates its tag and GitHub Release. Tags are `<plugin>--v<version>` (`sb-core--v1.0.0`), the convention Claude Code uses to resolve plugin dependencies. A change to `core/` touches every plugin's copy, so it releases all of them.
+Never edit `version` by hand. release-please keeps one release PR (`chore(main): release …`) open and up to date for every plugin with releasable changes. Merging it bumps each plugin's `.claude-plugin/plugin.json`, writes its `plugins/<plugin>/CHANGELOG.md` and creates its tag and GitHub Release. Tags are `<plugin>-v<version>` (`sb-core-v1.0.0`): release-please finds the previous release of each plugin by parsing them back, and it only understands a one-character separator. A change to `core/` touches every plugin's copy, so it releases all of them.
 
 The changelog of the 0.x releases (the single `sb-context-nuxt` plugin) stays in the root `CHANGELOG.md`.
 
