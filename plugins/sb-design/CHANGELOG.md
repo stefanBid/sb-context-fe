@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/stefanBid/sb-context-fe/compare/sb-design-v1.1.0...sb-design-v1.2.0) (2026-10-17)
+
+
+### Features
+
+* **sb-design:** load the style rules from standard, engine and framework layers ([#50](https://github.com/stefanBid/sb-context-fe/issues/50)) ([e715f11](https://github.com/stefanBid/sb-context-fe/commit/e715f119c615a1ed2941679dd93c3ac4a1bc331f))
+
 ## [1.1.0](https://github.com/stefanBid/sb-context-fe/compare/sb-design-v1.0.0...sb-design-v1.1.0) (2026-10-16)
 
 
