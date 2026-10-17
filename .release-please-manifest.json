@@ -3,5 +3,5 @@
   "plugins/sb-core": "1.1.0",
   "plugins/sb-github": "1.1.0",
   "plugins/sb-health": "1.1.0",
-  "plugins/sb-design": "1.1.0"
+  "plugins/sb-design": "1.2.0"
 }
