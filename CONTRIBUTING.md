@@ -10,9 +10,14 @@ core/                             shared code and references: the only place to 
 plugins/<plugin>/                 one plugin each: .claude-plugin/plugin.json, skills/, scripts/, README.md
 plugins/<plugin>/core/            generated copy of core/ (node scripts/sync-core.mjs), never edited by hand
 plugins/sb-context-fe/            the bundle: only a manifest whose dependencies are the four plugins
+plugins/sb-design/standard/       the style rules fixed on every stack
+plugins/sb-design/engines/<name>/ how the rules become CSS in one engine (tailwind4)
+plugins/sb-design/frameworks/     what is specific to one framework (nuxt.md)
 scripts/sync-core.mjs             copies core/ into every plugin; --check fails on a stale copy
 tests/                            unit, cli and contract tests for all the plugins
 ```
+
+In sb-design, a rule goes in the layer it belongs to, and `tests/contract/rules.test.mjs` lists every rule with its layer: moving or dropping one makes the suite fail, so the change is a decision.
 
 A plugin is installed alone into Claude Code's cache, so nothing in it may point outside its own folder: a skill reaches shared code through its plugin's copy (`${CLAUDE_SKILL_DIR}/../../core/…`), and a step that needs another plugin calls that plugin's **skill** by name (`/sb-design:check`), never its files. The contract tests enforce both.
 

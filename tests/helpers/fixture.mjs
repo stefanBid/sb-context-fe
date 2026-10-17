@@ -12,7 +12,9 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 export const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
-export const EXAMPLE_CSS = join(REPO, 'plugins/sb-design/skills/align/references/example');
+export const EXAMPLE_CSS = join(REPO, 'plugins/sb-design/engines/tailwind4/example');
+/** The framework settings the example style needs (sb-design's Nuxt adapter). */
+export const EXAMPLE_NUXT_CONFIG = join(REPO, 'plugins/sb-design/frameworks/nuxt.config.ts');
 
 export const SCRIPTS = {
   dependencyNotes: join(REPO, 'plugins/sb-health/scripts/dependency-notes.mjs'),
@@ -74,7 +76,7 @@ export function makeProject(files = {}, { git = true, modules = true, nuxtConfig
 
 /** The reference aligned style (prefix "sb") copied into <root>/app/assets/css. */
 export function withExampleStyle(project) {
-  cpSync(EXAMPLE_CSS, project.path('app/assets/css'), { recursive: true, filter: (src) => !src.endsWith('nuxt.config.ts') });
+  cpSync(EXAMPLE_CSS, project.path('app/assets/css'), { recursive: true });
   return project;
 }
 

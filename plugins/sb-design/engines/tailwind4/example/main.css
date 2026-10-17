@@ -1,6 +1,6 @@
 /* ==========================================================================
    main.css — entry point of the global style
-   The only file listed in nuxt.config.ts (css). Prefix "sb".
+   The only file registered as the global style (Nuxt: css in nuxt.config.ts). Prefix "sb".
    ========================================================================== */
 
 @import "tailwindcss";
@@ -8,7 +8,7 @@
 @import "./typography.css";
 @import "./animation.css";
 
-/* The dark theme follows data-theme on <html>, written by @nuxtjs/color-mode */
+/* The dark theme follows data-theme on <html>, written by the framework's color mode (Nuxt: @nuxtjs/color-mode) */
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 @layer base {

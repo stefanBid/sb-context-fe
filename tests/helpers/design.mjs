@@ -1,5 +1,5 @@
 // The sample Design System (tests/fixtures/design): same values as the reference aligned style
-// in plugins/sb-design/skills/align/references/example, so an extraction of it is "aligned" with that style.
+// in plugins/sb-design/engines/tailwind4/example, so an extraction of it is "aligned" with that style.
 
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';

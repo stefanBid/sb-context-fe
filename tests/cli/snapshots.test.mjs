@@ -1,14 +1,14 @@
 import { test, describe, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { makeProject, withExampleStyle, run, SCRIPTS, EXAMPLE_CSS } from '../helpers/fixture.mjs';
+import { makeProject, withExampleStyle, run, SCRIPTS, EXAMPLE_CSS, EXAMPLE_NUXT_CONFIG } from '../helpers/fixture.mjs';
 import { extract, SOURCE } from '../helpers/design.mjs';
 import { matchSnapshot } from '../helpers/snapshot.mjs';
 
 // The formats other skills, and the model, read. Each test pins a whole output.
 describe('output snapshots', () => {
   const p = withExampleStyle(makeProject({
-    'nuxt.config.ts': readFileSync(`${EXAMPLE_CSS}/nuxt.config.ts`, 'utf8'),
+    'nuxt.config.ts': readFileSync(EXAMPLE_NUXT_CONFIG, 'utf8'),
     'package.json': { devDependencies: { nuxt: '^4.1.0', tailwindcss: '^4.1.0', '@tailwindcss/vite': '^4.1.0', '@nuxtjs/color-mode': '^3.5.0', '@nuxt/fonts': '^0.11.0' } },
     'app/pages/index.vue': '<template>\n  <main>\n    <h1 class="text-4xl font-medium text-gray-700">Title</h1>\n    <p class="sb-body text-ink-muted rounded-xl shadow">Text</p>\n  </main>\n</template>\n',
   }));

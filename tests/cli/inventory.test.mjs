@@ -1,7 +1,7 @@
 import { test, describe, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { makeProject, withExampleStyle, SCRIPTS, EXAMPLE_CSS } from '../helpers/fixture.mjs';
+import { makeProject, withExampleStyle, SCRIPTS, EXAMPLE_CSS, EXAMPLE_NUXT_CONFIG } from '../helpers/fixture.mjs';
 
 const DEPS = { nuxt: '^4.1.0', tailwindcss: '^4.1.0', '@tailwindcss/vite': '^4.1.0', '@nuxtjs/color-mode': '^3.5.0', '@nuxt/fonts': '^0.11.0' };
 
@@ -30,7 +30,7 @@ describe('inventory.mjs', () => {
   };
 
   test('recognizes the reference style as aligned', () => {
-    p = withExampleStyle(makeProject({ 'nuxt.config.ts': readFileSync(`${EXAMPLE_CSS}/nuxt.config.ts`, 'utf8'), 'package.json': { devDependencies: DEPS } }));
+    p = withExampleStyle(makeProject({ 'nuxt.config.ts': readFileSync(EXAMPLE_NUXT_CONFIG, 'utf8'), 'package.json': { devDependencies: DEPS } }));
     const { md, inv } = inventory();
     assert.equal(inv.structure.aligned, true, JSON.stringify(inv.structure.checks.filter((c) => !c.ok)));
     assert.equal(inv.structure.prefix, 'sb');

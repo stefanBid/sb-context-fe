@@ -23,7 +23,7 @@ import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
 import { projectRoot, srcDirOf, requireStack } from '../../../core/lib/project.mjs';
 import { prefixFromUtilities } from '../../../scripts/lib/prefix.mjs';
-import { parseColor, findColors } from './color.mjs';
+import { parseColor, findColors } from '../../../scripts/lib/color.mjs';
 import { splitVariants, rootOf, COLOR_ROOTS, classesFromExpression, remPx, lab, PREF, nearestColors as nearestOf, nearestTextRole as nearestRoleOf, headingIssues } from './lib/classes.mjs';
 
 // ---------------------------------------------------------------------------

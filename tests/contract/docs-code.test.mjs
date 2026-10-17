@@ -101,7 +101,7 @@ describe('exit codes', () => {
 });
 
 describe('roles', () => {
-  const method = read('plugins/sb-design/skills/align/references/method.md');
+  const method = read('plugins/sb-design/standard/roles.md');
   const table = method.split('| Group | Roles | What they are for |')[1].split('\n\n')[0];
   const METHOD_COLORS = new Set(
     table.split('\n').flatMap((row) => {
@@ -121,19 +121,19 @@ describe('roles', () => {
   });
 
   test('the typography reference lists the type roles of the design extraction', () => {
-    const typo = read('plugins/sb-design/skills/align/references/typography.md').split('| Role | Family | Purpose |')[1].split('\n\n')[0];
+    const typo = read('plugins/sb-design/standard/typography.md').split('| Role | Family | Purpose |')[1].split('\n\n')[0];
     const roles = [...typo.matchAll(/^\| `([a-z0-9-]+)`/gm)].map((m) => m[1]).filter((r) => r !== 'hero');
     assert.deepEqual(roles, ROLE_TYPES);
   });
 
   test('the example style uses only fixed color roles', () => {
-    const theme = read('plugins/sb-design/skills/align/references/example/theme.css');
+    const theme = read('plugins/sb-design/engines/tailwind4/example/theme.css');
     const roles = new Set([...theme.matchAll(/--sb-([a-z0-9-]+)\s*:/g)].map((m) => m[1]).filter((r) => !r.startsWith('shadow-')));
     assert.deepEqual([...roles].filter((r) => !METHOD_COLORS.has(r)), []);
   });
 
   test('the example typography defines every type role', () => {
-    const typo = read('plugins/sb-design/skills/align/references/example/typography.css');
+    const typo = read('plugins/sb-design/engines/tailwind4/example/typography.css');
     const roles = new Set([...typo.matchAll(/--text-([a-z0-9-]+?)\s*:/g)].map((m) => m[1]));
     assert.deepEqual(ROLE_TYPES.filter((r) => !roles.has(r)), []);
   });

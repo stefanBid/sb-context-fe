@@ -17,7 +17,7 @@
 
 import { readFileSync } from 'node:fs';
 import '../../../core/lib/cli.mjs'; // blocking stdout: the JSON reaches the pipe whole
-import { parseColor, contrast } from './color.mjs';
+import { parseColor, contrast } from '../../../scripts/lib/color.mjs';
 import { themeVars, standardPairs, customPairs, evaluate, surfaces, surfaceNotes } from './lib/theme-vars.mjs';
 
 const args = process.argv.slice(2);

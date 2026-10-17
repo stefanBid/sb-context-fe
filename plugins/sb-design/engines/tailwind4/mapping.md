@@ -1,5 +1,7 @@
 # Mapping: from old classes to theme roles
 
+Part of the **Tailwind 4 engine**: the classes below are Tailwind's. The roles are the standard's (`../../standard/`).
+
 The script proposes; the agent decides by looking at the line, the tag, the siblings and the meaning of the element. The script's proposals are ordered by plausible role, not by certainty.
 
 ## 1. Principles
@@ -74,5 +76,5 @@ Opacity (`bg-primary/10`) is kept if it was there; if it served to get a light t
 
 - Literal colors → `var(--color-{role})`.
 - Hand-written `font-size`, `font-weight`, `font-family`, `line-height` → `@apply {p}-{role};` (removing the replaced declarations).
-- To use `@apply` with theme utilities, the block must start with `@reference "~/assets/css/main.css";` (Tailwind 4 does not know the theme inside component `<style>` blocks without this line).
+- To use `@apply` with theme utilities, the block must start with `@reference` to the global `main.css` (Tailwind 4 does not know the theme inside component `<style>` blocks without this line). The exact line, with the framework's path alias, is in the framework file.
 - `<style scoped>` stays `scoped`: the refactor does not move anything into the global style.

@@ -1,49 +1,33 @@
 ---
 name: align
-description: Normalizes any global style setup of a Nuxt 4 + Tailwind 4 project into the fixed four-file structure (main.css, theme.css, typography.css, animation.css under assets/css), keeping the project's own values. Use it when asked to align, normalize, unify or reorganize a Nuxt project's global theme, palette, type scale, dark mode or global CSS.
+description: Normalizes any global style setup of an app (today Nuxt 4 + Tailwind 4) into the fixed four-file structure (main.css, theme.css, typography.css, animation.css in the project's style folder), keeping the project's own values; renames the token prefix; syncs the values with a Claude design snapshot. Use it when asked to align, normalize, unify or reorganize an app's global theme, palette, type scale, dark mode or global CSS.
 ---
 
-# Align the global style (Nuxt 4 + Tailwind 4)
+# Align the global style
 
-Normalizes any global style setup of a Nuxt 4 + Tailwind 4 project into the fixed four-file structure, keeping the project's own values.
+Normalizes any global style setup of an app into the fixed four-file structure, keeping the project's own values.
 
 The skill fixes the **structure**. It does not judge or improve the design: values come from `.sb-context/design-source.md` when it exists (the plugin's own snapshot of a Claude design, written by `/sb-design:extract-style`) and otherwise from the project itself. Improving the design is the job of Impeccable (`impeccable@impeccable`), a separate plugin the user may install. The two plugins are not connected: this skill never reads or writes Impeccable's `DESIGN.md`, and only recommends Impeccable as the next step.
 
 **Language**: this file and its references are in English, but talk to the user in their language: questions, report and summary.
 
-## Precedence
+## The three layers
 
-| Concern | Owner | Rule |
+What this skill enforces is written in three places. Read them before the report, and follow them when writing:
+
+| Layer | File | What it says |
 | --- | --- | --- |
-| **Structure**: the four files and their sections, token naming, the `{p}` prefix, the role names, closed Tailwind namespaces, `@theme` vs `@theme inline`, utilities `{p}-<role>`, base layer for `h1`–`h4`, light/dark mechanics with `data-theme`, `@nuxtjs/color-mode` and `@nuxt/fonts`, breakpoints, `clamp()` only above `display` | **this plugin** | fixed, always enforced |
-| **Values and taste**: palette, font families and pairing, type ratios, line heights, letter spacing, weights, radii and shadow values, motion timings and character, how roles are used on a page (composition) | **`design-source.md`**, else the **project** | if `design-source.md` exists, its values win; otherwise keep the project's current values, normalized; never impose the example's |
+| **standard** | `${CLAUDE_SKILL_DIR}/../../standard/README.md` (and the files it lists) | structure vs values and their precedence, the scope, the four files, the prefix, the fixed rules, how values are treated, specific cases |
+| **engine** | `${CLAUDE_SKILL_DIR}/../../engines/tailwind4/README.md`, `example/` | how all of it is written with Tailwind 4: resets, `@theme` / `@theme inline`, utilities, the dark variant, the example files to replicate |
+| **framework** | `${CLAUDE_SKILL_DIR}/../../frameworks/nuxt.md`, sections **Requirements**, **Where things are**, **align** | where the style lives, what this skill may change in the framework's config, color mode, fonts, modules to install, build |
 
-**One exception to "`design-source.md` wins": no eyebrows, ever.** `overline` is for badges, tags, counters, table headers and metadata, never a kicker above a heading, even if `design-source.md` documents one. The same goes for the fixed breakpoints and the 16px floor for running text and inputs.
-
-`references/example/` is the `sb` template (prefix `sb`): it is the **structural** reference. Its values are never copied into another project.
-
-## Where things are
-
-The plugin works only on Nuxt projects. Scripts find the **project root** themselves, from wherever they start (the folder with `nuxt.config.*`; outside a Nuxt project they refuse), and everything is relative to it:
-
-- the global style: `<srcDir>/assets/css/` (`app/assets/css/` in Nuxt 4), always, never anywhere else;
-- the plugins' folder: `<root>/.sb-context/` (snapshot, role map, applied version, project settings), which can be committed with the project.
-
-## Scope
-
-It covers **only and exclusively the global state**:
-
-- it writes `main.css`, `theme.css`, `typography.css`, `animation.css` in `<srcDir>/assets/css/` (in Nuxt 4 usually `app/assets/css/`);
-- it changes `nuxt.config.ts` only in the `modules`, `css`, `colorMode`, `fonts` keys and, if missing, `vite.plugins` for `@tailwindcss/vite`;
-- it installs `@nuxtjs/color-mode` and `@nuxt/fonts` if they are missing.
-
-It **does not touch** components, pages, layouts, `<style scoped>` or `<style module>`. The one exception is the optional prefix rename, which only replaces the old prefix.
+The engine is the profile's `styling.engine.name` and the framework the profile's `adapter`. Today only `tailwind4` and `nuxt` exist: any other value means the project is out of scope (say which layer is missing and stop).
 
 ## Requirements (blocking)
 
 - **An app on a stack sb-design has an adapter for** (today Nuxt): `node "${CLAUDE_SKILL_DIR}/../../core/scripts/profile.mjs" get` must show `adapter: "nuxt"` and `kind: "app"`. A library, or a Vue + Vite app, is out of scope for now: say so and stop (the scripts refuse it too). Format: `${CLAUDE_SKILL_DIR}/../../core/references/profile.md`.
-- **Tailwind 4** with `@tailwindcss/vite`, and **Nuxt 4**. With Tailwind 3 (`tailwind.config.*`, `@tailwind`, `@config`, `@nuxtjs/tailwindcss`), Nuxt 3 or global CSS in SCSS, the skill stops and says so (P1, P2, P5). No adaptation.
-- **`@nuxtjs/color-mode`** and **`@nuxt/fonts`** are required. If missing, the skill installs them during the write phase (`npx nuxi module add color-mode`, `npx nuxi module add fonts`; use the project's package manager: `facts.packageManager` of `project-settings.mjs detect --need stack`, or `stack.packageManager` in the settings).
+- The engine's and the framework's **Requirements**: an unsupported version stops the skill (P1, P2, P5). No adaptation.
+- What the framework file says is required (color mode, fonts) is installed by this skill during the write phase if missing, with the project's package manager (`packageManager` of the profile).
 
 ## Questions at startup
 
@@ -53,14 +37,14 @@ Run the inventory first (Flow step 1: it is read only). If the project is **alre
 
 Read it first: `node "${CLAUDE_SKILL_DIR}/../../core/scripts/project-settings.mjs" get style.prefix`. If the project settings already have it, **use it and do not ask again** (the user changes it only by asking, through the prefix rename). If the project is already aligned and the settings are empty, detect it from `theme.css` (`node "${CLAUDE_SKILL_DIR}/../../core/scripts/project-settings.mjs" detect --need style` → `facts.style.prefix`), confirm it with the user and save it. Otherwise ask.
 
-Ask. Propose a default: the `suggestedPrefix` of `design-source.md` when it has one (initials of the design's name, e.g. `PraticaSicura` → `ps`), otherwise one derived from the project name. It is only a proposal: **whatever the user answers is the prefix** (`pippo` → `pippo`, within the rules below). Never fall back to a fixed prefix, and `sb` in `references/example/` is just the example's. The prefix becomes:
+Ask. Propose a default: the `suggestedPrefix` of `design-source.md` when it has one (initials of the design's name, e.g. `PraticaSicura` → `ps`), otherwise one derived from the project name. It is only a proposal: **whatever the user answers is the prefix** (`pippo` → `pippo`, within the rules below). Never fall back to a fixed prefix, and `sb` in the engine's `example/` is just the example's. The prefix becomes:
 
 - the prefix of the raw variables: `--{p}-bg`, `--{p}-primary`, `--{p}-duration-state`;
 - the prefix of the skill's utilities: `{p}-h1`, `{p}-body`, `{p}-overline`, `{p}-transition`.
 
-Tailwind tokens keep the role name (`--color-primary` → `bg-primary`, `--text-h1` → `text-h1`): those are Tailwind utilities, not the skill's. Show the user an example when you ask for the prefix.
+The engine's own tokens keep the role name (with Tailwind 4: `--color-primary` → `bg-primary`, `--text-h1` → `text-h1`): those are the engine's utilities, not the skill's. Show the user an example when you ask for the prefix.
 
-Rules: 2–4 lowercase letters, starting with a letter, no hyphens. It cannot match a Tailwind utility root (`p`, `m`, `w`, `h`, `bg`, `text`, `font`, `border`, `rounded`, `shadow`, `flex`, `grid`, `gap`, `ring`, `top`, `size`, `col`, `row`, `sr`, `dark`, `ease`, `animate`, `inset`, `space`, `divide`, `outline`, `fill`, `stroke`). If the user picks one of these, explain the conflict and ask for another.
+Rules: the standard's (2–4 lowercase letters, starting with a letter, no hyphens) and the engine's (with Tailwind 4, never one of its utility roots: the list is in the engine file). If the user picks a forbidden one, explain the conflict and ask for another.
 
 ### 2. Component impact analysis (optional)
 
@@ -100,7 +84,7 @@ node "${CLAUDE_SKILL_DIR}/scripts/inventory.mjs" --out /tmp/style-inventory.json
 
 It prints: versions and modules, global style sources (including orphan files and global `<style>` blocks in `.vue` files), dark theme, text sizes with the nearest step **of the project's own scale** (the `--text-*` tokens, or proposed clusters when there are none), scattered literal colors, radii, shadows, motion, `clamp()`, breakpoints. If the user passes files instead of a project: `--file a.css --file b.css`.
 
-If the inventory reports a blocking issue (Tailwind or Nuxt not at version 4), **stop here** and report it.
+If the inventory reports a blocking issue (P1, P2, P5: the framework or the engine below the supported version, or a global style in SCSS), **stop here** and report it.
 
 Then read the flagged source files: the script finds the values; you work out the **role** of each rule from its selector and context.
 
@@ -137,7 +121,7 @@ node "${CLAUDE_SKILL_DIR}/scripts/sync-values.mjs"            # table of differe
 It compares the snapshot with the project's `theme.css` and `typography.css`: colors per theme, shadows, radii, type sizes / line heights / weights / tracking, mobile sizes of `display`, `h1`, `h2`, and the families. Then:
 
 1. Show the table (token, theme, project now, design) and, for changed colors, the contrast of the new pairs (`contrast.mjs theme.css --prefix {p}`; a pair below the minimum comes with the lightness-only correction proposal, the choice is the user's).
-2. Show **Needs a decision**, which the script never applies: a role new in the design (e.g. `accent`: add it to `theme.css`, both `@theme inline` and the contrast check), a role the design dropped (kept, the user decides), a changed family (stack in `typography.css` **and** `fonts.families` in `nuxt.config.ts`), the `hero` clamp when `display` changed. Resolve each with the user and write it by hand following `references/example/`.
+2. Show **Needs a decision**, which the script never applies: a role new in the design (e.g. `accent`: add it to `theme.css`, both `@theme inline` and the contrast check), a role the design dropped (kept, the user decides), a changed family (stack in `typography.css` **and** the framework's font configuration: the framework file says where), the `hero` clamp when `display` changed. Resolve each with the user and write it by hand following the engine's `example/`.
 3. **Stop and wait** for confirmation. Then `sync-values.mjs --apply` writes the changed values, refreshes the px comments and records the applied version in `.sb-context/design-applied.json`.
 4. Verify as in step 6 (inventory still aligned, contrast, build), then run `sync-values.mjs --check` again: it must exit 0.
 5. Say what was **not** verified visually, and that components using changed tokens follow automatically; components using removed ones need `/sb-design:migrate`.
@@ -166,12 +150,12 @@ If the project already has color variables, measure the current contrast. If the
 
 ### 3. Report
 
-Write the report in the format of "Report format". Every item has a code from `references/issues.md`. Before each part, read its reference:
+Write the report in the format of "Report format". Every item has a code from `${CLAUDE_SKILL_DIR}/../../standard/issues.md`; for a code of layer `engine` or `framework`, the correction is the one of that layer's file. Before each part, read its standard file (and the engine's section for the same area):
 
-- `references/typography.md` → Typography;
-- `references/fonts.md` → Fonts;
-- `references/method.md` → Color and theme, Shapes and breakpoints;
-- `references/motion.md` → Motion.
+- `standard/typography.md` → Typography;
+- `standard/fonts.md` → Fonts;
+- `standard/roles.md` → Color and theme, Shapes and breakpoints;
+- `standard/motion.md` → Motion.
 
 ### 4. Confirmation
 
@@ -179,18 +163,18 @@ Write the report in the format of "Report format". Every item has a code from `r
 
 ### 5. Writing
 
-1. Install the missing modules and update `nuxt.config.ts` as in `references/example/nuxt.config.ts`: `css` contains **only** `~/assets/css/main.css`; `fonts.families` lists the families with the weights in use.
-2. Write `theme.css`, `typography.css`, `animation.css`, `main.css` following **the structure of `references/example/` file by file**: same sections, same order, same resets.
+1. Install what the framework file requires and register the style as its **align** section says (with Nuxt: the modules, `css` with only `main.css`, `colorMode`, `fonts.families` with the weights in use, as in `frameworks/nuxt.config.ts`). Nothing else of the framework's config changes.
+2. Write `theme.css`, `typography.css`, `animation.css`, `main.css` in the style folder (`paths.styles` of the profile) following **the structure of the engine's `example/` file by file**: same sections, same order, same resets.
    - the structure, naming, utilities, breakpoints and reduced-motion block: identical to the example, with the project's prefix (plus the `hero` role if any);
    - the values (palette, shadows, sizes, line heights, weights, tracking, radii, durations): the project's, or `design-source.md`'s, as approved in the report.
 3. Save the prefix in the project settings: `node "${CLAUDE_SKILL_DIR}/../../core/scripts/project-settings.mjs" set style.prefix '"{p}"'`. If a snapshot was used, record it: `node "${CLAUDE_SKILL_DIR}/scripts/sync-values.mjs" --record` (writes `.sb-context/design-applied.json`: artifact version, prefix, css dir).
-4. Old global files are not deleted: they are unlinked from `nuxt.config` and listed in the summary. Global `<style>` blocks in `.vue` files are moved only if the user approved it (P8).
+4. Old global files are not deleted: they are unregistered (with Nuxt: removed from `css`) and listed in the summary. Global `<style>` blocks in `.vue` files are moved only if the user approved it (P8).
 
 ### 6. Verification
 
-1. `node "${CLAUDE_SKILL_DIR}/scripts/inventory.mjs" --file <srcDir>/assets/css/main.css`: every size with offset 0, no media query outside the breakpoints, no literal color outside `theme.css`, closed namespaces: `color, font, text, shadow, radius, font-weight, inset-shadow, drop-shadow, text-shadow, ease, animate, breakpoint`.
-2. `node "${CLAUDE_SKILL_DIR}/scripts/contrast.mjs" <srcDir>/assets/css/theme.css --prefix {p}`: the result must match what was approved in the report. A pair the user chose to keep below the minimum stays flagged in the summary; it is never silently corrected.
-3. Project build (`npm run build`, `pnpm build`, … or `npx nuxi build`): no CSS errors.
+1. `node "${CLAUDE_SKILL_DIR}/scripts/inventory.mjs" --file <styles>/main.css`: the checks of the engine's **Verification** section (every size with offset 0, no media query outside the breakpoints, no literal color outside `theme.css`, the closed namespaces).
+2. `node "${CLAUDE_SKILL_DIR}/scripts/contrast.mjs" <styles>/theme.css --prefix {p}`: the result must match what was approved in the report. A pair the user chose to keep below the minimum stays flagged in the summary; it is never silently corrected.
+3. Project build, as the framework file says: no CSS errors.
 
 If a check fails because of a mistake by the skill, fix it and repeat before delivering.
 
@@ -202,40 +186,9 @@ State what was **not verified visually** (rendered contrast, dark theme, heading
 
 Remind the user that components were not modified, and that `/sb-design:migrate` handles template migration.
 
-## Fixed rules (structure)
+## Rules and values
 
-- **Context**: Tailwind 4 + Nuxt 4, global state only, only the four files in `assets/css`.
-- **Closed system**: no default Tailwind palette, family, weight, text size, shadow, radius, easing or animation. Namespaces are reset as in the example; only static utilities remain (`transparent`, `current`, `inherit`, `rounded-none`, `rounded-full`, `shadow-none`). Everything the project uses is defined by the theme.
-- **Type roles** (`references/typography.md`): the set of roles, token shape and utilities are fixed; sizes and weights are the project's (or `design-source.md`'s). Two family roles, `display` and `body` (plus `mono` only if the project shows code). Guard rails: running text 1rem floor, inputs never below 16px, prose 45–75ch, `display` at most 6rem, tracking not below −0.04em, adjacent roles visibly distinct. `overline` is for badges, tags, counters, table headers and metadata, never a kicker above a heading.
-- **Standard breakpoints**: only `sm` 640, `md` 768, `lg` 1024, `xl` 1280, declared in `theme.css`. Every media query on other widths moves to the nearest breakpoint. Text changes **in steps** at `lg`, only `display`, `h1`, `h2`.
-- **`clamp()` only above `display`**: text larger than `display` becomes the `hero` role, with a `clamp()` built with the formula in `typography.md` §4. Any other `clamp()` on text becomes a stepped role.
-- **Literal colors only in `theme.css`**, in the `:root, [data-theme="light"]` and `[data-theme="dark"]` blocks. Both themes exist.
-- **Reduced motion** always handled, by zeroing `--{p}-motion-distance`, not the durations (`references/motion.md` §3).
-
-## Values: how the skill treats them
-
-**Color.** The palette belongs to the project (or `design-source.md`). The skill:
-
-- **maps** existing colors onto the roles (`references/method.md` §1) where the meaning matches, and **keeps** project colors without a matching role, with an agreed semantic name;
-- **does not change** existing values on its own initiative: every change to an existing color is a "To decide" proposal;
-- **derives** missing roles minimally, marked **provisional**;
-- **measures** contrast (4.5:1 text, 3:1 large text, controls, focus) and reports it. Pairs below the minimum come with a lightness-only correction proposal; the choice is the user's.
-
-The lightness table in `method.md` is an *example*, never a rule.
-
-**Radii, shadows, motion.** Closed sets with the project's values (or `design-source.md`'s), merged into the fixed number of steps.
-
-**Fonts** (`references/fonts.md`). The skill only normalizes declaration and loading: two family roles (`--font-display`, `--font-body`, optional `--font-mono`), loaded through `@nuxt/fonts` with only the weights in use. It does not judge the pairing or propose alternatives. With more than two families in use it asks which roles they play; if the pairing looks unintentional it says so and points to `/impeccable typeset`.
-
-## Specific cases
-
-- **Value equidistant between two steps**: the element's role decides (`typography.md` §6); the report says which and why.
-- **Recurring off-scale value**: aligned like the others. The report groups it so the user sees the effect, but it does not become a new role.
-- **Several different sizes above `display`**: a single `hero` role, with the most used maximum; the report lists the absorbed values.
-- **No dark theme**: propose a minimal derivation, every value marked **provisional**, to be approved.
-- **Dark theme on `.dark` or only on `prefers-color-scheme`**: migrate it to `data-theme` (C11). `color-mode` already covers the system preference.
-- **Fonts from `@font-face` or a Google `@import`**: they move to `@nuxt/fonts` (T7). Local fonts: `@nuxt/fonts` serves them from the `public/` folder, and the report says so.
-- **Global variables that are not style** (z-index, layout widths…): they stay outside the four files; the report mentions them without touching them.
+The fixed rules (closed system, type roles and guard rails, breakpoints, `clamp()`, literal colors, reduced motion), how values are treated (color, radii, shadows, motion, fonts) and the specific cases (equidistant values, recurring off-scale values, several sizes above `display`, no dark theme, `.dark` themes, `@font-face` fonts, non-style variables) are in `${CLAUDE_SKILL_DIR}/../../standard/README.md`. They apply to every item of the report and of the writing.
 
 ## Report format
 
@@ -244,7 +197,7 @@ Write the report in the user's language; the structure is this:
 ```markdown
 # Global style — report
 
-**Project**: Nuxt x · Tailwind x · color-mode ✓/✗ · fonts ✓/✗ · prefix `{p}` · design-source.md ✓/✗ · component impact: yes/no
+**Project**: framework x (adapter) · engine x · color mode ✓/✗ · fonts ✓/✗ · prefix `{p}` · design-source.md ✓/✗ · component impact: yes/no
 **Sources analyzed**: list
 
 ## Blocking
@@ -287,13 +240,17 @@ List of everything derived, with the Impeccable command that refines it.
 
 | File | When to read it |
 | --- | --- |
-| `references/typography.md` | before the Typography part and before writing `typography.css` |
-| `references/fonts.md` | before the Fonts part |
-| `references/method.md` | before the Color, Shapes and Breakpoints parts |
-| `references/motion.md` | before the Motion part |
-| `references/issues.md` | for the code and severity of each item |
-| `references/example/*` | before writing the files: it is the structure to replicate (values are the `sb` template's) |
-| `../../references/stack-docs.md` | maintainers' guides for Tailwind theme, `@nuxt/fonts`, `@nuxtjs/color-mode`, `nuxt.config.ts`; open them when module options or Tailwind v4 behavior are in doubt |
+| `${CLAUDE_SKILL_DIR}/../../standard/README.md` | before the report: precedence, scope, fixed rules, values, specific cases |
+| `${CLAUDE_SKILL_DIR}/../../standard/typography.md` | before the Typography part and before writing `typography.css` |
+| `${CLAUDE_SKILL_DIR}/../../standard/fonts.md` | before the Fonts part |
+| `${CLAUDE_SKILL_DIR}/../../standard/roles.md` | before the Color, Shapes and Breakpoints parts |
+| `${CLAUDE_SKILL_DIR}/../../standard/motion.md` | before the Motion part |
+| `${CLAUDE_SKILL_DIR}/../../standard/issues.md` | for the code, severity and layer of each item |
+| `${CLAUDE_SKILL_DIR}/../../engines/tailwind4/README.md` | how each part is written with Tailwind 4, the engine's corrections and verification |
+| `${CLAUDE_SKILL_DIR}/../../engines/tailwind4/example/` | before writing the files: the structure to replicate (values are the `sb` template's) |
+| `${CLAUDE_SKILL_DIR}/../../frameworks/nuxt.md` | requirements, where the style lives, what may change in `nuxt.config.ts`, color mode, fonts, build; the framework's corrections |
+| `${CLAUDE_SKILL_DIR}/../../frameworks/nuxt.config.ts` | the framework settings the style needs |
+| `${CLAUDE_SKILL_DIR}/../../core/references/stack-docs.md` | maintainers' guides for Tailwind theme, `@nuxt/fonts`, `@nuxtjs/color-mode`, `nuxt.config.ts`; open them when module options or Tailwind v4 behavior are in doubt |
 | `scripts/inventory.mjs` | global style inventory (+ impact with `--classes`) |
 | `scripts/contrast.mjs` | contrast and OKLCH lightness, light and dark |
 | `scripts/sync-values.mjs` | values of the project vs the design snapshot: `--check`, table, `--apply`, `--record` |
