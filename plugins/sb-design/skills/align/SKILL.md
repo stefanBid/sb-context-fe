@@ -250,7 +250,7 @@ List of everything derived, with the Impeccable command that refines it.
 | `${CLAUDE_SKILL_DIR}/../../engines/tailwind4/example/` | before writing the files: the structure to replicate (values are the `sb` template's) |
 | `${CLAUDE_SKILL_DIR}/../../frameworks/nuxt.md` | requirements, where the style lives, what may change in `nuxt.config.ts`, color mode, fonts, build; the framework's corrections |
 | `${CLAUDE_SKILL_DIR}/../../frameworks/nuxt.config.ts` | the framework settings the style needs |
-| `${CLAUDE_SKILL_DIR}/../../core/references/stack-docs.md` | maintainers' guides for Tailwind theme, `@nuxt/fonts`, `@nuxtjs/color-mode`, `nuxt.config.ts`; open them when module options or Tailwind v4 behavior are in doubt |
+| `node "${CLAUDE_SKILL_DIR}/../../core/scripts/docs.mjs" get --for sb-design:align` | the project's links to the maintainers' guides for Tailwind theme, `@nuxt/fonts`, `@nuxtjs/color-mode`, `nuxt.config.ts` (`${CLAUDE_SKILL_DIR}/../../core/references/docs.md`); open them when module options or Tailwind v4 behavior are in doubt |
 | `scripts/inventory.mjs` | global style inventory (+ impact with `--classes`) |
 | `scripts/contrast.mjs` | contrast and OKLCH lightness, light and dark |
 | `scripts/sync-values.mjs` | values of the project vs the design snapshot: `--check`, table, `--apply`, `--record` |

@@ -44,7 +44,7 @@ Save each answer with `profile.mjs set <key> '<json>'` (`set kind '"library"'`),
 node "${CLAUDE_SKILL_DIR}/../../scripts/setup-state.mjs" --init
 ```
 
-Creates `.sb-context/` and its `.gitignore`. It prints the state of the project as JSON (`profile`, `folder`, `files`, `style`, `design`, `github`, `dependencyNotes`, `docs`, `next`); keep it for step 6. `folder.ignoredByProject` says whether the project's `.gitignore` keeps the whole folder local; mention it once, without asking to change it.
+Creates `.sb-context/` and its `.gitignore`. It prints the state of the project as JSON (`profile`, `folder`, `files`, `style`, `design`, `docLinks`, `github`, `dependencyNotes`, `docs`, `next`); keep it for step 6. `folder.ignoredByProject` says whether the project's `.gitignore` keeps the whole folder local; mention it once, without asking to change it.
 
 Read `CLAUDE.md` if present and follow its rules for the rest of the run.
 
@@ -91,6 +91,7 @@ One table, what the plugins know now:
 | Project settings | saved now / already saved / skipped |
 | Global style | `style` + `/sb-design:check` of step 5 (when sb-design applies) |
 | Design snapshot | `design.source`, `design.applied` |
+| Documentation links | `docLinks` (links saved in `docs.json`, `CLAUDE.md` pointing to them) |
 | GitHub | `github` (remote, cache, signature asked, PR title lint, release-please) |
 | Dependency notes | `dependencyNotes.open` |
 | Project docs | `docs` |

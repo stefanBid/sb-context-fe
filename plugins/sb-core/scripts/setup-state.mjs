@@ -5,7 +5,8 @@
 // Usage (from anywhere inside a Nuxt project):
 //   node setup-state.mjs           the state as JSON: the project profile (saved or not, confirmed values that drifted),
 //                                  the .sb-context folder and its files, the four
-//                                  global style files, the design snapshot, the GitHub side, project docs,
+//                                  global style files, the design snapshot, the documentation links (docs.json and the
+//                                  CLAUDE.md block), the GitHub side, project docs,
 //                                  and the recommended next skills. Writes nothing.
 //   node setup-state.mjs --init    also creates .sb-context/ and its .gitignore (personal and throwaway files)
 //                                  (the only write; no other project file is touched)
@@ -17,6 +18,7 @@ import { join } from 'node:path';
 import { projectRoot, cssDirOf, contextDirOf, ensureContextDir, relPath, CONTEXT_DIR } from '../core/lib/project.mjs';
 import { themePrefixOf } from '../core/lib/settings.mjs';
 import { loadProfile } from '../core/lib/profile.mjs';
+import { START as DOCS_START } from '../core/lib/docs.mjs';
 import { LOCAL_FILES, STYLE_FILES, githubRemoteOf, recommend } from './lib/setup.mjs';
 
 const root = projectRoot();
@@ -77,6 +79,7 @@ const state = {
   files,
   style: { cssDir: relPath(root, cssDir), files: styleFiles, prefix: themePrefixOf(read(join(cssDir, 'theme.css'))) },
   design: { source: files['design-source.md'], applied: files['design-applied.json'] },
+  docLinks: { saved: files['docs.json'], count: readJson(join(dir, 'docs.json'))?.links?.length ?? 0, claudeBlock: ['CLAUDE.md', '.claude/CLAUDE.md'].some((f) => read(join(root, f)).includes(DOCS_START)) },
   github: {
     remote: git ? githubRemoteOf(read(join(root, '.git', 'config'))) : null,
     cache: files['github.json'],

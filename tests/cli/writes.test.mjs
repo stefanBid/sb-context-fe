@@ -61,6 +61,10 @@ describe('what the scripts write', () => {
       [SCRIPTS.profile, ['detect']],
       [SCRIPTS.profile, ['get']],
       [SCRIPTS.projectPlugins, ['plan', '--installed', 'sb-design@sb-context-fe']],
+      [SCRIPTS.docs, ['detect']],
+      [SCRIPTS.docs, ['get']],
+      [SCRIPTS.docs, ['get', '--for', 'sb-design:extract-ui']],
+      [SCRIPTS.docs, ['render']],
     ];
     for (const [script, args] of commands) assert.deepEqual(changed(p, () => p.run(script, args)), [], `${script.split('/').pop()} ${args.join(' ')}`);
   });
@@ -89,6 +93,18 @@ describe('what the scripts write', () => {
     rmSync(p.path('.sb-context/.gitignore'), { force: true });
     assert.deepEqual(changed(p, () => p.run(SCRIPTS.profile, ['set', 'kind', '"app"'])), ['.sb-context/.gitignore', '.sb-context/profile.json']);
     assert.deepEqual(changed(p, () => p.run(SCRIPTS.profile, ['write'])), [], 'nothing changed in the project: the same file');
+  });
+
+  test('docs add, set and remove touch only docs.json (and the folder\'s .gitignore); render --write only CLAUDE.md', () => {
+    rmSync(p.path('.sb-context/.gitignore'), { force: true });
+    const all = [
+      ...changed(p, () => p.run(SCRIPTS.docs, ['add', '--catalog', 'nuxt:pages,nuxt:seo'])),
+      ...changed(p, () => p.run(SCRIPTS.docs, ['add', '{"url":"https://example.com/guide","title":"Guide"}'])),
+      ...changed(p, () => p.run(SCRIPTS.docs, ['set', 'nuxt:pages', 'verifiedAt', 'today'])),
+      ...changed(p, () => p.run(SCRIPTS.docs, ['remove', 'nuxt:seo'])),
+    ];
+    assert.deepEqual([...new Set(all)].sort(), ['.sb-context/.gitignore', '.sb-context/docs.json']);
+    assert.deepEqual(changed(p, () => p.run(SCRIPTS.docs, ['render', '--write'])), ['CLAUDE.md']);
   });
 
   test('project-plugins disable writes only .claude/settings.local.json', () => {

@@ -109,7 +109,7 @@ Find the release information for **every major between the current version and t
 
 1. GitHub releases: `npm view <pkg> repository.url`, then `gh release view v<version> --repo <owner>/<repo>` or `gh api repos/<owner>/<repo>/releases`;
 2. `CHANGELOG.md` / `HISTORY.md` in the repo (`gh api repos/<owner>/<repo>/contents/CHANGELOG.md`) or in the package;
-3. the library's migration or upgrade guide in its docs (for the stack's own libraries, `${CLAUDE_SKILL_DIR}/../../core/references/stack-docs.md`), and the `BREAKING CHANGE` commits as a last resort.
+3. the library's migration or upgrade guide in its docs (the project's upgrade guides: `node "${CLAUDE_SKILL_DIR}/../../core/scripts/docs.mjs" get --for sb-health:deps`), and the `BREAKING CHANGE` commits as a last resort.
 
 Extract, for each: **breaking changes** (removed or renamed APIs, options and exports, changed defaults and behavior), **new requirements** (minimum Node, peer dependencies, required config or module changes), **deprecations that become removals**, and **new features worth knowing** (one line each, not the point of the task). If no release information can be found, say so and treat the update as unverified: propose, do not apply.
 

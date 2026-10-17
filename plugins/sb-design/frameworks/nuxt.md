@@ -54,7 +54,7 @@ Each skill reads only its section, plus **Requirements** and **Where things are*
 - A component `<style>` that uses `@apply` starts with `@reference "~/assets/css/main.css";`.
 - Confirm the route resolves: the file name and `definePageMeta` match the plan.
 
-Guides to open (components and auto-imports, layouts and transitions, pages and routing, SEO and `useSeoMeta`, rendering and `routeRules`, `@nuxt/icon`, `@nuxt/image`, `@nuxtjs/i18n`): `../core/references/stack-docs.md`.
+Guides to open (components and auto-imports, layouts and transitions, pages and routing, SEO and `useSeoMeta`, rendering and `routeRules`, `@nuxt/icon`, `@nuxt/image`, `@nuxtjs/i18n`): the project's links for extract-ui, `docs.mjs get --for sb-design:extract-ui` (`../core/references/docs.md`).
 
 ## migrate
 
@@ -75,4 +75,4 @@ Guides to open (components and auto-imports, layouts and transitions, pages and 
 
 ## Docs
 
-The maintainers' guides for Tailwind's theme, `@nuxt/fonts`, `@nuxtjs/color-mode` and `nuxt.config.ts`: `../core/references/stack-docs.md`. Open them when module options or Tailwind 4 behavior are in doubt, and say what was not verified.
+The maintainers' guides for Tailwind's theme, `@nuxt/fonts`, `@nuxtjs/color-mode` and `nuxt.config.ts`: the project's links for align, `docs.mjs get --for sb-design:align` (`../core/references/docs.md`). Open them when module options or Tailwind 4 behavior are in doubt, and say what was not verified.

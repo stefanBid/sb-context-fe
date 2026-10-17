@@ -4,6 +4,7 @@
 export const LOCAL_FILES = {
   'profile.json': '/sb-core:setup',
   'settings.json': '/sb-core:setup',
+  'docs.json': '/sb-core:context',
   'design-source.md': '/sb-design:extract-style',
   'design-applied.json': '/sb-design:align',
   'design-map.json': '/sb-design:align',
@@ -22,7 +23,7 @@ export function githubRemoteOf(gitConfig) {
 
 /**
  * Next steps, in the order they make sense. Recommendations only: setup never runs them.
- * state: { profile?: { kind, adapter }, style: { files }, design: { source, applied }, github: { remote, cache, prTitleLint }, dependencyNotes: { open } }
+ * state: { profile?: { kind, adapter }, style: { files }, design: { source, applied }, docLinks?: { saved, claudeBlock }, github: { remote, cache, prTitleLint }, dependencyNotes: { open } }
  * The style steps are listed only for a project sb-design applies to (an app on a stack it has an adapter for).
  */
 export function recommend(state) {
@@ -33,6 +34,8 @@ export function recommend(state) {
   if (design && missingStyle.length) add('/sb-design:align', `the global style is not in the four-file structure (missing ${missingStyle.join(', ')})`);
   if (design && !state.design.source) add('/sb-design:extract-style', 'only if the design lives in Claude: no design snapshot yet');
   else if (design && !state.design.applied) add('/sb-design:align', 'a design snapshot exists but it was never applied (sync flow)');
+  if (state.docLinks && !state.docLinks.saved) add('/sb-core:context', 'no project docs chosen yet: the skills fall back on the catalog of official docs');
+  else if (state.docLinks && !state.docLinks.claudeBlock) add('/sb-core:context', 'the project docs are saved but CLAUDE.md does not point to them');
   if (state.github.remote && !state.github.cache) add('/sb-github:admin', 'the GitHub repo was never audited (read-only init)');
   if (state.github.remote && !state.github.prTitleLint) add('/sb-github:checks', 'no PR title lint: release-please depends on the PR titles');
   if (state.dependencyNotes.open) add('/sb-health:deps', `${state.dependencyNotes.open} dependency note(s) still open`);
@@ -46,7 +49,7 @@ export const PLUGINS = ['sb-core', 'sb-github', 'sb-health', 'sb-design'];
 
 /** The skills of each plugin, as the user types them. */
 export const SKILLS = {
-  'sb-core': ['/sb-core:setup', '/sb-core:onboard', '/sb-core:migration'],
+  'sb-core': ['/sb-core:setup', '/sb-core:context', '/sb-core:onboard', '/sb-core:migration'],
   'sb-github': ['/sb-github:admin', '/sb-github:checks'],
   'sb-health': ['/sb-health:checkup', '/sb-health:build', '/sb-health:lint', '/sb-health:deps', '/sb-health:docs', '/sb-health:seo'],
   'sb-design': ['/sb-design:align', '/sb-design:migrate', '/sb-design:extract-style', '/sb-design:extract-ui', '/sb-design:check'],

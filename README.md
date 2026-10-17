@@ -50,6 +50,7 @@ They do **not** judge or improve the design. That is the job of [Impeccable](#im
 - [Skill reference: sb-core](#skill-reference-sb-core)
   - [/sb-core:onboard](#onboard)
   - [/sb-core:setup](#setup)
+  - [/sb-core:context](#context)
   - [/sb-core:migration](#migration)
 - [Skill reference: sb-health](#skill-reference-sb-health)
   - [/sb-health:checkup](#checkup)
@@ -84,7 +85,7 @@ They do **not** judge or improve the design. That is the job of [Impeccable](#im
 
 | Plugin | Skills | Install it on |
 | --- | --- | --- |
-| [`sb-core`](plugins/sb-core/README.md) | `/sb-core:setup`, `/sb-core:onboard`, `/sb-core:migration` | every project: the others depend on it and install it for you |
+| [`sb-core`](plugins/sb-core/README.md) | `/sb-core:setup`, `/sb-core:context`, `/sb-core:onboard`, `/sb-core:migration` | every project: the others depend on it and install it for you |
 | [`sb-github`](plugins/sb-github/README.md) | `/sb-github:admin`, `/sb-github:checks` | every project hosted on GitHub |
 | [`sb-health`](plugins/sb-health/README.md) | `/sb-health:checkup`, `/sb-health:build`, `/sb-health:lint`, `/sb-health:deps`, `/sb-health:docs`, `/sb-health:seo` | every project |
 | [`sb-design`](plugins/sb-design/README.md) | `/sb-design:align`, `/sb-design:migrate`, `/sb-design:extract-style`, `/sb-design:extract-ui`, `/sb-design:check` | apps whose global style you want aligned (not libraries) |
@@ -196,6 +197,7 @@ Reading is free; writing asks first.
 | `/sb-health:deps` | the scope (minor/patch or also major) and the approval of every major migration plan |
 | `/sb-core:onboard` | every confirmation of the skills it calls |
 | `/sb-core:setup` | nothing outside `.sb-context/` is written; the settings are asked before they are saved |
+| `/sb-core:context` | saving the links you chose; writing the block in `CLAUDE.md` (or creating the file) after showing it |
 | `/sb-core:migration` | moving the folder, and rewriting references in your docs (approved separately) |
 
 ### Where things live
@@ -206,6 +208,7 @@ Reading is free; writing asks first.
 | The plugins' files in the project | `<root>/.sb-context/`: it can be committed; its own `.gitignore` keeps `github.json` and `*.prev.md` out. To keep it all local, add `.sb-context/` to the project's `.gitignore` |
 | Project root | the folder with `nuxt.config.*`, or a `package.json` that depends on nuxt or vue, found from wherever a script starts |
 | What the project is | `.sb-context/profile.json`: framework, kind (app or library), paths, styling, libraries. See [Project profile](#project-profile) |
+| Which docs Claude follows | `.sb-context/docs.json`, and a managed block of `CLAUDE.md`. See [/sb-core:context](#context) |
 
 The plugins never commit anything themselves. Outside a Nuxt or Vue project their scripts refuse to run.
 
@@ -229,6 +232,7 @@ The plugins never commit anything themselves. Outside a Nuxt or Vue project thei
 | --- | --- | --- | --- |
 | sb-core | `/sb-core:onboard` | command only | Join a project in progress: stack, settings, align, migrate, build, next steps |
 | sb-core | `/sb-core:setup` | model or command | Light setup on a project already in progress or aligned: `.sb-context/` folder, settings, state report, next steps |
+| sb-core | `/sb-core:context` | model or command | Choose the official docs of the stack, at the project's versions: `docs.json` and a short block in `CLAUDE.md` |
 | sb-core | `/sb-core:migration` | model or command | Move a project from sb-context-nuxt 0.x to 1.0: folder, file names, references |
 | sb-design | `/sb-design:extract-style` | model or command | Extract the style of a Claude design into `.sb-context/design-source.md` |
 | sb-design | `/sb-design:align` | model or command | Normalize the global style into four files; rename the prefix; sync values with the design |
@@ -251,6 +255,7 @@ The plugins never commit anything themselves. Outside a Nuxt or Vue project thei
 | Start working on a Nuxt project I just joined | `/sb-core:onboard` |
 | Use the plugins on a project that is already aligned | `/sb-core:setup` |
 | Move a project from sb-context-nuxt 0.x | `/sb-core:migration` |
+| Tell Claude which docs (and which versions) this project follows | `/sb-core:context` |
 | Know if the style is aligned and in sync, without changing anything | `/sb-design:check` |
 | Use the palette, fonts and radii of my design made in Claude | `/sb-design:extract-style`, then `/sb-design:align` |
 | Reorganize a messy global CSS / theme / dark mode | `/sb-design:align` |
@@ -282,6 +287,7 @@ Phrases below are the ones written in the skill descriptions (**listed**) or req
 | `/sb-health:deps` | listed: "check dependencies", "update dependencies", "verifichiamo le dipendenze"; matches: "migrate to the new major", "update nuxt to the next major" |
 | `/sb-health:docs` | listed: "update the documentation", "update the README", "aggiorna la documentazione" |
 | `/sb-github:admin` | matches: "connect to the repo", "open a PR", "manage labels", "change branch protection / rulesets", "inspect repo settings" |
+| `/sb-core:context` | listed: "set up the project docs", "which docs should Claude follow?", "add this link to the project docs", "imposta la documentazione del progetto", "aggiungi questo link alla documentazione" |
 | `/sb-core:migration` | listed: "migrate to v1", "the project uses sb-context-nuxt", "migra il progetto alla v1", "aggiorna da sb-context-nuxt" |
 | `/sb-design:check` | listed: "is the style aligned?", "check the design sync", "lo stile è allineato?", "controlla il design" |
 | `/sb-github:checks` | matches: "add the PR title check", "require a status check", "align CI checks with release-please" |
@@ -481,6 +487,25 @@ Text is never left inline: it goes to the locale files (see [The i18n stance](#t
 | 4. Project settings | `project-settings.mjs detect`, only the questions that apply to this project, all together |
 | 5. Style check | when sb-design applies and the four files exist, `/sb-design:check` (read-only) |
 | 6. Report | profile, plugins, settings, style, design snapshot, GitHub, dependency notes, docs; the skills for this project and the next steps, as recommendations |
+
+### context
+
+| | |
+| --- | --- |
+| **Command** | `/sb-core:context` (or natural language) |
+| **Does** | Chooses with you the official docs of the project's stack, at the versions it uses, and points every session to them |
+| **Reads** | the profile and the dependencies (installed versions included), the catalog of official docs the plugins know, the links you give (opened and summarized) |
+| **Writes** | `.sb-context/docs.json`; the block between `<!-- sb-context:docs:start -->` and `<!-- sb-context:docs:end -->` in `CLAUDE.md`, after showing it (the file is created only if you say yes). Nothing outside the markers |
+
+| Step | What |
+| --- | --- |
+| 1. Project | `docs.mjs detect`: one line on what the project is, the packages the catalog knows with the major the project uses and the one the docs document, the proposals, the dependencies the catalog does not know |
+| 2. Versions | for a package the project is **behind** on, asks whether to follow the docs of its major (recommended) or the latest; the latest everywhere else |
+| 3. Links | the proposals by package: you drop what you do not want and add your own links, which are opened and summarized ("covers X, Y, Z; version N") before you decide |
+| 4. Save | `docs.mjs add`, `remove`, `set`: only `docs.json` |
+| 5. CLAUDE.md | `docs.mjs render` shows the block and what would change; `render --write` after your yes |
+
+Every skill that needs the docs reads the project's links first (`docs.mjs get --for sb-design:extract-ui`); without `docs.json` it falls back on the catalog's links for the stack. `/sb-core:setup` recommends this skill until the project has its links. Format: [core/references/docs.md](core/references/docs.md).
 
 ### migration
 
@@ -776,6 +801,7 @@ At the project root, shared by all the plugins. It can be committed with the pro
 | --- | --- | --- | --- |
 | `profile.json` | `/sb-core:setup` (`profile.mjs set`, `write`) | what the project is: the [profile](#project-profile) | yes |
 | `settings.json` | `/sb-core:setup` (and `/sb-core:onboard` through it), any skill that needs a setting | the [keys](#keys) above | yes |
+| `docs.json` | `/sb-core:context` | the documentation links of the project: url, title, version documented, summary, which skill opens them | yes |
 | `design-source.md` | `/sb-design:extract-style` | snapshot of the Claude design: values, brand guide, component index, provenance, gaps, machine block | yes |
 | `design-source.prev.md` | `/sb-design:extract-style` | the previous snapshot, kept on re-extraction | no |
 | `design-applied.json`, `design-map.json` | `/sb-design:align` | which version of the snapshot is applied; the confirmed role mapping | yes |
@@ -790,6 +816,7 @@ Skills call these; you rarely run them by hand. Paths are relative to the repo: 
 | --- | --- | --- |
 | `core/scripts/project-settings.mjs` (`detect`, `get`, `set`) | most skills | read and save project settings |
 | `plugins/sb-health/scripts/dependency-notes.mjs` (`list`, `add`, `touch`, `resolve`) | `/sb-health:deps` | read and write the dependency notes |
+| `core/scripts/docs.mjs` (`detect`, `get`, `add`, `remove`, `set`, `render`) | `/sb-core:context`, every skill that opens the stack's docs | propose, save and read the project's documentation links; write the `CLAUDE.md` block |
 | `core/scripts/profile.mjs` (`detect`, `get`, `set`, `write`) | `/sb-core:setup`, the skills that check the stack | detect, read and confirm the project profile |
 | `plugins/sb-core/scripts/project-plugins.mjs` (`plan`, `disable`, `enable`, `reset`) | `/sb-core:setup` | which plugins the project needs; turns them off or on in `.claude/settings.local.json` |
 | `plugins/sb-core/scripts/setup-state.mjs` (`--init`) | `/sb-core:setup` | state of the project for the plugins and next steps; `--init` creates the folder |
