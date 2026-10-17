@@ -91,7 +91,7 @@ test('the 0.x names appear only where the migration documents them', () => {
 });
 
 test('subcommands used in the skills exist in the scripts', () => {
-  const commands = { 'dependency-notes.mjs': ['list', 'add', 'touch', 'resolve'], 'project-settings.mjs': ['detect', 'get', 'set'], 'github-settings.mjs': ['get', 'status', 'set', 'refresh'], 'profile.mjs': ['detect', 'get', 'set', 'write'], 'project-plugins.mjs': ['plan', 'disable', 'enable', 'reset'] };
+  const commands = { 'dependency-notes.mjs': ['list', 'add', 'touch', 'resolve'], 'project-settings.mjs': ['detect', 'get', 'set'], 'github-settings.mjs': ['get', 'status', 'set', 'refresh'], 'profile.mjs': ['detect', 'get', 'set', 'write'], 'docs.mjs': ['detect', 'get', 'add', 'remove', 'set', 'render'], 'project-plugins.mjs': ['plan', 'disable', 'enable', 'reset'] };
   for (const file of tracked.filter((f) => f.endsWith('.md'))) {
     for (const [script, valid] of Object.entries(commands)) {
       const text = read(file);

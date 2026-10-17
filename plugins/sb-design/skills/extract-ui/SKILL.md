@@ -44,7 +44,7 @@ If the request is ambiguous ("Home" may be a component or a page), ask which. If
 
 ## Stack: what to consult
 
-Build following the project's stack. The maintainers' guides are listed in `${CLAUDE_SKILL_DIR}/../../core/references/stack-docs.md`, and the framework file says which ones matter for each kind of piece: open the relevant ones (WebFetch) before writing code you are not certain about, and say in the final report what was **not verified** against the docs.
+Build following the project's stack. The maintainers' guides chosen for this project come from `node "${CLAUDE_SKILL_DIR}/../../core/scripts/docs.mjs" get --for sb-design:extract-ui` (rules: `${CLAUDE_SKILL_DIR}/../../core/references/docs.md`), and the framework file says which ones matter for each kind of piece: open the relevant ones (WebFetch) before writing code you are not certain about, and say in the final report what was **not verified** against the docs.
 
 ## Flow
 

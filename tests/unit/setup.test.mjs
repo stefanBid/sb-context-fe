@@ -41,6 +41,16 @@ describe('recommend', () => {
     assert.deepEqual(skills(s), []);
   });
 
+  test('project docs: none chosen → context; chosen but CLAUDE.md not pointing to them → context again', () => {
+    const s = base();
+    s.docLinks = { saved: false, claudeBlock: false };
+    assert.deepEqual(recommend(s), [{ skill: '/sb-core:context', why: 'no project docs chosen yet: the skills fall back on the catalog of official docs' }]);
+    s.docLinks = { saved: true, claudeBlock: false };
+    assert.match(recommend(s)[0].why, /CLAUDE\.md does not point to them/);
+    s.docLinks = { saved: true, claudeBlock: true };
+    assert.deepEqual(recommend(s), []);
+  });
+
   test('open dependency notes point to dependency-check', () => {
     const s = base();
     s.dependencyNotes.open = 2;

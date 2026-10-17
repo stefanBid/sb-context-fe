@@ -15,4 +15,4 @@ description: Audit robots.txt, sitemap, and per-page meta tags of a Nuxt project
 6b. Inline meta: `node "${CLAUDE_SKILL_DIR}/../../core/scripts/check-i18n.mjs" app/pages` (from `scripts/check-i18n.mjs`) lists literal titles/descriptions and readable text left inline. For a multilingual site every hit is a **warning** (the page is not translated).
 7. Report per check (robots, sitemap, global meta, per-page table) and summarise blockers vs warnings vs OK.
 
-Guides to open when in doubt (SEO and `useSeoMeta`, `routeRules`, `@nuxtjs/sitemap`): `${CLAUDE_SKILL_DIR}/../../core/references/stack-docs.md`. Say what was not verified against them.
+Guides to open when in doubt (SEO and `useSeoMeta`, `routeRules`, `@nuxtjs/sitemap`): `node "${CLAUDE_SKILL_DIR}/../../core/scripts/docs.mjs" get --for sb-health:seo` prints the project's links (rules: `${CLAUDE_SKILL_DIR}/../../core/references/docs.md`). Say what was not verified against them.

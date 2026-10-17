@@ -73,7 +73,8 @@ describe('setup-state.mjs', () => {
     assert.equal(s.github.releasePlease, true);
     assert.equal(s.dependencyNotes.open, 1);
     assert.equal(s.docs['CLAUDE.md'], true);
-    assert.deepEqual(s.next.map((n) => n.skill), ['/sb-design:align', '/sb-health:deps']);
+    assert.deepEqual(s.docLinks, { saved: false, count: 0, claudeBlock: false });
+    assert.deepEqual(s.next.map((n) => n.skill), ['/sb-design:align', '/sb-core:context', '/sb-health:deps']);
     assert.match(s.next[0].why, /never applied/);
   });
 
