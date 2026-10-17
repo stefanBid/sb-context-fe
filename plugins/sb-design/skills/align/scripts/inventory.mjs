@@ -17,7 +17,7 @@
 import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { join, resolve, dirname, relative, extname, basename, isAbsolute } from 'node:path';
 import { createRequire } from 'node:module';
-import { findColors, parseColor, toHex } from './color.mjs';
+import { findColors, parseColor, toHex } from '../../../scripts/lib/color.mjs';
 import { projectRoot, srcDirOf, requireStack } from '../../../core/lib/project.mjs';
 import { prefixFromUtilities } from '../../../scripts/lib/prefix.mjs';
 import { toPx as toPxRaw, parseFontShorthand, nearestStep, scaleFromTokens, clusterSizes, scaleFromClusters, mediaWidths, commonDir } from './lib/scale.mjs';

@@ -1,7 +1,7 @@
 // The logic of contrast.mjs, without I/O: custom properties per theme, var() resolution,
 // the standard role pairs and their evaluation.
 
-import { parseColor, contrast, toOklch, toHex } from '../color.mjs';
+import { parseColor, contrast, toOklch, toHex } from '../../../../scripts/lib/color.mjs';
 
 /** Mini parser: every block with its chain of preludes and the custom properties it declares. */
 export function parseBlocks(text) {

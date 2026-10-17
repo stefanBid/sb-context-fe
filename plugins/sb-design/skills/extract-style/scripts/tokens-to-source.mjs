@@ -136,7 +136,7 @@ for (const [k, b] of Object.entries(bpDesign)) {
 }
 if (Object.values(radius).filter((r) => !r.static).length < 2) gaps.push('Fewer than 2 radii declared.');
 if (!Object.keys(shadows).length) gaps.push('No shadows declared: three levels derived minimally, provisional.');
-gaps.push('Motion: the design system has no motion family. Defaults from `/sb-design:align` references/motion.md apply, marked provisional.');
+gaps.push('Motion: the design system has no motion family. Defaults from standard/motion.md (`/sb-design:align`) apply, marked provisional.');
 
 // ---------------------------------------------------------------------------
 // Brand guide (README) and components (folders saved from the artifact)

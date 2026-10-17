@@ -1,4 +1,6 @@
-# Method: color roles, light and dark themes, shapes
+# Color roles, light and dark themes, shapes
+
+Part of the **standard**: fixed for every engine and framework. How the roles become CSS is the engine's file (`../engines/tailwind4/README.md`); how the theme is switched is the framework's (`../frameworks/nuxt.md`).
 
 The skill applies the **structure**, not the values. Every project keeps its own palette, radii and shadows. What is fixed: the role names, where literal colors live, how light and dark work, the closed namespaces. What follows `design-source.md` (or, without it, the project's current values): the colors themselves, radii, shadow values, how roles are used on a page. Taste is Impeccable's job.
 
@@ -39,13 +41,12 @@ Always measured with `scripts/contrast.mjs`, never by eye, in **both themes**. P
 
 Two colors that must be told apart (for example success and error) differ in lightness, not only in hue. When a correction is needed, move **only lightness** (never the hue) and show before and after.
 
-## 3. Theme mechanics (Nuxt + Tailwind 4)
+## 3. Themes
 
-- Raw values live in `theme.css`: `:root, [data-theme="light"]` for light, `[data-theme="dark"]` for dark, each with `color-scheme`.
-- `@nuxtjs/color-mode` with `dataValue: 'theme'` and `classSuffix: ''` writes `data-theme` on `<html>` before the first render, with `preference: 'system'` and `fallback: 'light'`.
-- Tailwind's `dark:` variant follows `data-theme` (`@custom-variant dark` in `main.css`). With semantic roles it is rarely needed: the color changes on its own.
-- Tailwind colors are mapped in `@theme inline`, so utilities read `var(--{p}-*)` on the element and also follow a nested `data-theme`.
-- Tailwind token names are the roles without a prefix (`--color-primary` → `bg-primary`); the prefix goes on the raw variables (`--{p}-primary`) and on the skill's utilities (`{p}-h1`).
+- **Literal colors only in `theme.css`**, in two blocks: light on `:root, [data-theme="light"]` (it applies before anything writes `data-theme`), dark on `[data-theme="dark"]`, each with its `color-scheme`. Both themes always exist.
+- The theme in use is the `data-theme` attribute on `<html>`, written before the first render by the framework's color-mode mechanism, following the system preference until the user chooses.
+- Every role is exposed through the engine with its plain role name (`primary`, not `{p}-primary`); the raw variables carry the prefix (`--{p}-primary`). Utilities read the variable on the element, so they also follow a nested `data-theme`.
+- With semantic roles a color changes with the theme on its own: a dark variant on a theme color is rarely needed.
 - The dark theme is **not** an inversion by definition of the structure: each role has its own dark value. A project without a dark theme gets a derived one, provisional.
 
 ## 4. Example calibration
@@ -94,10 +95,10 @@ Two colors that must be told apart (for example success and error) differ in lig
 | --- | --- | --- |
 | Radii | `sm`, `md`, `lg` (+ `xl` if the project needs a fourth step; `none` and `full` are always available) | values from `design-source.md` or the project, merged into three or four steps |
 | Shadows | `sm`, `md`, `lg`, a value per theme | values from `design-source.md` or the project, merged into three levels |
-| Spacing | Tailwind default (`--spacing: 0.25rem`) | 4px grid |
+| Spacing | the engine's default 4px grid | not part of the closed sets |
 | Breakpoints | `sm` 640, `md` 768, `lg` 1024, `xl` 1280 | **fixed**: no others, no different values |
 
-Radii and shadows are closed (no Tailwind defaults, reset in the example) but the values are the project's. Scattered values (eight different shadows) are reduced to the three levels by nearest value; the report lists what was merged.
+Radii and shadows are closed (no engine defaults: the engine's file says how they are reset) but the values are the project's. Scattered values (eight different shadows) are reduced to the three levels by nearest value; the report lists what was merged.
 
 The `example/` files are a non-normative illustration: three radii (10 / 14 / 22px), three shadow levels per theme.
 

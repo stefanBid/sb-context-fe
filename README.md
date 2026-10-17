@@ -725,6 +725,18 @@ Checked by `scripts/check-i18n.mjs`.
 
 ## The global style
 
+### Three layers
+
+sb-design writes its rules in three layers, so a new stack only adds an adapter:
+
+| Layer | Folder | Holds | Today |
+| --- | --- | --- | --- |
+| **standard** | [`plugins/sb-design/standard/`](plugins/sb-design/standard/README.md) | what is fixed on every stack: the four files, roles, guard rails, breakpoints, `clamp()`, contrast, motion, the issue codes | one |
+| **engine** | [`plugins/sb-design/engines/<name>/`](plugins/sb-design/engines/tailwind4/README.md) | how the standard becomes CSS: tokens, resets, utilities, the example files | `tailwind4` |
+| **framework** | [`plugins/sb-design/frameworks/<adapter>.md`](plugins/sb-design/frameworks/nuxt.md) | where the style lives, how it is registered, color mode, fonts, how UI is written | `nuxt` |
+
+The engine is the profile's `styling.engine.name`, the framework its `adapter`. A project whose engine or adapter has no file yet is out of scope: the skills say which one is missing and stop.
+
 ### The four files
 
 All under `<srcDir>/assets/css/`:
@@ -736,7 +748,7 @@ All under `<srcDir>/assets/css/`:
 | `typography.css` | font families, type scale, the `{p}-<role>` text utilities, mobile sizes, `clamp()` above `display` only, base layer for `h1`–`h4` |
 | `animation.css` | durations, easings, animations, Vue transitions, `prefers-reduced-motion` |
 
-`{p}` is the prefix you chose: raw variables `--{p}-bg`, utilities `{p}-h1`, `{p}-body`, `{p}-overline`, `{p}-transition`. Tailwind tokens keep the role name (`--color-primary` → `bg-primary`, `--text-h1` → `text-h1`). The reference structure is in `skills/style-align/references/example/` (values are the example's, not yours).
+`{p}` is the prefix you chose: raw variables `--{p}-bg`, utilities `{p}-h1`, `{p}-body`, `{p}-overline`, `{p}-transition`. Tailwind tokens keep the role name (`--color-primary` → `bg-primary`, `--text-h1` → `text-h1`). The reference structure is in `plugins/sb-design/engines/tailwind4/example/` (values are the example's, not yours); the rules are in `plugins/sb-design/standard/`, and what is specific to Nuxt in `plugins/sb-design/frameworks/nuxt.md`.
 
 ### What is fixed and what follows the design
 

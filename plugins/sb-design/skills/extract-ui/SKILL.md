@@ -1,12 +1,18 @@
 ---
 name: extract-ui
-description: Extracts UI from a design made in Claude (a Design or Design System artifact of the connected account) and builds it as Nuxt 4 + Tailwind 4 code with the project's global style. It decides what to build from the request — a component, a section, a layout, a page, or a whole set of screens — checks what the project already has, and asks before replacing or naming anything. Use it when the user says "extract the Button component", "bring the Home page from the design", "build the main layout", or asks to turn a Claude design into Nuxt code.
+description: Extracts UI from a design made in Claude (a Design or Design System artifact of the connected account) and builds it as code for the project's framework (today Nuxt 4) with Tailwind 4 and the project's global style. It decides what to build from the request — a component, a section, a layout, a page, or a whole set of screens — checks what the project already has, and asks before replacing or naming anything. Use it when the user says "extract the Button component", "bring the Home page from the design", "build the main layout", or asks to turn a Claude design into code.
 argument-hint: "[what to extract: the Button component | the Home page | the main layout | …] [optional artifact link]"
 ---
 
 # Extract UI from a Claude design
 
-Reads a design made in Claude and brings **what the user asks for** into the project as Nuxt 4 code: Vue `<script setup lang="ts">`, Tailwind 4 with the project's own theme. The look comes from the design; the code comes from the project's conventions and from the stack's own docs.
+Reads a design made in Claude and brings **what the user asks for** into the project as code of its framework, with the engine's classes and the project's own theme. The look comes from the design; the code comes from the project's conventions, from the framework file and from the stack's own docs.
+
+What this skill writes is shaped by three files, read before the plan:
+
+- the standard's rules (`${CLAUDE_SKILL_DIR}/../../standard/README.md`): roles, breakpoints, no eyebrows;
+- the engine (`${CLAUDE_SKILL_DIR}/../../engines/tailwind4/README.md`, section **Templates and components**, and `mapping.md`): which classes exist and how an old value becomes a role;
+- the framework (`${CLAUDE_SKILL_DIR}/../../frameworks/nuxt.md`, section **extract-ui**): destinations, naming, assets, how components, layouts and pages are written, icons, images, links, i18n helpers, SEO.
 
 ```
 request → what is it? (component / layout / page / several) → find it in the design → plan with what the project already has → ask → build → verify
@@ -18,25 +24,27 @@ Sibling skill: `/sb-design:extract-style` extracts the global style. This skill 
 
 ## What a request becomes
 
-| The user asks for | Nuxt destination | Source in the design |
-| --- | --- | --- |
-| a **component** ("the Button", "the stepper", "TextField") | `app/components/…` | Design System: `project/components/<Name>/` (README + preview + `bundle.css`); otherwise an element of a board |
-| a **section** of a screen ("the hero", "the FAQ", "the footer") | a component (or several) in `app/components/…` | a board of a Design (`project/*.dc.html`) |
-| a **layout** ("the main layout", "header and footer") | `app/layouts/<name>.vue` with `<slot />`; header, footer and navigation as components | the repeated frame of a board: what surrounds `<main>` |
-| a **page** ("the Home", "the form page") | `app/pages/<route>.vue`, plus the components and the layout it needs | a board of a Design (desktop, mobile and dark variants are the same screen) |
-| **everything** ("the whole design", "all the screens") | one page per screen, one layout, the shared components | all the boards of the Design |
+| The user asks for | Source in the design |
+| --- | --- |
+| a **component** ("the Button", "the stepper", "TextField") | Design System: `project/components/<Name>/` (README + preview + `bundle.css`); otherwise an element of a board |
+| a **section** of a screen ("the hero", "the FAQ", "the footer") | a board of a Design (`project/*.dc.html`) |
+| a **layout** ("the main layout", "header and footer") | the repeated frame of a board: what surrounds `<main>` |
+| a **page** ("the Home", "the form page") | a board of a Design (desktop, mobile and dark variants are the same screen) |
+| **everything** ("the whole design", "all the screens") | all the boards of the Design |
+
+Where each one goes in the project (a component, a layout with its slot, a page with its route): the framework file's **Destinations**.
 
 If the request is ambiguous ("Home" may be a component or a page), ask which. If it names several things, split it, show the plan, and build in order.
 
 ## Requirements
 
 - **An app on a stack sb-design has an adapter for** (today Nuxt): `node "${CLAUDE_SKILL_DIR}/../../core/scripts/profile.mjs" get` must show `adapter: "nuxt"` and `kind: "app"`. A library, or a Vue + Vite app, is out of scope for now: say so and stop (the scripts refuse it too). Format: `${CLAUDE_SKILL_DIR}/../../core/references/profile.md`.
-- Nuxt 4 + Tailwind 4 with `@tailwindcss/vite`, and a global style already aligned **and in sync with the design** (`/sb-design:align`: four files under `assets/css`, `{p}-<role>` utilities; step 0 checks the sync). Without it, stop and run `/sb-design:extract-style`, which realigns the style. Do not build against default Tailwind values.
+- The engine's and the framework's requirements, and a global style already aligned **and in sync with the design** (`/sb-design:align`: the four files in the style folder, `{p}-<role>` utilities; step 0 checks the sync). Without it, stop and run `/sb-design:extract-style`, which realigns the style. Do not build against the engine's default values.
 - The `Artifact` tool, connected to the Claude account that owns the design. Read-only: never publish, edit or delete an artifact from this skill.
 
 ## Stack: what to consult
 
-Build following the stack this plugin is made for. The maintainers' guides are listed in `${CLAUDE_SKILL_DIR}/../../core/references/stack-docs.md`: open the relevant ones (WebFetch) before writing code you are not certain about, and say in the final report what was **not verified** against the docs. By kind: components and auto-imports, Tailwind theme, `@nuxt/icon`, `@nuxt/image`, `@nuxtjs/i18n` (all of it: text, plurals, localized links); layouts and transitions (layouts); pages and routing, SEO and `useSeoMeta`, rendering and `routeRules` (pages).
+Build following the project's stack. The maintainers' guides are listed in `${CLAUDE_SKILL_DIR}/../../core/references/stack-docs.md`, and the framework file says which ones matter for each kind of piece: open the relevant ones (WebFetch) before writing code you are not certain about, and say in the final report what was **not verified** against the docs.
 
 ## Flow
 
@@ -56,7 +64,7 @@ How this project is organized (i18n, icons, images, naming) is saved in `.sb-con
 node "${CLAUDE_SKILL_DIR}/../../core/scripts/project-settings.mjs" detect --need i18n,icons,images,naming
 ```
 
-It prints what the project already shows and a `missing` list. **Ask the user only about what is missing**, in one go (question tool if available), with the detected value as the recommended answer, and save each answer with `project-settings.mjs set <key> '<json>'`. Typical doubts: default locale and other locales, whether the other locales are translated or fall back, where the locale files go, the key style, the base-component prefix, and, if `@nuxtjs/i18n` is not installed, whether to set it up (a write: show the command and files first). Nothing is asked twice, and nothing already in the file is asked at all.
+It prints what the project already shows and a `missing` list. **Ask the user only about what is missing**, in one go (question tool if available), with the detected value as the recommended answer, and save each answer with `project-settings.mjs set <key> '<json>'`. Typical doubts: default locale and other locales, whether the other locales are translated or fall back, where the locale files go, the key style, the base-component prefix, and, if the framework's i18n module (the framework file names it) is not installed, whether to set it up (a write: show the command and files first). Nothing is asked twice, and nothing already in the file is asked at all.
 
 ### 1. Input
 
@@ -80,7 +88,7 @@ Read with `read` (`path`/`paths`). Boards are HTML with a custom wrapper (`<x-dc
 
 ### 3. Plan, with what the project already has
 
-Break the request into pieces and look for each one in the project (`app/components/`, `layouts/`, `pages/`, also inline copies): by name (`Button`, `BaseButton`, `AppButton`, `UButton` from a UI library) and by role (a component that renders a `<button>` with variants; a field wrapper with label and error; a layout with header and footer).
+Break the request into pieces and look for each one in the project (the folders of the framework file, `paths` of the profile, also inline copies): by name (`Button`, `BaseButton`, `AppButton`, `UButton` from a UI library) and by role (a component that renders a `<button>` with variants; a field wrapper with label and error; a layout with header and footer).
 
 - **A page** → header/footer/nav around `<main>` become the **layout**; each `<section>` or repeated block becomes a **component** (or reuses one: a button, a card, a field that the Design System documents under `components/`); what is left is the page.
 - **A component** → one piece.
@@ -92,36 +100,36 @@ Show the plan as a table and ask:
 
 - **Something similar exists** → show where it is and how it is used (count uses), and what it lacks against the design (variants, states, sizes). Ask: **replace it** (public props and emitted events are kept unless the user agrees to change them; list the call sites that would break), **create a new one** (ask the name), or **leave it** and only add what is missing. Never replace silently.
 - **Nothing exists** → ask only the name; propose one that follows the project's convention.
-- **Naming**: from what exists (`Base*`, `App*`, `Ui*`, or none) and Nuxt's auto-import rule: the name comes from the path (`components/form/Field.vue` → `<FormField>`), PascalCase, multi-word. Pages: the route (`index` for the home, `[id]` for dynamic). Layouts: kebab-case (`default`, `marketing`). The user's answer wins.
-- **Assets** (logos, images the screen uses, from the Design System's `project/assets/`): say where they would go (`public/` for files referenced by URL, `app/assets/` for imported ones) and ask; never commit anything the user did not approve.
+- **Naming**: the framework file's **Naming** (from what exists, and the framework's own rule). The user's answer wins.
+- **Assets** (logos, images the screen uses, from the Design System's `project/assets/`): say where they would go (the framework file's **Assets**) and ask; never commit anything the user did not approve.
 
 **Stop and wait** for approval of the plan. Then build in dependency order: components, then layout, then pages.
 
 ### 4. Build
 
-Look at 2–3 existing files of the same kind first (how props become classes, script style, i18n use, icons, SEO), and follow them. Rules for every file:
+Look at 2–3 existing files of the same kind first (how props become classes, script style, i18n use, icons, SEO), and follow them. The framework file's **Code** says how a component, a layout and a page are written there. Rules for every file:
 
-- `<script setup lang="ts">`; typed props with `defineProps<{…}>()` and defaults, `defineEmits`, `defineModel` for `v-model`. Variants and sizes become props mapped to class strings in a `const` object, as the project already does.
-- **Classes**: only the project's theme and utilities (`bg-primary`, `text-on-primary`, `{p}-body-strong`, `rounded-md`, `shadow-sm`, the theme's durations and easings). Never copy the design's own classes (`ps-btn`, `btn`, `pick`…), its CSS variables, or its inline `style` attributes; translate them. Use `${CLAUDE_SKILL_DIR}/../migrate/references/mapping.md` to choose a role for each value (role before similarity). A value the theme cannot express goes to **Missing from the theme**, with the closest token as stand-in; do not invent a token and do not hard-code a literal.
+- Typed props with defaults, typed events, two-way binding where the design needs it (the framework file says the syntax). Variants and sizes become props mapped to class strings in a `const` object, as the project already does.
+- **Classes**: only the project's theme and utilities (`bg-primary`, `text-on-primary`, `{p}-body-strong`, `rounded-md`, `shadow-sm`, the theme's durations and easings). Never copy the design's own classes (`ps-btn`, `btn`, `pick`…), its CSS variables, or its inline `style` attributes; translate them. Use `${CLAUDE_SKILL_DIR}/../../engines/tailwind4/mapping.md` to choose a role for each value (role before similarity). A value the theme cannot express goes to **Missing from the theme**, with the closest token as stand-in; do not invent a token and do not hard-code a literal.
 - **Responsive**: mobile-first with the plugin's breakpoints (`sm` 640, `md` 768, `lg` 1024, `xl` 1280). The design's `@container` limits (1023 → below `lg`, 767 → below `md`) become the mirrored prefixes (`lg:`, `md:`). Text steps (`display`, `h1`, `h2`) already change at `lg` through their `{p}-<role>` utility: do not repeat it.
-- **Dark mode** comes from the theme colors: no `dark:` on theme colors. A logo with a light and a dark variant is switched with the theme, not with duplicated markup when `@nuxtjs/color-mode` can do it.
+- **Dark mode** comes from the theme colors: no `dark:` on theme colors. A logo with a light and a dark variant is switched with the theme (the framework file says how), not with duplicated markup.
 - **States** from the design's README: hover, `focus-visible`, disabled, loading (`aria-busy`), error, with the semantics it asks for (target size, labels, roles).
-- **Icons**: `<Icon name="lucide:…" />` from `@nuxt/icon` if the project has it; otherwise inline SVG as in the design and a note that the module is missing (do not install it without asking). **Images**: `<NuxtImg>` / `<NuxtPicture>` if `@nuxt/image` is there, with `alt`, width and height.
-- **Text is never inline.** Every visible string goes through i18n (`$t` / `useI18n`) and into the locale files of `settings.json`: headings, paragraphs, button and link text, labels, placeholders, `alt`, `title`, `aria-label`, error messages, SEO meta (`useSeoMeta` values come from `t()`). Keys follow the saved key style, one block per file (`pages.home.hero.title`, `components.button.loading`, `layouts.default.footer.legal`). The default locale gets the design's text; for the other locales do what `i18n.otherLocales` says (translate, marked to review, or leave empty to fall back). Links with text inside a sentence use `<i18n-t>` interpolation, not concatenation; internal links use the localized path helpers (`NuxtLinkLocale` / `useLocalePath`); numbers and dates use `$n` / `$d`; plurals use the module's plural syntax (check the docs). Brand names and the words in `i18n.untranslated` stay as they are. A language switcher goes in the layout when there is more than one locale. Components take dynamic content (a name, a count) as props or slots; sample data of a preview is not copy. Without `@nuxtjs/i18n` and without the user's wish to install it, text still stays out of the templates, in one typed content module (`project-settings.md` explains).
-- **Behavior**: only what the design documents or its `DCLogic` script does (menu toggle, accordion, stepper). No data fetching, global state or new composable unless the README requires it. If it needs `@apply` in a `<style>` block, add `@reference "~/assets/css/main.css";`.
+- **Icons and images**: the framework file's way, when the project has the module (the profile's `features.icons`, `features.images`); otherwise inline SVG as in the design, plain images with `alt`, width and height, and a note that the module is missing (do not install it without asking).
+- **Text is never inline.** Every visible string goes through i18n (the framework file names the module and its helpers) and into the locale files of `settings.json`: headings, paragraphs, button and link text, labels, placeholders, `alt`, `title`, `aria-label`, error messages, SEO meta. Keys follow the saved key style, one block per file (`pages.home.hero.title`, `components.button.loading`, `layouts.default.footer.legal`). The default locale gets the design's text; for the other locales do what `i18n.otherLocales` says (translate, marked to review, or leave empty to fall back). Links with text inside a sentence use interpolation, not concatenation; internal links use the localized path helpers; numbers, dates and plurals use the module's formatting (the framework file lists the helpers; check the docs). Brand names and the words in `i18n.untranslated` stay as they are. A language switcher goes in the layout when there is more than one locale. Components take dynamic content (a name, a count) as props or slots; sample data of a preview is not copy. Without the i18n module and without the user's wish to install it, text still stays out of the templates, in one typed content module (`project-settings.md` explains).
+- **Behavior**: only what the design documents or its `DCLogic` script does (menu toggle, accordion, stepper). No data fetching, global state or new composable unless the README requires it. If it needs `@apply` in a `<style>` block, start the block with the `@reference` line of the framework file.
 - **No eyebrows**: a small uppercase kicker above a heading is left out, and the report says so (same rule as `/sb-design:align`).
 
 Per kind:
 
-- **Layout**: `<slot />` for the page, header/footer/nav as components, `NuxtLink` for internal links, skip link and landmarks (`header`, `nav` with `aria-label`, `main`, `footer`) kept from the design. The color-mode toggle only if the design has one.
-- **Page**: `<script setup>` with `definePageMeta({ layout })` when it is not `default`, and `useSeoMeta` (`title`, `description`, `ogTitle`, `ogDescription`; the board's `<title>` is only a starting point, the description is to be written or asked). **One `h1`**, no skipped levels. Section `id`s from the design are kept for anchors. Composition only: the sections are components, the page does not repeat their markup.
+- **Layout**: a slot for the page, header/footer/nav as components, the framework's link component for internal links, skip link and landmarks (`header`, `nav` with `aria-label`, `main`, `footer`) kept from the design. The color-mode toggle only if the design has one.
+- **Page**: its layout and its SEO meta as the framework file says (`title`, `description`, `ogTitle`, `ogDescription`; the board's `<title>` is only a starting point, the description is to be written or asked). **One `h1`**, no skipped levels. Section `id`s from the design are kept for anchors. Composition only: the sections are components, the page does not repeat their markup.
 - **Component**: the API (props, slots, events) is documented in the report, with a short usage example.
 
 Before writing, show the final paths and each component's API. **Stop and wait** again only if a replace changes an existing API; otherwise write.
 
 ### 5. Verify
 
-For every `.vue` file written:
+For every template file written:
 
 ```bash
 node "${CLAUDE_SKILL_DIR}/../migrate/scripts/template.mjs" <file> --out /tmp/design-extract-ui.json
@@ -133,7 +141,7 @@ Every class must be `ok` (generated by the theme); fix what is `broken`, `arbitr
 node "${CLAUDE_SKILL_DIR}/../../core/scripts/check-i18n.mjs" <files> [--allow "Brand,Other"]
 ```
 
-It reports literal text in templates and in interpolations (`{{ 'Hello' }}`), readable attributes also when bound to a literal (`alt`, `title`, `placeholder`, `aria-label`…), SEO strings, text-like keys and sentence-like strings in `<script>`, **and** every message key used (`t('a.b')`, `<i18n-t keypath>`) that is missing from the default locale (error) or from another locale (listed). Fix every hit and repeat; an allowed word (brand, proper noun) goes through `--allow` and into `i18n.untranslated`; a line that must stay literal takes `// i18n-ignore`. Dynamic keys (`t(`a.${x}`)`) cannot be checked: the report counts them, and the build should read them by hand. For pages, confirm the route resolves (the file name and `definePageMeta` match the plan).
+It reports literal text in templates and in interpolations (`{{ 'Hello' }}`), readable attributes also when bound to a literal (`alt`, `title`, `placeholder`, `aria-label`…), SEO strings, text-like keys and sentence-like strings in `<script>`, **and** every message key used (`t('a.b')`, `<i18n-t keypath>`) that is missing from the default locale (error) or from another locale (listed). Fix every hit and repeat; an allowed word (brand, proper noun) goes through `--allow` and into `i18n.untranslated`; a line that must stay literal takes `// i18n-ignore`. Dynamic keys (`t(`a.${x}`)`) cannot be checked: the report counts them, and the build should read them by hand. For pages, confirm the route resolves as the framework file says.
 
 ### 6. Report
 

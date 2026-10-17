@@ -1,6 +1,6 @@
 ---
 name: migrate
-description: Reads Vue templates line by line, tag by tag, and proposes (then applies, after confirmation) the refactor of component classes and styles after a change to the global style of a Nuxt 4 + Tailwind 4 project. Command only.
+description: Reads Vue templates line by line, tag by tag, and proposes (then applies, after confirmation) the refactor of component classes and styles after a change to the global style of an app (today Nuxt 4 + Tailwind 4). Command only.
 disable-model-invocation: true
 argument-hint: "[files or folders to analyze]"
 ---
@@ -13,12 +13,12 @@ The reference is **the project's current global style**, not a fixed list: a cla
 
 **Language**: this file and its references are in English, but talk to the user in their language: questions, proposals and summary.
 
-Like every sb-design skill, it works on a Nuxt app only: `node "${CLAUDE_SKILL_DIR}/../../core/scripts/profile.mjs" get` must show `adapter: "nuxt"` and `kind: "app"`; otherwise say so and stop.
+Like every sb-design skill, it works on a Nuxt app only: `node "${CLAUDE_SKILL_DIR}/../../core/scripts/profile.mjs" get` must show `adapter: "nuxt"` and `kind: "app"`; otherwise say so and stop. What it reads and writes follows the engine (`${CLAUDE_SKILL_DIR}/../../engines/tailwind4/README.md`, section **Templates and components**) and the framework (`${CLAUDE_SKILL_DIR}/../../frameworks/nuxt.md`, section **migrate**).
 
 ## Requirements
 
-- Nuxt 4 and Tailwind 4 with `@tailwindcss/vite` (the script resolves `@tailwindcss/node`, `vue/compiler-sfc` and `postcss` from the project root, then from `@tailwindcss/vite` and `nuxt`, so it also works with pnpm). Otherwise stop and say so.
-- A global style with its tokens in `@theme` (the entry point is the first `css` entry in `nuxt.config`, or `--css`).
+- The engine's and the framework's requirements (the script resolves `@tailwindcss/node`, `vue/compiler-sfc` and `postcss` from the project root, then from `@tailwindcss/vite` and `nuxt`, so it also works with pnpm). Otherwise stop and say so.
+- A global style with its tokens declared as the engine says; the entry point is the one the framework file's **migrate** section names (or `--css`).
 - The prefix of the typographic utilities is detected automatically (`{p}-h1`, `{p}-body`). If the script says "not detected", ask the user before proposing typographic classes.
 
 ## Flow
@@ -44,7 +44,7 @@ node "${CLAUDE_SKILL_DIR}/scripts/template.mjs" <files or folders> --out /tmp/te
 
 For each flagged line the script gives: tag, class, status (`broken`, `arbitrary value`, `redundant`, `unknown`, `inline style`), a proposal and a note. It also reports issues in the component's `<style>` and the heading structure (more than one `h1` in the same page, skipped levels).
 
-Then **read each file**: the script sees the classes, you see the meaning. For each flagged line look at the tag, its content, its siblings and its parent, and decide the replacement with `references/mapping.md`. Also look for what the script cannot see:
+Then **read each file**: the script sees the classes, you see the meaning. For each flagged line look at the tag, its content, its siblings and its parent, and decide the replacement with `${CLAUDE_SKILL_DIR}/../../engines/tailwind4/mapping.md`. Also look for what the script cannot see:
 
 - classes built in `<script>` (strings in `computed`, variant maps, `cva`/`tv`): read the strings and treat them as classes;
 - props that end up as classes (`color="gray"`, `size="sm"` passed to a component that turns them into classes): follow the component;
@@ -77,7 +77,7 @@ These always go under "To decide": tag or heading level changes, `unknown` class
 
 - Change only what was approved, with minimal edits: tokens inside `class`, strings inside `:class`, the `style` attribute, declarations in the component's `<style>`.
 - Keep the order and formatting of the classes; do not touch logic, props, events or text.
-- If you use `@apply` with theme utilities in the component's `<style>`, add `@reference "~/assets/css/main.css";` (or the real path of the global style) at the top of the block.
+- If you use `@apply` with theme utilities in the component's `<style>`, add the `@reference` line of the framework file (or the real path of the global style) at the top of the block.
 - Do not modify the global style. If something is needed that the theme does not have (for example the `hero` role), note it in the summary for `/sb-design:align`.
 
 ### 6. Verification
@@ -94,5 +94,6 @@ Short: files modified, number of replacements by type, lines left as they were b
 
 | File | When |
 | --- | --- |
-| `references/mapping.md` | before writing the proposal: how to choose the right role |
+| `${CLAUDE_SKILL_DIR}/../../engines/tailwind4/mapping.md` | before writing the proposal: how to choose the right role |
+| `${CLAUDE_SKILL_DIR}/../../frameworks/nuxt.md` | which file is the global style, which templates to read |
 | `scripts/template.mjs` | summary (`--summary`) and line-by-line analysis |

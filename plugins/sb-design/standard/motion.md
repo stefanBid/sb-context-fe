@@ -1,10 +1,12 @@
 # Motion
 
+Part of the **standard**: fixed for every engine and framework. How the tokens are declared is the engine's file (`../engines/tailwind4/README.md`).
+
 The skill fixes the **structure** of motion: which tokens exist, how animations and the standard transition are declared, how reduced motion works. Values and character come from `design-source.md` when it exists; the numbers below are defaults.
 
 ## 1. Tokens
 
-Durations follow four bands. Raw variables with the prefix (Tailwind 4 has no namespace for durations):
+Durations follow four bands, as raw variables with the prefix:
 
 | Token | Default | Band | Use |
 | --- | --- | --- | --- |
@@ -13,7 +15,7 @@ Durations follow four bands. Raw variables with the prefix (Tailwind 4 has no na
 | `--{p}-duration-layout` | 400ms | 300–500ms | side panels, overlays, layout changes |
 | `--{p}-duration-entrance` | 600ms | 500–800ms | authored entrances |
 
-Easings are Tailwind tokens, with `--ease-*: initial` first:
+Easings are a closed set:
 
 | Token | Value | Use |
 | --- | --- | --- |
@@ -21,7 +23,7 @@ Easings are Tailwind tokens, with `--ease-*: initial` first:
 | `--ease-in` | `cubic-bezier(0.4, 0, 1, 1)` | exit: things going out |
 | `--ease-in-out` | `cubic-bezier(0.4, 0, 0.2, 1)` | in-place state changes |
 
-Animations are Tailwind tokens with `--animate-*: initial`. Defined by default: `fade-in`, `fade-out`, `rise-in`, `slide-in-right`, `spin` (loading indicators). Others only if the project uses them, with the same durations and easings. The spatial keyframes translate by `var(--{p}-motion-distance)` (§3).
+Animations are a closed set. Defined by default: `fade-in`, `fade-out`, `rise-in`, `slide-in-right`, `spin` (loading indicators). Others only if the project uses them, with the same durations and easings. The spatial keyframes translate by `var(--{p}-motion-distance)` (§3).
 
 The `{p}-transition` utility (the example also has `{p}-focus`, `{p}-focus-within` and `{p}-no-focus`, kept when the project uses them): explicit properties (color, background, border, outline, shadow, opacity, transform), `feedback` duration, `ease-in-out` easing. It is the default transition for controls.
 

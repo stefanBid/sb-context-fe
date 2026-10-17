@@ -1,7 +1,7 @@
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { makeProject, withExampleStyle, SCRIPTS, EXAMPLE_CSS } from '../helpers/fixture.mjs';
+import { makeProject, withExampleStyle, SCRIPTS, EXAMPLE_CSS, EXAMPLE_NUXT_CONFIG } from '../helpers/fixture.mjs';
 
 const PAGE = `<template>
   <div>
@@ -23,7 +23,7 @@ describe('template.mjs', () => {
   let result;
   before(() => {
     p = withExampleStyle(makeProject({
-      'nuxt.config.ts': readFileSync(`${EXAMPLE_CSS}/nuxt.config.ts`, 'utf8'),
+      'nuxt.config.ts': readFileSync(EXAMPLE_NUXT_CONFIG, 'utf8'),
       'app/pages/index.vue': PAGE,
       'app/components/Clean.vue': CLEAN,
       'app/components/Broken.vue': '<template><div class="text-red-500"></template>',

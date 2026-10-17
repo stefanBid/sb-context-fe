@@ -149,7 +149,7 @@ _No README._
 
 ## Gaps to resolve in /sb-design:align
 
-- Motion: the design system has no motion family. Defaults from `/sb-design:align` references/motion.md apply, marked provisional.
+- Motion: the design system has no motion family. Defaults from standard/motion.md (`/sb-design:align`) apply, marked provisional.
 - Component `Card` has no README: usage rules unknown, read its preview.
 - Token group `zIndex` (1) is not part of the fixed style: kept in the machine data under `extra`, not applied. Decide in /sb-design:align where it belongs (a token, a component constant) or drop it.
 
@@ -703,7 +703,7 @@ _No README._
     "README: \"Use eyebrows and kickers sparingly.\" → \"Use sparingly.\""
   ],
   "gaps": [
-    "Motion: the design system has no motion family. Defaults from `/sb-design:align` references/motion.md apply, marked provisional.",
+    "Motion: the design system has no motion family. Defaults from standard/motion.md (`/sb-design:align`) apply, marked provisional.",
     "Component `Card` has no README: usage rules unknown, read its preview.",
     "Token group `zIndex` (1) is not part of the fixed style: kept in the machine data under `extra`, not applied. Decide in /sb-design:align where it belongs (a token, a component constant) or drop it."
   ]

@@ -1,12 +1,12 @@
 ---
 name: extract-style
-description: Reads a design made in Claude (a Design or Design System artifact of the claude.ai account the session is connected to) and saves its values — colors, typography, spacing, radii, shadows, components — into the project as .sb-context/design-source.md, the snapshot that /sb-design:align turns into the four-file Nuxt 4 + Tailwind 4 global style. Use it when the user asks to extract, import or take the style, tokens, palette or typography from a Claude design.
+description: Reads a design made in Claude (a Design or Design System artifact of the claude.ai account the session is connected to) and saves its values — colors, typography, spacing, radii, shadows, components — into the project as .sb-context/design-source.md, the snapshot that /sb-design:align turns into the four-file global style. Use it when the user asks to extract, import or take the style, tokens, palette or typography from a Claude design.
 argument-hint: "[claude.ai artifact link, or the design's name]"
 ---
 
 # Extract the global style from a Claude design
 
-The bridge between a design made in Claude and the project's global style. Input: a **Design** or **Design System** artifact of the connected Claude account. Output: `.sb-context/design-source.md`, then `/sb-design:align` writes the four files (`main.css`, `theme.css`, `typography.css`, `animation.css`) in the structure of `${CLAUDE_SKILL_DIR}/../align/references/example/`.
+The bridge between a design made in Claude and the project's global style. Input: a **Design** or **Design System** artifact of the connected Claude account. Output: `.sb-context/design-source.md`, then `/sb-design:align` writes the four files (`main.css`, `theme.css`, `typography.css`, `animation.css`) in the structure of `${CLAUDE_SKILL_DIR}/../../engines/tailwind4/example/`.
 
 ```
 Claude design → this skill → .sb-context/design-source.md → /sb-design:align → global style
@@ -77,7 +77,7 @@ node "${CLAUDE_SKILL_DIR}/scripts/tokens-to-source.mjs" --tokens <saved>/project
   [--design <link of the Design the user pointed to>]
 ```
 
-It runs from anywhere inside the Nuxt project and writes to `<project root>/.sb-context/design-source.md` (the root is the folder with `nuxt.config.*`; outside a Nuxt project it refuses). Pass the artifact's **title** as `--name`: `tokens.json` often has none, and the suggested prefix comes from it.
+It runs from anywhere inside the project and writes to `<project root>/.sb-context/design-source.md` (the root is the folder with `nuxt.config.*`, or a `package.json` that depends on nuxt or vue; outside one it refuses). The snapshot itself does not depend on the stack. Pass the artifact's **title** as `--name`: `tokens.json` often has none, and the suggested prefix comes from it.
 
 Deterministic: no interpretation. It normalizes values, resolves color aliases, writes the readable sections and the complete `json design-source` block, lists overrides and gaps, creates `.sb-context/` and its `.gitignore` when missing, and ends with a **coverage check** (colors, type styles, spacing, radii, shadows, breakpoints read vs written). If it prints `MISMATCH` or exits non-zero, stop and report: do not move on with an incomplete snapshot.
 
@@ -92,7 +92,7 @@ Short, in the user's language (the summary above is not repeated, only what the 
 - **gaps**, typically: no motion in the design (defaults from `/sb-design:align`, provisional), missing mobile values for `display`/`h1`/`h2`, colors without a matching role;
 - **the suggested prefix** (initials of the design's name, `PraticaSicura` → `ps`): a proposal only; `/sb-design:align` asks and the user's answer wins.
 
-If the Design System has `project/implementazione.md`, mention it: it is the design's own opinion on the Nuxt setup (class names, token names). It is **not** applied: structure belongs to this plugin, and where they differ `/sb-design:align` wins.
+If the Design System has `project/implementazione.md`, mention it: it is the design's own opinion on the project setup (class names, token names). It is **not** applied: structure belongs to this plugin, and where they differ `/sb-design:align` wins.
 
 ### 5. Realign the project
 

@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { rng } from '../helpers/random.mjs';
-import { parseColor, contrast, toOklch } from '../../plugins/sb-design/skills/align/scripts/color.mjs';
+import { parseColor, contrast, toOklch } from '../../plugins/sb-design/scripts/lib/color.mjs';
 import { parseBlocks, themeVars, resolveVars } from '../../plugins/sb-design/skills/align/scripts/lib/theme-vars.mjs';
 import { blockOf, findSlot, toRem, nShadow } from '../../plugins/sb-design/skills/align/scripts/lib/sync.mjs';
 import { toPx, parseFontShorthand, clusterSizes, mediaWidths } from '../../plugins/sb-design/skills/align/scripts/lib/scale.mjs';

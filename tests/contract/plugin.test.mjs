@@ -104,10 +104,8 @@ test('subcommands used in the skills exist in the scripts', () => {
   }
 });
 
-test('the shared color helpers are identical in every skill that ships one', () => {
-  const copies = tracked.filter((f) => f.endsWith('/scripts/color.mjs'));
-  assert.ok(copies.length >= 2);
-  for (const c of copies.slice(1)) assert.equal(read(c), read(copies[0]), `${c} differs from ${copies[0]}`);
+test('the color helpers exist once, in sb-design/scripts/lib, and the skills import that copy', () => {
+  assert.deepEqual(tracked.filter((f) => f.endsWith('/color.mjs')), ['plugins/sb-design/scripts/lib/color.mjs']);
 });
 
 describe('core', () => {

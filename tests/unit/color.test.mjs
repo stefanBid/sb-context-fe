@@ -1,14 +1,13 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import * as alignColor from '../../plugins/sb-design/skills/align/scripts/color.mjs';
-import * as migrateColor from '../../plugins/sb-design/skills/migrate/scripts/color.mjs';
+import * as color from '../../plugins/sb-design/scripts/lib/color.mjs';
 
 // a tiny seeded PRNG: random inputs, same every run
 const rng = (seed) => () => ((seed = (seed * 1664525 + 1013904223) % 2 ** 32) / 2 ** 32);
 const randomHex = (r) => `#${[0, 0, 0].map(() => Math.floor(r() * 256).toString(16).padStart(2, '0')).join('')}`.toUpperCase();
 const close = (a, b, eps = 1e-3) => assert.ok(Math.abs(a - b) < eps, `${a} ≉ ${b}`);
 
-for (const [label, { parseColor, contrast, luminance, over, toOklch, toHex, findColors }] of [['style-align', alignColor], ['style-migrate', migrateColor]]) {
+for (const [label, { parseColor, contrast, luminance, over, toOklch, toHex, findColors }] of [['sb-design/scripts/lib', color]]) {
   describe(`color.mjs (${label})`, () => {
     describe('parseColor', () => {
       test('hex: 3, 4, 6 and 8 digits, any case', () => {

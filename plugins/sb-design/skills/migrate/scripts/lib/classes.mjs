@@ -1,7 +1,7 @@
 // The analysis of template.mjs that does not need Tailwind: class anatomy, nearest theme
 // roles (colors, text sizes) and the heading outline.
 
-import { toOklch } from '../color.mjs';
+import { toOklch } from '../../../../scripts/lib/color.mjs';
 
 /** "md:hover:!bg-[#fff]" → { variants: ['md', 'hover'], utility: 'bg-[#fff]' } (colons inside [] kept). */
 export function splitVariants(cls) {
