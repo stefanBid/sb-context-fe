@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/stefanBid/sb-context-fe/compare/sb-design-v1.2.0...sb-design-v1.3.0) (2026-10-17)
+
+
+### Features
+
+* **core:** choose the project's documentation links with /sb-core:context ([#52](https://github.com/stefanBid/sb-context-fe/issues/52)) ([4fef4cf](https://github.com/stefanBid/sb-context-fe/commit/4fef4cf0b2172dcbe8175af479daf7b54ade76fc))
+
 ## [1.2.0](https://github.com/stefanBid/sb-context-fe/compare/sb-design-v1.1.0...sb-design-v1.2.0) (2026-10-17)
 
 
