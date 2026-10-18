@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 // Line-by-line analysis of Vue templates against the project's global style.
 //
-// Usage (from the root of a Nuxt 4 + Tailwind 4 project):
+// Usage (from the root of a Tailwind 4 app: Nuxt 4, or Vue 3 + Vite):
 //   node template.mjs --summary                           counts per file (cheap)
 //   node template.mjs app/pages/index.vue app/components  detailed analysis of files or folders
 //   options:
-//     --css <file>      global style entry point (default: first css entry in nuxt.config,
-//                       otherwise <srcDir>/assets/css/main.css)
-//     --root <dir>      project root (default: the Nuxt project found from the current folder upward)
+//     --css <file>      global style entry point (default: the first style the framework registers —
+//                       nuxt.config css, or the CSS imported by src/main.ts — otherwise <styles>/main.css)
+//     --root <dir>      project root (default: the project found from the current folder upward)
 //     --out <file>      also save the result as JSON
 //
 // Each class is judged by compiling it with Tailwind:
@@ -22,6 +22,7 @@ import { join, resolve, dirname, relative, extname } from 'node:path';
 import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
 import { projectRoot, srcDirOf, requireStack } from '../../../core/lib/project.mjs';
+import { ADAPTER_NAMES, adapterFor } from '../../../scripts/lib/frameworks/index.mjs';
 import { prefixFromUtilities } from '../../../scripts/lib/prefix.mjs';
 import { parseColor, findColors } from '../../../scripts/lib/color.mjs';
 import { splitVariants, rootOf, COLOR_ROOTS, classesFromExpression, remPx, lab, PREF, nearestColors as nearestOf, nearestTextRole as nearestRoleOf, headingIssues } from './lib/classes.mjs';
@@ -35,7 +36,8 @@ const opt = (n) => {
   return i === -1 ? null : argv[i + 1];
 };
 const root = projectRoot(opt('--root'));
-requireStack(root, { adapters: ['nuxt'], kinds: ['app'], what: '/sb-design:migrate' });
+const profile = requireStack(root, { adapters: ADAPTER_NAMES, kinds: ['app'], what: '/sb-design:migrate' });
+const fw = adapterFor(profile);
 const summaryOnly = argv.includes('--summary');
 const outFile = opt('--out');
 const valued = new Set(['--css', '--root', '--out']);
@@ -43,11 +45,11 @@ const targets = argv.filter((a, i) => !a.startsWith('--') && !valued.has(argv[i 
 
 // ---------------------------------------------------------------------------
 // Module resolution (works with pnpm, where transitive deps are not hoisted):
-// the project root first, then the location of @tailwindcss/vite and nuxt.
+// the project root first, then the location of the adapter's packages (@tailwindcss/vite, nuxt or vite).
 // ---------------------------------------------------------------------------
 const req = createRequire(join(root, 'package.json'));
 const bases = [req];
-for (const pkgName of ['@tailwindcss/vite', 'nuxt']) {
+for (const pkgName of fw.MODULE_BASES) {
   for (const target of [`${pkgName}/package.json`, pkgName]) {
     try {
       bases.push(createRequire(req.resolve(target)));
@@ -66,7 +68,7 @@ function locate(name) {
 function need(name) {
   const found = locate(name);
   if (!found) {
-    console.error(`Module "${name}" not found from the project root, from @tailwindcss/vite or from nuxt. Run the script from the root of a Nuxt 4 project with Tailwind 4 (@tailwindcss/vite) and install its dependencies first.`);
+    console.error(`Module "${name}" not found from the project root or from ${fw.MODULE_BASES.join(', ')}. Run the script from the root of the project, with Tailwind 4 (@tailwindcss/vite) and its dependencies installed.`);
     process.exit(2);
   }
   return found.r(name);
@@ -88,12 +90,9 @@ const twDir = dirname(locate('tailwindcss/package.json')?.path ?? need('tailwind
 // ---------------------------------------------------------------------------
 // Project configuration
 // ---------------------------------------------------------------------------
-const configPath = ['nuxt.config.ts', 'nuxt.config.js', 'nuxt.config.mjs'].map((f) => join(root, f)).find(existsSync);
-const cfg = configPath ? readFileSync(configPath, 'utf8') : '';
 const srcDir = srcDirOf(root);
-const firstCss = cfg.match(/\bcss\s*:\s*\[\s*['"`]([^'"`]+)['"`]/)?.[1];
-const aliasPath = (e) => (/^~~\/|^@@\//.test(e) ? join(root, e.slice(3)) : /^~\/|^@\//.test(e) ? join(srcDir, e.slice(2)) : resolve(root, e));
-const cssEntry = opt('--css') ? resolve(root, opt('--css')) : firstCss ? aliasPath(firstCss) : join(srcDir, 'assets/css/main.css');
+const firstCss = fw.cssEntries(root, profile).entries[0]?.path;
+const cssEntry = opt('--css') ? resolve(root, opt('--css')) : (firstCss ?? fw.defaultCss(root));
 if (!existsSync(cssEntry)) {
   console.error(`Global style not found: ${relative(root, cssEntry)}. Pass it with --css.`);
   process.exit(2);
@@ -369,7 +368,7 @@ function suggest(cls, el) {
 // ---------------------------------------------------------------------------
 // Files to analyze
 // ---------------------------------------------------------------------------
-const IGNORE = new Set(['node_modules', '.nuxt', '.output', '.git', 'dist', '.data', 'coverage']);
+const IGNORE = fw.IGNORE;
 function walk(dir, out = []) {
   if (!existsSync(dir)) return out;
   if (statSync(dir).isFile()) {

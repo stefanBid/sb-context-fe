@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Inventory of the global style of a Nuxt 4 + Tailwind 4 project.
+// Inventory of the global style of a Tailwind 4 app (Nuxt 4, or Vue 3 + Vite).
 //
 // Usage (from the project root):
 //   node "${CLAUDE_SKILL_DIR}/scripts/inventory.mjs"                     analyze the project
@@ -11,14 +11,15 @@
 //                     .vue/.ts/.js file in the project; use it only if the user asks.
 //
 // Prints a Markdown summary. Never modifies any file.
-// Requires postcss, which a Nuxt project already has (resolved from the project root,
-// then from @tailwindcss/vite and nuxt, so it also works with pnpm).
+// Requires postcss, which the project already has through Tailwind (resolved from the project root,
+// then from the packages the framework adapter names, so it also works with pnpm).
 
 import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from 'node:fs';
-import { join, resolve, dirname, relative, extname, basename, isAbsolute } from 'node:path';
+import { join, resolve, dirname, relative, extname, basename } from 'node:path';
 import { createRequire } from 'node:module';
 import { findColors, parseColor, toHex } from '../../../scripts/lib/color.mjs';
-import { projectRoot, srcDirOf, requireStack } from '../../../core/lib/project.mjs';
+import { projectRoot, srcDirOf, cssDirOf, requireStack } from '../../../core/lib/project.mjs';
+import { ADAPTER_NAMES, adapterFor, IGNORE_ANY, MODULE_BASES_ANY } from '../../../scripts/lib/frameworks/index.mjs';
 import { prefixFromUtilities } from '../../../scripts/lib/prefix.mjs';
 import { toPx as toPxRaw, parseFontShorthand, nearestStep, scaleFromTokens, clusterSizes, scaleFromClusters, mediaWidths, commonDir } from './lib/scale.mjs';
 
@@ -29,21 +30,22 @@ const argv = process.argv.slice(2);
 const getAll = (n) => argv.flatMap((a, i) => (a === n ? [argv[i + 1]] : []));
 const get = (n) => getAll(n)[0] ?? null;
 const explicitFiles = getAll('--file').map((f) => resolve(f));
-// --file mode analyzes loose files and may run outside a project; otherwise the Nuxt project root is required
+// --file mode analyzes loose files and may run outside a project; otherwise the project root is required
 const root = projectRoot(get('--root'), { required: !explicitFiles.length });
-// sb-design knows the Nuxt structure only, and aligns apps, not libraries
-if (!explicitFiles.length) requireStack(root, { adapters: ['nuxt'], kinds: ['app'], what: 'The style inventory of /sb-design:align' });
+// sb-design aligns apps on a stack it has an adapter for, not libraries
+const profile = explicitFiles.length ? null : requireStack(root, { adapters: ADAPTER_NAMES, kinds: ['app'], what: 'The style inventory of /sb-design:align' });
+const fw = adapterFor(profile);
 const outFile = get('--out');
 const scanClasses = argv.includes('--classes');
 
 // ---------------------------------------------------------------------------
-// postcss: from the project root, then from the location of @tailwindcss/vite
-// and nuxt (pnpm does not hoist transitive dependencies), then fail clearly
+// postcss: from the project root, then from the location of the adapter's packages
+// (pnpm does not hoist transitive dependencies), then fail clearly
 // ---------------------------------------------------------------------------
 function loadPostcss() {
   const bases = [createRequire(join(root, 'package.json'))];
   const first = bases[0];
-  for (const pkgName of ['@tailwindcss/vite', 'nuxt']) {
+  for (const pkgName of fw?.MODULE_BASES ?? MODULE_BASES_ANY) {
     for (const target of [`${pkgName}/package.json`, pkgName]) {
       try {
         bases.push(createRequire(first.resolve(target)));
@@ -57,7 +59,7 @@ function loadPostcss() {
       return r('postcss');
     } catch {}
   }
-  console.error('postcss not found from the project root, from @tailwindcss/vite or from nuxt. Run the script from the root of a Nuxt 4 project with its dependencies installed.');
+  console.error(`postcss not found from the project root or from ${(fw?.MODULE_BASES ?? MODULE_BASES_ANY).join(', ')}. Run the script from the root of the project with its dependencies installed.`);
   process.exit(2);
 }
 const postcss = loadPostcss();
@@ -77,56 +79,21 @@ const readJson = (p) => {
 // ---------------------------------------------------------------------------
 const project = { root, warnings: [] };
 const pkg = readJson(join(root, 'package.json'));
-if (pkg && !explicitFiles.length) {
-  const deps = { ...pkg.dependencies, ...pkg.devDependencies };
-  const ver = (n) => deps[n] ?? null;
-  project.dependencies = {
-    nuxt: ver('nuxt'),
-    tailwindcss: ver('tailwindcss'),
-    '@tailwindcss/vite': ver('@tailwindcss/vite'),
-    '@nuxtjs/tailwindcss': ver('@nuxtjs/tailwindcss'),
-    '@nuxtjs/color-mode': ver('@nuxtjs/color-mode'),
-    '@nuxt/fonts': ver('@nuxt/fonts'),
-  };
-  const major = (v) => (v ? parseInt(String(v).replace(/^[^\d]*/, ''), 10) : null);
-  if (major(ver('nuxt')) !== null && major(ver('nuxt')) < 4) project.warnings.push(`Nuxt ${ver('nuxt')}: the skill only works with Nuxt 4.`);
-  if (!ver('tailwindcss')) project.warnings.push('tailwindcss is not among the dependencies.');
-  else if (major(ver('tailwindcss')) < 4) project.warnings.push(`Tailwind ${ver('tailwindcss')}: the skill only works with Tailwind 4.`);
-  if (ver('@nuxtjs/tailwindcss')) project.warnings.push('@nuxtjs/tailwindcss is the Tailwind 3 module: with Tailwind 4, use @tailwindcss/vite.');
-  if (!ver('@nuxtjs/color-mode')) project.warnings.push('@nuxtjs/color-mode is not installed (required).');
-  if (!ver('@nuxt/fonts')) project.warnings.push('@nuxt/fonts is not installed (required).');
-}
-
-const configPath = ['nuxt.config.ts', 'nuxt.config.js', 'nuxt.config.mjs'].map((f) => join(root, f)).find(existsSync);
 let srcDir = root;
-const cssEntries = [];
-if (configPath && !explicitFiles.length) {
-  const cfg = readFileSync(configPath, 'utf8');
-  project.config = rel(configPath);
+let css = { registry: null, entries: [], packages: [] };
+if (fw) {
+  Object.assign(project, fw.styleSetup(root, profile, { pkg, rel }));
   srcDir = srcDirOf(root);
-  const cssArr = cfg.match(/\bcss\s*:\s*\[([\s\S]*?)\]/);
-  if (cssArr) for (const m of cssArr[1].matchAll(/['"`]([^'"`]+)['"`]/g)) cssEntries.push(m[1]);
-  const mods = cfg.match(/\bmodules\s*:\s*\[([\s\S]*?)\]/);
-  project.modules = mods ? [...mods[1].matchAll(/['"`]([^'"`]+)['"`]/g)].map((m) => m[1]) : [];
-  project.colorMode = {
-    configured: /colorMode\s*:/.test(cfg),
-    dataValue: cfg.match(/dataValue\s*:\s*['"`]([^'"`]+)/)?.[1] ?? null,
-    classSuffix: cfg.match(/classSuffix\s*:\s*['"`]([^'"`]*)/)?.[1] ?? null,
-  };
-  project.fonts = { configured: /\bfonts\s*:/.test(cfg), families: [...cfg.matchAll(/name\s*:\s*['"`]([^'"`]+)['"`]\s*,\s*provider/g)].map((m) => m[1]) };
-  project.tailwindVite = /@tailwindcss\/vite/.test(cfg);
-  for (const m of ['@nuxtjs/color-mode', '@nuxt/fonts'])
-    if (project.dependencies?.[m] && !project.modules.includes(m)) project.warnings.push(`${m} is installed but not listed in modules.`);
-  if (project.colorMode.configured && project.colorMode.dataValue !== 'theme')
-    project.warnings.push('colorMode.dataValue is not "theme": the method uses data-theme on <html>.');
+  css = fw.cssEntries(root, profile);
 }
+const cssEntries = css.entries.map((e) => e.spec);
 project.srcDir = rel(srcDir);
 project.cssInConfig = cssEntries;
 
 // ---------------------------------------------------------------------------
 // 2. Global style sources
 // ---------------------------------------------------------------------------
-const IGNORE = new Set(['node_modules', '.nuxt', '.output', '.git', 'dist', '.data', 'coverage']);
+const IGNORE = fw?.IGNORE ?? IGNORE_ANY;
 function walk(dir, exts, out = []) {
   if (!existsSync(dir)) return out;
   for (const name of readdirSync(dir)) {
@@ -138,13 +105,6 @@ function walk(dir, exts, out = []) {
   }
   return out;
 }
-function resolveAlias(entry) {
-  if (/^~~\/|^@@\//.test(entry)) return join(root, entry.slice(3));
-  if (/^~\/|^@\//.test(entry)) return join(srcDir, entry.slice(2));
-  if (isAbsolute(entry)) return entry;
-  return join(root, entry);
-}
-
 const sources = new Map(); // path -> { type, linked, css, offset }
 function addCss(path, linked, via) {
   if (sources.has(path)) {
@@ -168,8 +128,9 @@ let vueScoped = 0;
 if (explicitFiles.length) {
   for (const f of explicitFiles) addCss(f, true, null);
 } else {
-  for (const e of cssEntries) addCss(resolveAlias(e), true, 'nuxt.config');
+  for (const e of css.entries) addCss(e.path, true, css.registry);
   for (const f of walk(join(srcDir, 'assets'), ['.css', '.scss', '.sass'])) addCss(f, false, null);
+  for (const f of walk(cssDirOf(root), ['.css', '.scss', '.sass'])) addCss(f, false, null);
   for (const f of walk(srcDir, ['.vue'])) {
     const txt = readFileSync(f, 'utf8');
     for (const m of txt.matchAll(/<style([^>]*)>([\s\S]*?)<\/style>/g)) {
@@ -412,7 +373,10 @@ const structure = { prefix: null, checks: [], aligned: false };
   add('S1', four.every((f) => names.has(f)), `four files present (${four.filter((f) => !names.has(f)).join(', ') || 'all'}${four.every((f) => names.has(f)) ? '' : ' missing'})`);
   const mainTxt = [...sources.entries()].find(([k]) => base(k) === 'main.css')?.[1].css ?? '';
   add('S1', ['theme', 'typography', 'animation'].every((n) => new RegExp(`@import\\s+["']\\./${n}\\.css["']`).test(mainTxt)), 'main.css imports theme, typography, animation');
-  add('P9', cssEntries.length === 1 && /assets\/css\/main\.css$/.test(cssEntries[0] ?? ''), 'nuxt.config css lists only ~/assets/css/main.css');
+  if (fw) {
+    const p9 = fw.p9(root, css);
+    add('P9', p9.ok, p9.what);
+  }
   add('S2', /@theme\s+inline/.test(allText), '@theme inline present');
   add('F3/C2/T15', NAMESPACES.every((n) => resets.includes(n)), `all namespaces closed${resets.length === NAMESPACES.length ? '' : ` (open: ${NAMESPACES.filter((n) => !resets.includes(n)).join(', ')})`}`);
   add('C11/C12', darkTheme.dataTheme && darkTheme.colorScheme && darkTheme.customVariantDark, 'data-theme dark, color-scheme, @custom-variant dark');
@@ -491,9 +455,7 @@ if (project.dependencies) {
   p('## Project\n');
   for (const [k, v] of Object.entries(project.dependencies)) p(`- ${k}: ${v ?? '—'}`);
   p(`- srcDir: ${project.srcDir}`);
-  p(`- css in nuxt.config: ${cssEntries.length ? cssEntries.join(', ') : '—'}`);
-  if (project.colorMode) p(`- colorMode: ${project.colorMode.configured ? `dataValue=${project.colorMode.dataValue ?? '—'}, classSuffix=${project.colorMode.classSuffix ?? '—'}` : 'not configured'}`);
-  if (project.fonts) p(`- fonts: ${project.fonts.configured ? project.fonts.families.join(', ') || 'configured without explicit families' : 'not configured'}`);
+  for (const line of fw.projectLines(project, css)) p(line);
   p();
 }
 if (project.warnings.length) {
@@ -502,7 +464,7 @@ if (project.warnings.length) {
   p();
 }
 p('## Sources\n');
-for (const s of out.sources) p(`- ${s.file} (${s.type}${s.linked ? '' : ', NOT linked from nuxt.config'}${s.via && s.via !== 'nuxt.config' ? `, imported by ${s.via}` : ''})`);
+for (const s of out.sources) p(`- ${s.file} (${s.type}${s.linked ? '' : `, NOT linked from ${css.registry ?? 'the app'}`}${s.via && s.via !== css.registry ? `, imported by ${s.via}` : ''})`);
 if (vueScoped) p(`- ${vueScoped} <style scoped|module> blocks ignored (out of scope: not global)`);
 for (const e of inv.parseErrors) p(`- ERROR ${e.file}: ${e.reason}`);
 p();

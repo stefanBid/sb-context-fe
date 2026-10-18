@@ -1,6 +1,6 @@
 import { test, describe, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { SCRIPTS } from '../helpers/fixture.mjs';
+import { SCRIPTS, makeProject } from '../helpers/fixture.mjs';
 import { nuxtApp, vueApp, vueLibrary } from '../helpers/stacks.mjs';
 
 describe('profile.mjs', () => {
@@ -126,8 +126,8 @@ describe('sb-design refuses the stacks it has no adapter for', () => {
   afterEach(() => p?.cleanup());
 
   for (const [name, make, why] of [
-    ['a Vue + Vite app', vueApp, /supports nuxt projects for now; this project is vue \+ vite/],
-    ['a Vue library', vueLibrary, /supports nuxt projects for now/],
+    ['a Vue app without Vite', () => makeProject({ 'package.json': { dependencies: { vue: '^3.5.0' }, devDependencies: { webpack: '^5.0.0' } }, 'index.html': '<div id="app"></div>\n', 'src/main.ts': '' }, { nuxtConfig: false }), /supports nuxt, vue-vite projects for now; this project is vue\./],
+    ['a Vue library', vueLibrary, /is for app projects; this project is a library/],
     ['a Nuxt module (library)', () => nuxtApp({ 'package.json': { devDependencies: { nuxt: '^4.0.0', '@nuxt/module-builder': '^1.0.0' } } }), /is for app projects; this project is a library/],
   ])
     test(name, () => {

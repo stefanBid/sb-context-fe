@@ -13,8 +13,8 @@
 //                                                                         # confirm which plugin role each design name stands for (null = none)
 //   options: --snapshot <path> --prefix <p> --json
 //
-// Runs from anywhere inside a Nuxt project: it finds the project root (nuxt.config.*), reads the snapshot from
-// <root>/.sb-context/, and edits only <srcDir>/assets/css/ (theme.css, typography.css) — the fixed place of the global style.
+// Runs from anywhere inside the project: it finds the project root, reads the snapshot from <root>/.sb-context/,
+// and edits only the style folder of the profile (theme.css, typography.css) — the fixed place of the global style.
 // Exit codes: 0 aligned · 10 drift · 3 no snapshot / no aligned style · 4 role mapping needed or inconsistent.
 //
 // Differences it cannot apply (new tokens, tokens the design dropped, a changed family list, hero clamp)
@@ -23,6 +23,7 @@
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { resolve, join } from 'node:path';
 import { projectRoot, requireStack, cssDirOf, contextDirOf, ensureContextDir, relPath } from '../../../core/lib/project.mjs';
+import { ADAPTER_NAMES, adapterFor } from '../../../scripts/lib/frameworks/index.mjs';
 import { nHex, nShadow, nFamily, toRem, same, remStr, blockOf, findSlot, writeSlots, refreshMobileComments, parseMapArg, byRole as byRoleOf } from './lib/sync.mjs';
 
 const argv = process.argv.slice(2);
@@ -32,7 +33,8 @@ const get = (n) => {
 };
 const has = (n) => argv.includes(n);
 const root = projectRoot();
-requireStack(root, { adapters: ['nuxt'], kinds: ['app'], what: 'The design sync of /sb-design:align' });
+const profile = requireStack(root, { adapters: ADAPTER_NAMES, kinds: ['app'], what: 'The design sync of /sb-design:align' });
+const fw = adapterFor(profile);
 const snapPath = resolve(get('--snapshot') || join(contextDirOf(root), 'design-source.md'));
 
 // ---------------------------------------------------------------------------
@@ -54,7 +56,7 @@ const [light, dark] = S.themes;
 // ---------------------------------------------------------------------------
 // Project CSS
 // ---------------------------------------------------------------------------
-const dir = cssDirOf(root); // the global style lives in <srcDir>/assets/css, always
+const dir = cssDirOf(root); // the global style lives in the profile's style folder, always
 if (!existsSync(join(dir, 'theme.css')) || !existsSync(join(dir, 'typography.css'))) {
   console.error(`The project has no aligned global style (theme.css / typography.css not found in ${relPath(root, dir)}). Run /sb-design:align.`);
   process.exit(3);
@@ -244,7 +246,7 @@ if (diffs.some((d) => d.area === 'type' && /^(display)(--| |$)/.test(d.token)) &
 for (const [role, want] of [['display', S.fonts?.display], ['body', S.fonts?.body]]) {
   const sl = slot('typography', `--font-${role}`);
   if (!want || !sl) continue;
-  if (nFamily(sl.value) !== nFamily(want)) undecided.push({ area: 'font', token: role, note: `family changed: ${sl.value.split(',')[0]} → ${want.split(',')[0]}. Update the stack here and \`fonts.families\` (weights) in nuxt.config.ts` });
+  if (nFamily(sl.value) !== nFamily(want)) undecided.push({ area: 'font', token: role, note: `family changed: ${sl.value.split(',')[0]} → ${want.split(',')[0]}. Update the stack here and ${fw.fontNote(profile)}` });
 }
 
 // ---------------------------------------------------------------------------
