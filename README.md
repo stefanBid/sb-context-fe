@@ -4,7 +4,7 @@
 [![Coverage](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2FstefanBid%2Fsb-context-fe%2Fbadges%2Fcoverage.json)](#reliability)
 [![Branch coverage](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2FstefanBid%2Fsb-context-fe%2Fbadges%2Fcoverage-branches.json)](#reliability)
 
-A Claude Code **marketplace of everyday plugins for frontend projects**. `sb-core`, `sb-github` and `sb-health` work on **Nuxt 4** and **Vue 3 + Vite** projects, apps and libraries; `sb-design` aligns the style of **Nuxt 4 + Tailwind 4 apps** (Vue + Vite apps come next). This README is the user guide: every plugin and skill, when to use it, what to say to trigger it, what it reads and writes.
+A Claude Code **marketplace of everyday plugins for frontend projects**. `sb-core`, `sb-github` and `sb-health` work on **Nuxt 4** and **Vue 3 + Vite** projects, apps and libraries; `sb-design` aligns the style of **Tailwind 4 apps** on Nuxt 4 or Vue 3 + Vite (not libraries). This README is the user guide: every plugin and skill, when to use it, what to say to trigger it, what it reads and writes.
 
 The plugins do two things:
 
@@ -123,7 +123,7 @@ Each plugin has its own version and changelog (`plugins/<plugin>/CHANGELOG.md`).
 
 ### First run on a project
 
-Open Claude Code in the Nuxt project and run:
+Open Claude Code in the app (Nuxt, or Vue + Vite) and run:
 
 ```
 /sb-core:onboard
@@ -204,7 +204,7 @@ Reading is free; writing asks first.
 
 | What | Where |
 | --- | --- |
-| Global style (the only place `sb-design` writes CSS) | `<srcDir>/assets/css/` (`app/assets/css/` in Nuxt 4) |
+| Global style (the only place `sb-design` writes CSS) | `<srcDir>/assets/css/` (`app/assets/css/` in Nuxt 4, `src/assets/css/` in Vue + Vite) |
 | The plugins' files in the project | `<root>/.sb-context/`: it can be committed; its own `.gitignore` keeps `github.json` and `*.prev.md` out. To keep it all local, add `.sb-context/` to the project's `.gitignore` |
 | Project root | the folder with `nuxt.config.*`, or a `package.json` that depends on nuxt or vue, found from wherever a script starts |
 | What the project is | `.sb-context/profile.json`: framework, kind (app or library), paths, styling, libraries. See [Project profile](#project-profile) |
@@ -217,10 +217,10 @@ The plugins never commit anything themselves. Outside a Nuxt or Vue project thei
 | Need | Required by |
 | --- | --- |
 | Nuxt 4, or Vue 3 (with Vite) | everything; `/sb-core:setup` stops on Nuxt < 4 and Vue < 3 |
-| A Nuxt app | `sb-design` (its scripts refuse a Vue + Vite project and libraries for now) |
+| An app (Nuxt, or Vue + Vite) | `sb-design` (its scripts refuse libraries and other stacks) |
 | Tailwind 4 with `@tailwindcss/vite` | `sb-design` (stops on Tailwind 3: `tailwind.config.*`, `@tailwind`, `@nuxtjs/tailwindcss`, SCSS global CSS) |
-| `@nuxtjs/color-mode`, `@nuxt/fonts` | `/sb-design:align` installs them if missing |
-| `@nuxtjs/i18n` | proposed when text is found inline (a write, with its own confirmation) |
+| Color mode and fonts: `@nuxtjs/color-mode` and `@nuxt/fonts` (Nuxt); `@vueuse/core` and `@fontsource/*` (Vue + Vite) | `/sb-design:align` installs them if missing |
+| `@nuxtjs/i18n` (Nuxt) or `vue-i18n` (Vue) | proposed when text is found inline (a write, with its own confirmation) |
 | A Claude account with the design | `/sb-design:extract-style`, `/sb-design:extract-ui` (via the `Artifact` tool, read only) |
 | GitHub CLI (`gh`), logged in | `/sb-github:admin`, `/sb-github:checks` |
 
@@ -237,10 +237,10 @@ The plugins never commit anything themselves. Outside a Nuxt or Vue project thei
 | sb-design | `/sb-design:extract-style` | model or command | Extract the style of a Claude design into `.sb-context/design-source.md` |
 | sb-design | `/sb-design:align` | model or command | Normalize the global style into four files; rename the prefix; sync values with the design |
 | sb-design | `/sb-design:migrate` | command only | Migrate Vue templates after the global style changed |
-| sb-design | `/sb-design:extract-ui` | model or command | Build a component, section, layout, page or whole design from Claude as Nuxt code |
+| sb-design | `/sb-design:extract-ui` | model or command | Build a component, section, layout, page or whole design from Claude as code of the app (Nuxt, or Vue + Vite) |
 | sb-design | `/sb-design:check` | model or command | Read-only: is the style aligned, and still in sync with the design snapshot? |
 | sb-health | `/sb-health:lint` | model or command | ESLint fix and report |
-| sb-health | `/sb-health:build` | model or command | Type check and production build, errors categorized |
+| sb-health | `/sb-health:build` | model or command | Type check and production build, errors categorized; for a library, what the package ships |
 | sb-health | `/sb-health:seo` | model or command | robots, sitemap, per-page meta |
 | sb-health | `/sb-health:deps` | model or command | Outdated and vulnerable dependencies: minor/patch updates and major migrations (changelog, conflicts, notes) |
 | sb-health | `/sb-health:docs` | model or command | Align `README.md` with the code of the project |
@@ -252,7 +252,7 @@ The plugins never commit anything themselves. Outside a Nuxt or Vue project thei
 
 | I want to… | Use |
 | --- | --- |
-| Start working on a Nuxt project I just joined | `/sb-core:onboard` |
+| Start working on an app I just joined (Nuxt, or Vue + Vite) | `/sb-core:onboard` |
 | Use the plugins on a project that is already aligned | `/sb-core:setup` |
 | Move a project from sb-context-nuxt 0.x | `/sb-core:migration` |
 | Tell Claude which docs (and which versions) this project follows | `/sb-core:context` |
@@ -265,6 +265,7 @@ The plugins never commit anything themselves. Outside a Nuxt or Vue project thei
 | Bring a component, a page or a layout from the Claude design | `/sb-design:extract-ui` |
 | Know if the project is healthy before a release | `/sb-health:checkup` |
 | Fix lint / see if the build passes | `/sb-health:lint` / `/sb-health:build` |
+| Check that my library's package exports, types and peers are right | `/sb-health:build` |
 | Check robots, sitemap, meta tags | `/sb-health:seo` |
 | See outdated or vulnerable packages, update them, migrate a major | `/sb-health:deps` |
 | Refresh the project README | `/sb-health:docs` |
@@ -389,8 +390,8 @@ Good to know:
 | --- | --- |
 | **Command** | `/sb-design:align` |
 | **Does** | Normalizes any global style setup into `main.css`, `theme.css`, `typography.css`, `animation.css` under `assets/css`, keeping the project's values (or the design's, if a snapshot exists) |
-| **Reads** | the whole global style, `nuxt.config.ts`, `design-source.md` if present |
-| **Writes** | the four files; `nuxt.config.ts` only in `modules`, `css`, `colorMode`, `fonts` (and `vite.plugins` for `@tailwindcss/vite` if missing); installs `@nuxtjs/color-mode` and `@nuxt/fonts` if missing |
+| **Reads** | the whole global style, the framework's files (`nuxt.config.ts`; or `src/main.ts`, `vite.config.ts`, `index.html`), `design-source.md` if present |
+| **Writes** | the four files. Nuxt: `nuxt.config.ts` only in `modules`, `css`, `colorMode`, `fonts` (and `vite.plugins` for `@tailwindcss/vite` if missing); installs `@nuxtjs/color-mode` and `@nuxt/fonts` if missing. Vue + Vite: the style and Fontsource imports of `src/main.ts`, `@tailwindcss/vite` and the `@` alias in `vite.config.ts`, the inline theme script of `index.html`, the `useTheme` composable (VueUse `useColorMode`); installs `@vueuse/core` and the `@fontsource/*` packages if missing |
 | **Never touches** | components, pages, layouts, `<style scoped>`, `<style module>` (only the optional prefix rename replaces the old prefix) |
 | **Next** | `/sb-design:migrate` |
 
@@ -425,19 +426,19 @@ If the project is **already aligned** and values match, it says so and stops.
 | | |
 | --- | --- |
 | **Command** | `/sb-design:extract-ui [what to extract] [optional artifact link]` |
-| **Does** | Builds what you ask for from a Claude design as Nuxt 4 code: Vue `<script setup lang="ts">`, Tailwind 4 with the project's own theme |
+| **Does** | Builds what you ask for from a Claude design as code of the app (Nuxt 4, or Vue 3 + Vite): Vue `<script setup lang="ts">`, Tailwind 4 with the project's own theme |
 | **Needs** | style aligned **and in sync with the design** (step 0 checks it; otherwise it stops and runs `/sb-design:extract-style`) |
 | **Reads** | the design (read only), the project, project settings |
 | **Writes** | components, layouts, pages, locale files |
 
 What a request becomes:
 
-| You ask for | Destination | Source in the design |
-| --- | --- | --- |
-| a **component** ("the Button", "the stepper") | `app/components/…` | Design System component folder, or an element of a board |
-| a **section** ("the hero", "the FAQ", "the footer") | one or more components in `app/components/…` | a board of a Design |
-| a **layout** ("the main layout", "header and footer") | `app/layouts/<name>.vue` with `<slot />`; header, footer, navigation as components | the frame that surrounds `<main>` |
-| a **page** ("the Home", "the form page") | `app/pages/<route>.vue` plus the components and layout it needs | a board (desktop, mobile and dark variants are one screen) |
+| You ask for | Destination (Nuxt) | Destination (Vue + Vite) | Source in the design |
+| --- | --- | --- | --- |
+| a **component** ("the Button", "the stepper") | `app/components/…` | `src/components/…` | Design System component folder, or an element of a board |
+| a **section** ("the hero", "the FAQ", "the footer") | one or more components in `app/components/…` | one or more components in `src/components/…` | a board of a Design |
+| a **layout** ("the main layout", "header and footer") | `app/layouts/<name>.vue` with `<slot />` | `src/layouts/<Name>Layout.vue` with `<RouterView />`; header, footer, navigation as components | the frame that surrounds `<main>` |
+| a **page** ("the Home", "the form page") | `app/pages/<route>.vue` plus the components and layout it needs | `src/views/<Name>View.vue` and its route in the router | a board (desktop, mobile and dark variants are one screen) |
 | **everything** ("the whole design") | one page per screen, one layout, the shared components | all boards of the Design |
 
 Flow: style current? → project settings → input → find it in the design → plan with what the project already has → **ask** → build → verify → report. Several things in one request are split, shown as a plan, and built in order.
@@ -465,7 +466,7 @@ Text is never left inline: it goes to the locale files (see [The i18n stance](#t
 
 | Step | What |
 | --- | --- |
-| 1. Setup | runs [`/sb-core:setup`](#setup): stack (**stops** on Nuxt < 4), `CLAUDE.md` rules, `.sb-context/` folder, all missing project settings in one go |
+| 1. Setup | runs [`/sb-core:setup`](#setup): stack (**stops** on Nuxt < 4 or Vue < 3), `CLAUDE.md` rules, `.sb-context/` folder, all missing project settings in one go |
 | 2. Align | asks for a design link first if you have one and there is no snapshot, then `/sb-design:align` |
 | 3. Migrate | `/sb-design:migrate`: summary, then the areas you pick |
 | 4. Build | `/sb-health:build` (or the project's `build` script without sb-health); reports errors and warnings |
@@ -556,9 +557,10 @@ Every skill that needs the docs reads the project's links first (`docs.mjs get -
 
 | | |
 | --- | --- |
-| **Trigger** | "check the build", "does the project build?", "check del build" |
-| **Does** | Type check (`npx nuxt typecheck`, needs `vue-tsc` + `typescript`) then production build; package manager detected from the lockfile |
-| **Categories** | **TypeScript errors** (type safety), **Build errors** (blocking: TypeScript, Vite, Nitro, module not found, SSR), **Build warnings** (non-blocking) |
+| **Trigger** | "check the build", "does the project build?", "does the library build?", "check del build" |
+| **Does** | Type check (`npx nuxt typecheck` for Nuxt; the project's script or `vue-tsc` for Vue, never `tsc` alone, which skips `.vue` files) then production build; package manager from the profile |
+| **Categories** | **TypeScript errors** (type safety), **Build errors** (blocking: TypeScript, Vite, Rollup, Nitro, module not found, SSR), **Package errors** of a library (blocking a release), **Warnings** (non-blocking) |
+| **A library** | after the build, `npm pack --dry-run --json` piped into `lib-check.mjs --pack -`: every path of `exports` / `main` / `module` / `types` in the package and `.d.ts` files shipped (L1), a `files` field (L2), a `types` condition, first (L3, L4), `vue` and Vue-coupled packages as peers, not dependencies (L5, L6), every peer in `devDependencies` on an allowed major (L7), peer ranges with an upper bound (L8), peers left out of the bundle (L9), `sideEffects` and CSS (L10). Writes nothing |
 | **On failure** | suggests a fix direction, does not auto-apply it |
 
 ### seo
@@ -566,7 +568,7 @@ Every skill that needs the docs reads the project's links first (`docs.mjs get -
 | | |
 | --- | --- |
 | **Trigger** | "check SEO", "check GSC readiness", "verifica la SEO" |
-| **Does** | Audits readiness for Google Search Console |
+| **Does** | Audits readiness for Google Search Console: Nuxt apps, and Vue + Vite apps generated at build time (`vite-ssg`, whose generated HTML is checked for its meta). Stops on libraries and client-rendered apps |
 | **Asks** | only what is missing: multilingual or not, locales, production URL |
 
 | Check | Expected |
@@ -575,7 +577,7 @@ Every skill that needs the docs reads the project's links first (`docs.mjs get -
 | Sitemap | valid XML, `<loc>` on the production domain, `<xhtml:link>` alternates per locale with `x-default`, hreflang matching `i18n.locales[].iso`, all indexable routes |
 | Placeholders | no `yoursite.com`, `Your Site Name`, `example.com` left in config, `.env`, `.env.example` |
 | Per-page meta | each page has `title`, `description`, `ogTitle`, `ogDescription`, `ogImage` through i18n; pages without a head call are flagged |
-| Inline meta | `check-i18n.mjs` on `app/pages`; hits are warnings on multilingual sites |
+| Inline meta | `check-i18n.mjs` on the pages folder (`app/pages`, `src/views`); hits are warnings on multilingual sites |
 
 Report: per check, blockers vs warnings vs OK.
 
@@ -594,7 +596,8 @@ Rules:
 
 - **Forward only.** Never downgrades a package, never lowers a constraint, never `--force` / `--legacy-peer-deps` / `npm audit fix --force`, never an `overrides` entry that pins an old version to make a new one fit. What does not fit **waits**, and is noted.
 - `0.y.z` → `0.(y+1).z` counts as a major.
-- One major at a time, core first (`nuxt`, `vue`, `vite`, `tailwindcss`), verified before the next.
+- One major at a time, core first (`nuxt` or `vue`, `vite`, `tailwindcss`), verified before the next.
+- A library's **peer ranges** are its public contract: a peer with a new major is tested through the `devDependency`, then you choose to **widen** the range (`^1 || ^2`, a minor release of the library) or **move** it (`^2`, a major release). A peer is never moved into `dependencies`.
 
 Minor and patch: same major as the declared constraint. The changelog is checked first; if a concern shows up, the package is handled as a major.
 
@@ -603,7 +606,7 @@ Major, per package:
 | Step | What happens |
 | --- | --- |
 | **Read** | release notes of **every** major between current and target (GitHub releases, `CHANGELOG.md`, migration guide): breaking changes, new requirements (Node, peers), deprecations turned into removals |
-| **Match** | searches the project for each change (imports, `nuxt.config`, module options, templates, scripts) and builds a table: change, used here?, where, what must change. "Not used" is a finding, not an assumption |
+| **Match** | searches the project for each change (imports, the framework's config, module and plugin options, templates, scripts) and builds a table: change, used here?, where, what must change. "Not used" is a finding, not an assumption |
 | **Check compatibility** | peers of the target, dependents that still list the old range, install dry run, Node `engines` |
 | **Judge each conflict** | who owns it (`project` or `upstream`), how much it matters (blocks install / breaks build or runtime / warning only), is it already fixed in a newer version of the other library, what is the way forward (update both, change our code, **wait**, ask you) |
 | **Propose** | release notes in short, exact edits (file, line, before → after), conflicts, order, what is postponed. **Stops** for your approval (all, part, or postpone) |
@@ -717,17 +720,17 @@ Skills that use it: `/sb-core:setup` and `/sb-core:onboard` (ask everything miss
 
 | Key | Meaning | Detected from |
 | --- | --- | --- |
-| `i18n.enabled` | all user-visible text goes through i18n | `@nuxtjs/i18n` in modules/deps |
-| `i18n.defaultLocale` | language of the design's text and the default locale file | `defaultLocale` in `nuxt.config` |
-| `i18n.locales` | supported locales (`["it","en"]`) | `locales` in `nuxt.config`, locale files |
+| `i18n.enabled` | all user-visible text goes through i18n | `@nuxtjs/i18n` (Nuxt) or `vue-i18n` (Vue) in modules/deps |
+| `i18n.defaultLocale` | language of the design's text and the default locale file | `defaultLocale` in `nuxt.config`, or `locale` of `createI18n` |
+| `i18n.locales` | supported locales (`["it","en"]`) | `locales` in `nuxt.config`, the `messages` of `createI18n`, locale files |
 | `i18n.otherLocales` | non-default locales: `"translate"` (written, marked to review) or `"fallback"` (empty, falls back) | asked |
-| `i18n.messagesDir` | where the locale files live | `i18n/locales`, `locales`, `langDir` |
+| `i18n.messagesDir` | where the locale files live | `i18n/locales`, `locales`, `src/locales`, `src/i18n/locales`, `langDir` |
 | `i18n.keyStyle` | key organization, e.g. `pages.home.hero.title` | existing locale files |
 | `i18n.untranslated` | words that stay as they are (brand names) | asked when the design has them |
-| `icons.module` | `"@nuxt/icon"` or `null` (inline SVG) | modules |
+| `icons.module` | `"@nuxt/icon"`, `"unplugin-icons"`, `"@iconify/vue"` or `null` (inline SVG) | modules, dependencies |
 | `images.module` | `"@nuxt/image"` or `null` | modules |
 | `style.prefix` | prefix of the global style tokens and utilities | `--<p>-bg` in `theme.css` |
-| `seo.siteUrl` | production URL for robots, sitemap, canonical | `siteUrl`/`baseUrl` in `nuxt.config` |
+| `seo.siteUrl` | production URL for robots, sitemap, canonical | `siteUrl`/`baseUrl` in the framework's config, `SITE_URL` in `.env.production` / `.env` |
 | `stack.packageManager` | only when there is no lockfile | lockfile |
 | `naming.componentPrefix` | prefix of shared components: `"Base"`, `"App"`, `"Ui"`, `"none"` | most common prefix in `components/` |
 
@@ -739,9 +742,9 @@ The plugin **never leaves user-visible text inline**: templates, `alt`, `aria-la
 
 | Situation | What happens |
 | --- | --- |
-| `@nuxtjs/i18n` installed | used, with the saved locales and key style |
+| `@nuxtjs/i18n` (Nuxt) or `vue-i18n` (Vue) installed | used, with the saved locales and key style |
 | Not installed | it proposes setting it up (the exact command and files are shown, you confirm) |
-| You decline | `i18n.enabled: false`; text still stays **out of templates**, in a typed content module (`app/content/<name>.ts`), movable to i18n later |
+| You decline | `i18n.enabled: false`; text still stays **out of templates**, in a typed content module (`app/content/<name>.ts`, `src/content/<name>.ts` in Vue), movable to i18n later |
 | Sample data in a design (names, dates in a preview) | becomes props, slots or sample data, not message keys |
 
 Checked by `scripts/check-i18n.mjs`.
@@ -758,7 +761,7 @@ sb-design writes its rules in three layers, so a new stack only adds an adapter:
 | --- | --- | --- | --- |
 | **standard** | [`plugins/sb-design/standard/`](plugins/sb-design/standard/README.md) | what is fixed on every stack: the four files, roles, guard rails, breakpoints, `clamp()`, contrast, motion, the issue codes | one |
 | **engine** | [`plugins/sb-design/engines/<name>/`](plugins/sb-design/engines/tailwind4/README.md) | how the standard becomes CSS: tokens, resets, utilities, the example files | `tailwind4` |
-| **framework** | [`plugins/sb-design/frameworks/<adapter>.md`](plugins/sb-design/frameworks/nuxt.md) | where the style lives, how it is registered, color mode, fonts, how UI is written | `nuxt` |
+| **framework** | [`plugins/sb-design/frameworks/<adapter>.md`](plugins/sb-design/frameworks/nuxt.md), with its script adapter in `plugins/sb-design/scripts/lib/frameworks/` | where the style lives, how it is registered, color mode, fonts, how UI is written | `nuxt`, `vue-vite` |
 
 The engine is the profile's `styling.engine.name`, the framework its `adapter`. A project whose engine or adapter has no file yet is out of scope: the skills say which one is missing and stop.
 
@@ -768,18 +771,18 @@ All under `<srcDir>/assets/css/`:
 
 | File | Content |
 | --- | --- |
-| `main.css` | the only file in `nuxt.config.ts` `css`: imports the other three, the `dark` variant on `data-theme`, base layer for `html` / `body` / media |
+| `main.css` | the only style file registered (Nuxt: `css` of `nuxt.config.ts`; Vue + Vite: imported by `src/main.ts`): imports the other three, the `dark` variant on `data-theme`, base layer for `html` / `body` / media |
 | `theme.css` | color tokens for light and dark, radii, shadows, `@theme inline` and `@theme` |
 | `typography.css` | font families, type scale, the `{p}-<role>` text utilities, mobile sizes, `clamp()` above `display` only, base layer for `h1`–`h4` |
 | `animation.css` | durations, easings, animations, Vue transitions, `prefers-reduced-motion` |
 
-`{p}` is the prefix you chose: raw variables `--{p}-bg`, utilities `{p}-h1`, `{p}-body`, `{p}-overline`, `{p}-transition`. Tailwind tokens keep the role name (`--color-primary` → `bg-primary`, `--text-h1` → `text-h1`). The reference structure is in `plugins/sb-design/engines/tailwind4/example/` (values are the example's, not yours); the rules are in `plugins/sb-design/standard/`, and what is specific to Nuxt in `plugins/sb-design/frameworks/nuxt.md`.
+`{p}` is the prefix you chose: raw variables `--{p}-bg`, utilities `{p}-h1`, `{p}-body`, `{p}-overline`, `{p}-transition`. Tailwind tokens keep the role name (`--color-primary` → `bg-primary`, `--text-h1` → `text-h1`). The reference structure is in `plugins/sb-design/engines/tailwind4/example/` (values are the example's, not yours); the rules are in `plugins/sb-design/standard/`, and what is specific to each stack in `plugins/sb-design/frameworks/nuxt.md` and `plugins/sb-design/frameworks/vue-vite.md`.
 
 ### What is fixed and what follows the design
 
 | Concern | Owner | Rule |
 | --- | --- | --- |
-| **Structure**: the four files and their sections, token naming, the `{p}` prefix, role names, closed Tailwind namespaces, `@theme` vs `@theme inline`, utilities `{p}-<role>`, base layer for `h1`–`h4`, light/dark with `data-theme`, `@nuxtjs/color-mode` and `@nuxt/fonts`, breakpoints, `clamp()` only above `display` | **this plugin** | fixed, always enforced |
+| **Structure**: the four files and their sections, token naming, the `{p}` prefix, role names, closed Tailwind namespaces, `@theme` vs `@theme inline`, utilities `{p}-<role>`, base layer for `h1`–`h4`, light/dark with `data-theme`, the framework's color mode and fonts (`@nuxtjs/color-mode` and `@nuxt/fonts`; VueUse `useColorMode` with an inline script, and Fontsource), breakpoints, `clamp()` only above `display` | **this plugin** | fixed, always enforced |
 | **Values and taste**: palette, font families and pairing, type ratios, line heights, letter spacing, weights, radii and shadow values, motion timings and character, how roles are used on a page | **`design-source.md`**, else the project | if `.sb-context/design-source.md` exists, its values win; otherwise the project's current values are kept, normalized |
 
 ### Hard rules
@@ -816,13 +819,15 @@ Skills call these; you rarely run them by hand. Paths are relative to the repo: 
 | --- | --- | --- |
 | `core/scripts/project-settings.mjs` (`detect`, `get`, `set`) | most skills | read and save project settings |
 | `plugins/sb-health/scripts/dependency-notes.mjs` (`list`, `add`, `touch`, `resolve`) | `/sb-health:deps` | read and write the dependency notes |
+| `plugins/sb-health/scripts/lib-check.mjs` (`--pack`, `--json`) | `/sb-health:build` | a library's package against its `package.json`: exports, types, peers, bundle externals |
 | `core/scripts/docs.mjs` (`detect`, `get`, `add`, `remove`, `set`, `render`) | `/sb-core:context`, every skill that opens the stack's docs | propose, save and read the project's documentation links; write the `CLAUDE.md` block |
 | `core/scripts/profile.mjs` (`detect`, `get`, `set`, `write`) | `/sb-core:setup`, the skills that check the stack | detect, read and confirm the project profile |
 | `plugins/sb-core/scripts/project-plugins.mjs` (`plan`, `disable`, `enable`, `reset`) | `/sb-core:setup` | which plugins the project needs; turns them off or on in `.claude/settings.local.json` |
 | `plugins/sb-core/scripts/setup-state.mjs` (`--init`) | `/sb-core:setup` | state of the project for the plugins and next steps; `--init` creates the folder |
 | `plugins/sb-github/scripts/github-settings.mjs` (`get`, `status`, `set`, `refresh`) | `/sb-github:admin`, `/sb-github:checks` | read and write the signature choice and the repo cache; `refresh` prints what changed |
 | `core/scripts/check-i18n.mjs` | `/sb-health:checkup`, `/sb-health:seo`, `/sb-design:extract-ui` | find inline text and missing keys in the default locale |
-| `core/lib/project.mjs` | all scripts | find the Nuxt root and `srcDir`, the `.sb-context/` folder |
+| `core/lib/project.mjs` | all scripts | find the project root and `srcDir`, the `.sb-context/` folder |
+| `plugins/sb-design/scripts/lib/frameworks/` | the sb-design scripts | the adapter of each stack (`nuxt`, `vue-vite`): where the style is registered, aliases, color mode, fonts |
 | `plugins/sb-core/scripts/migrate-v1.mjs` (`--apply`, `--refs`) | `/sb-core:migration` | plan and apply the move from 0.x |
 | `plugins/sb-design/skills/extract-style/scripts/tokens-to-source.mjs` | `/sb-design:extract-style` | convert the artifact's tokens into the snapshot, with coverage check |
 | `plugins/sb-design/skills/align/scripts/inventory.mjs` | `/sb-design:align` | inventory of the global style (`--classes` for component impact) |
@@ -861,11 +866,11 @@ After alignment: `/impeccable document` records the aligned system in `DESIGN.md
 
 | Problem | Cause and fix |
 | --- | --- |
-| "The skill stops: Tailwind 3 / Nuxt 3" | style skills require Nuxt 4 and Tailwind 4 with `@tailwindcss/vite`. No adaptation: upgrade first. |
+| "The skill stops: Tailwind 3 / Nuxt 3 / Vue 2" | style skills require Nuxt 4 or Vue 3 + Vite 5.2+, and Tailwind 4 with `@tailwindcss/vite`. No adaptation: upgrade first. |
 | A script says the project was set up with sb-context-nuxt 0.x | run `/sb-core:migration`: it moves `.sb-context-nuxt/` to `.sb-context/`. |
 | A step says a plugin is not installed | the skill needs another plugin of the marketplace: `/plugin install <plugin>@sb-context-fe`, or the bundle `sb-context-fe`. |
 | A script says it is not in a Nuxt or Vue project | it looks upward for `nuxt.config.*` or a `package.json` that depends on nuxt or vue; run Claude Code inside the project. |
-| An sb-design script says it supports nuxt projects for now | sb-design has no adapter yet for this stack (Vue + Vite), or the project is a library. `/sb-core:setup` can turn sb-design off for this project. |
+| An sb-design script says it supports nuxt, vue-vite projects for now | sb-design has no adapter for this stack (Vue without Vite, another framework), or the project is a library. `/sb-core:setup` can turn sb-design off for this project. |
 | The profile says the wrong kind or folder | correct it once: `/sb-core:setup` asks, or `profile.mjs set kind '"app"'`. A confirmed value is never overwritten. |
 | `/sb-design:extract-ui` refuses to start | the style is not aligned or not in sync with the design. Run `/sb-design:extract-style` (it realigns) or `/sb-design:align`. |
 | `sync-values.mjs --check` exits `4` | the design's role names are not mapped to plugin roles. `/sb-design:align` maps them with you. |
