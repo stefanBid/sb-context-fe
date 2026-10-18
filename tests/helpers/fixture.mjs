@@ -22,6 +22,7 @@ export const EXAMPLE_VUE = Object.fromEntries(
 
 export const SCRIPTS = {
   dependencyNotes: join(REPO, 'plugins/sb-health/scripts/dependency-notes.mjs'),
+  libCheck: join(REPO, 'plugins/sb-health/scripts/lib-check.mjs'),
   projectSettings: join(REPO, 'core/scripts/project-settings.mjs'),
   githubSettings: join(REPO, 'plugins/sb-github/scripts/github-settings.mjs'),
   setupState: join(REPO, 'plugins/sb-core/scripts/setup-state.mjs'),

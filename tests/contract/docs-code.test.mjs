@@ -74,6 +74,7 @@ describe('exit codes', () => {
     'sync-values.mjs': (h) => h.split('\n').find((l) => /Exit codes:/.test(l)),
     'check-i18n.mjs': (h) => h.split('\n').find((l) => /^\/\/ Exit /.test(l)),
     'contrast.mjs': (h) => h.split('\n').find((l) => /Exits with code/.test(l)),
+    'lib-check.mjs': (h) => h.split('\n').find((l) => /Exit codes:/.test(l)),
   };
   for (const [script, pick] of Object.entries(cases)) {
     test(`${script}: the header lists exactly the codes the code returns`, () => {
