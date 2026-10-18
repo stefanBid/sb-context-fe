@@ -8,7 +8,7 @@
 //   preferences (user-owned): signature, defaults. Changed only when the user asks; a refresh never touches them.
 //   cache (agent-owned): repo, labels, rulesets, ci, release, security. A snapshot of the remote.
 //
-// Usage (from anywhere inside a Nuxt project):
+// Usage (from anywhere inside a Nuxt or Vue project):
 //   node github-settings.mjs get [dotted.path]              the file, or one value (null when unknown)
 //   node github-settings.mjs status                         signature asked or not, age of each cache key, what is missing or stale (JSON)
 //   node github-settings.mjs set <dotted.path> '<json>'     a preference (signature, defaults)

@@ -1,4 +1,4 @@
-// The logic of project-settings.mjs, without I/O: dotted paths and what is read from nuxt.config.
+// The logic of project-settings.mjs, without I/O: dotted paths and what is read from nuxt.config or a Vue app.
 
 export const dig = (o, path) => path.split('.').reduce((a, k) => (a == null ? undefined : a[k]), o);
 
