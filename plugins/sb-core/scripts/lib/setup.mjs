@@ -56,7 +56,7 @@ export const SKILLS = {
 };
 
 /** The stacks sb-design has an adapter for. A project on another stack keeps it off until its adapter exists. */
-export const DESIGN_ADAPTERS = ['nuxt'];
+export const DESIGN_ADAPTERS = ['nuxt', 'vue-vite'];
 
 /**
  * For each plugin: whether this project needs it, and why. A recommendation only: the user decides.
@@ -81,7 +81,7 @@ export function pluginPlan(profile, { github = false } = {}) {
 /** The skills worth listing for this project: those of the recommended plugins, minus the ones that do not apply. */
 export function skillsFor(plan, profile) {
   const skip = new Set(profile?.kind === 'library' || profile?.rendering === 'csr' ? ['/sb-health:seo'] : []);
-  if (profile?.adapter !== 'nuxt' || profile?.kind !== 'app') skip.add('/sb-core:onboard');
+  if (profile?.kind !== 'app' || !DESIGN_ADAPTERS.includes(profile?.adapter)) skip.add('/sb-core:onboard');
   return plan.filter((p) => p.recommended).flatMap((p) => SKILLS[p.plugin]).filter((s) => !skip.has(s));
 }
 

@@ -4,13 +4,16 @@
 //
 //   standard  plugins/sb-design/standard/        fixed for every engine and framework
 //   engine    plugins/sb-design/engines/tailwind4/   how the standard becomes Tailwind 4 CSS
-//   framework plugins/sb-design/frameworks/nuxt.*    where the style lives and how it is registered in Nuxt
+//   nuxt      plugins/sb-design/frameworks/nuxt.*    where the style lives and how it is registered in Nuxt
+//   vue-vite  plugins/sb-design/frameworks/vue-vite.*  the same in a Vue + Vite app
+// A framework adapter is a layer of its own: each one must say how it corrects every framework code.
 
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { REPO, lf } from '../helpers/fixture.mjs';
+import { ADAPTER_NAMES } from '../../plugins/sb-design/scripts/lib/frameworks/index.mjs';
 
 const DESIGN = join(REPO, 'plugins/sb-design');
 const files = (dir) =>
@@ -25,7 +28,7 @@ const text = (paths) => paths.map((p) => lf(readFileSync(p, 'utf8'))).join('\n')
 export const LAYERS = {
   standard: () => text(files(join(DESIGN, 'standard'))),
   engine: () => text(files(join(DESIGN, 'engines/tailwind4'))),
-  framework: () => text(files(join(DESIGN, 'frameworks')).filter((p) => /[\\/]nuxt\.[a-z.]+$/.test(p))),
+  ...Object.fromEntries(ADAPTER_NAMES.map((a) => [a, () => text(files(join(DESIGN, 'frameworks')).filter((p) => p.split(/[\\/]/).pop().startsWith(`${a}.`)))])),
 };
 
 /** [id, layer, pattern] */
@@ -100,26 +103,53 @@ export const RULES = [
   ['@reference before @apply in components', 'engine', /@reference/],
 
   // Nuxt
-  ['Nuxt 4 required', 'framework', /Nuxt 4/],
-  ['global style in app/assets/css', 'framework', /app\/assets\/css/],
-  ['only main.css in nuxt.config css', 'framework', /`css` contains \*\*only\*\* `~\/assets\/css\/main\.css`/],
-  ['nuxt.config keys align may change', 'framework', /`modules`, `css`, `colorMode`, `fonts`/],
-  ['tailwind vite plugin', 'framework', /`vite\.plugins`/],
-  ['install color-mode and fonts', 'framework', /npx nuxi module add color-mode/],
-  ['color-mode writes data-theme', 'framework', /`dataValue: 'theme'`/],
-  ['color-mode no class suffix', 'framework', /`classSuffix: ''`/],
-  ['color-mode follows the system', 'framework', /`preference: 'system'`/],
-  ['fonts.families with the weights in use', 'framework', /`fonts\.families`/],
-  ['local fonts from public/', 'framework', /serves them from `public\/`/],
-  ['build command', 'framework', /npx nuxi build/],
-  ['extract-ui: layouts', 'framework', /`app\/layouts\/<name>\.vue`/],
-  ['extract-ui: auto-import naming', 'framework', /components\/form\/Field\.vue/],
-  ['extract-ui: localized links', 'framework', /NuxtLinkLocale/],
-  ['extract-ui: SEO', 'framework', /useSeoMeta/],
-  ['extract-ui: page meta', 'framework', /definePageMeta/],
-  ['extract-ui: images', 'framework', /<NuxtImg>/],
-  ['extract-ui: icons', 'framework', /`@nuxt\/icon`/],
-  ['@reference path alias', 'framework', /@reference "~\/assets\/css\/main\.css";/],
+  ['Nuxt 4 required', 'nuxt', /Nuxt 4/],
+  ['global style in app/assets/css', 'nuxt', /app\/assets\/css/],
+  ['only main.css in nuxt.config css', 'nuxt', /`css` contains \*\*only\*\* `~\/assets\/css\/main\.css`/],
+  ['nuxt.config keys align may change', 'nuxt', /`modules`, `css`, `colorMode`, `fonts`/],
+  ['tailwind vite plugin', 'nuxt', /`vite\.plugins`/],
+  ['install color-mode and fonts', 'nuxt', /npx nuxi module add color-mode/],
+  ['color-mode writes data-theme', 'nuxt', /`dataValue: 'theme'`/],
+  ['color-mode no class suffix', 'nuxt', /`classSuffix: ''`/],
+  ['color-mode follows the system', 'nuxt', /`preference: 'system'`/],
+  ['fonts.families with the weights in use', 'nuxt', /`fonts\.families`/],
+  ['local fonts from public/', 'nuxt', /serves them from `public\/`/],
+  ['build command', 'nuxt', /npx nuxi build/],
+  ['extract-ui: layouts', 'nuxt', /`app\/layouts\/<name>\.vue`/],
+  ['extract-ui: auto-import naming', 'nuxt', /components\/form\/Field\.vue/],
+  ['extract-ui: localized links', 'nuxt', /NuxtLinkLocale/],
+  ['extract-ui: SEO', 'nuxt', /useSeoMeta/],
+  ['extract-ui: page meta', 'nuxt', /definePageMeta/],
+  ['extract-ui: images', 'nuxt', /<NuxtImg>/],
+  ['extract-ui: icons', 'nuxt', /`@nuxt\/icon`/],
+  ['@reference path alias', 'nuxt', /@reference "~\/assets\/css\/main\.css";/],
+
+  // Vue + Vite
+  ['Vue 3 required', 'vue-vite', /\*\*Vue 3\*\*/],
+  ['Vite 5.2 or later', 'vue-vite', /\*\*Vite 5\.2 or later\*\*/],
+  ['global style in src/assets/css', 'vue-vite', /`src\/assets\/css\/`/],
+  ['only main.css imported by main.ts', 'vue-vite', /`src\/main\.ts` imports \*\*only\*\* `\.\/assets\/css\/main\.css`/],
+  ['package CSS is not the global style', 'vue-vite', /CSS of packages \(Fontsource/],
+  ['tailwind vite plugin in vite.config', 'vue-vite', /tailwindcss\(\)/],
+  ['@ alias to src', 'vue-vite', /'@': fileURLToPath\(new URL\('\.\/src'/],
+  ['useColorMode writes data-theme', 'vue-vite', /attribute: 'data-theme'/],
+  ['color mode follows the system', 'vue-vite', /initialValue: 'auto'/],
+  ['inline script before the first paint', 'vue-vite', /document\.documentElement\.setAttribute\('data-theme'/],
+  ['inline script and composable share the key', 'vue-vite', /\*\*same `storageKey`\*\*/],
+  ['CSP hash for the inline script', 'vue-vite', /strict Content-Security-Policy/],
+  ['Fontsource with the weights in use', 'vue-vite', /import '@fontsource\/inter\/400\.css'/],
+  ['static Fontsource packages', 'vue-vite', /not `@fontsource-variable\/\*`/],
+  ['local fonts when Fontsource lacks the family', 'vue-vite', /A family Fontsource does not have/],
+  ['build command', 'vue-vite', /npx vite build/],
+  ['extract-ui: views and routes', 'vue-vite', /`src\/views\/<Name>View\.vue`/],
+  ['extract-ui: layout with RouterView', 'vue-vite', /<RouterView \/>/],
+  ['extract-ui: explicit imports or unplugin-vue-components', 'vue-vite', /`unplugin-vue-components`/],
+  ['extract-ui: RouterLink', 'vue-vite', /`RouterLink`/],
+  ['extract-ui: vue-i18n', 'vue-vite', /`vue-i18n`: `useI18n\(\)`/],
+  ['extract-ui: unhead meta on the client', 'vue-vite', /`@unhead\/vue`/],
+  ['extract-ui: icons', 'vue-vite', /`unplugin-icons`/],
+  ['extract-ui: plain images', 'vue-vite', /a plain `<img>`/],
+  ['@reference path alias', 'vue-vite', /@reference "@\/assets\/css\/main\.css";/],
 ];
 
 /** Every issue code of the catalog, with the layer whose file says how to correct it. */
@@ -142,7 +172,8 @@ describe('sb-design rules: each one lives in its layer', () => {
     assert.deepEqual([...listed].sort(), [...all].sort(), 'codes in the catalog and in this list differ');
   });
 
-  test('the framework file corrects every framework code', () => {
-    for (const c of CODES.framework) assert.match(layer.framework, new RegExp(`\\b${c}\\b`), c);
-  });
+  for (const a of ADAPTER_NAMES)
+    test(`the ${a} framework file corrects every framework code`, () => {
+      for (const c of CODES.framework) assert.match(lf(readFileSync(join(DESIGN, 'frameworks', `${a}.md`), 'utf8')), new RegExp(`^\\| ${c} \\|`, 'm'), c);
+    });
 });

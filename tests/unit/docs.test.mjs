@@ -32,7 +32,10 @@ describe('the catalog', () => {
 
   test('every link the old fixed list gave a skill is still there for it', () => {
     const forSkill = (s) => CATALOG.flatMap((e) => e.links.filter((l) => l.usedBy?.includes(s)).map((l) => `${e.package}:${l.topic}`));
-    assert.deepEqual(forSkill('sb-health:seo').sort(), ['@nuxtjs/sitemap:module', 'nuxt:rendering', 'nuxt:seo']);
+    assert.deepEqual(forSkill('sb-health:seo').sort(), ['@nuxtjs/sitemap:module', '@unhead/vue:seo-meta', 'nuxt:rendering', 'nuxt:seo']);
+    for (const id of ['@fontsource:install', '@vueuse/core:color-mode', 'vite:config']) assert.ok(forSkill('sb-design:align').includes(id), id);
+    for (const id of ['@unhead/vue:seo-meta', 'vue-router:guide', 'vue-i18n:composition']) assert.ok(forSkill('sb-design:extract-ui').includes(id), id);
+    assert.ok(forSkill('sb-health:build').includes('vite:library-mode'));
     for (const id of ['nuxt:components', 'nuxt:layouts', 'nuxt:pages', 'nuxt:seo', 'tailwindcss:theme', '@nuxt/icon:module', '@nuxt/image:module', '@nuxtjs/i18n:started']) assert.ok(forSkill('sb-design:extract-ui').includes(id), id);
     for (const id of ['tailwindcss:theme', '@nuxt/fonts:module', '@nuxtjs/color-mode:module', 'nuxt:config']) assert.ok(forSkill('sb-design:align').includes(id), id);
   });
@@ -46,6 +49,12 @@ describe('the catalog', () => {
     assert.ok(vite.includes('vite:library-mode') && !vite.includes('vite:build'), 'only the links that fit the profile');
     assert.throws(() => catalogIds(['nope:*'], lib), /no package nope/);
     assert.throws(() => catalogIds(['nuxt:nope'], lib), /not a link of the catalog/);
+  });
+
+  test('Fontsource is matched through the profile (one package per family, no package named @fontsource)', () => {
+    const app = { kind: 'app', framework: { name: 'vue' }, styling: { fonts: '@fontsource' } };
+    assert.ok(catalogFor(app, []).proposals.some((l) => l.id === '@fontsource:install'));
+    assert.equal(catalogFor({ ...app, kind: 'library' }, []).proposals.some((l) => l.id === '@fontsource:install'), false);
   });
 
   test('applies: every key must match, a list is any of', () => {

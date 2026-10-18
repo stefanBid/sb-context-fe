@@ -80,6 +80,7 @@ describe('plugins and skills for a project', () => {
   const nuxtApp = { kind: 'app', adapter: 'nuxt', rendering: 'ssr' };
   const vueApp = { kind: 'app', adapter: 'vue-vite', rendering: 'csr' };
   const lib = { kind: 'library', adapter: 'vue-vite', rendering: null };
+  const vueWebpack = { kind: 'app', adapter: null, rendering: 'csr' };
   const need = (plan) => Object.fromEntries(plan.map((p) => [p.plugin, p.recommended]));
 
   test('a Nuxt app on GitHub needs all four', () => {
@@ -90,12 +91,13 @@ describe('plugins and skills for a project', () => {
     const l = pluginPlan(lib);
     assert.equal(need(l)['sb-design'], false);
     assert.match(l.find((p) => p.plugin === 'sb-design').why, /library/);
-    assert.match(pluginPlan(vueApp).find((p) => p.plugin === 'sb-design').why, /no adapter for vue-vite/);
+    assert.match(pluginPlan(vueWebpack).find((p) => p.plugin === 'sb-design').why, /no adapter for this stack yet \(sb-design supports nuxt, vue-vite\)/);
+    assert.equal(need(pluginPlan(vueApp))['sb-design'], true, 'a Vue + Vite app has its adapter');
     assert.match(pluginPlan({ kind: null }).find((p) => p.plugin === 'sb-design').why, /unknown/);
     assert.equal(need(l)['sb-github'], false, 'no GitHub remote');
   });
 
-  test('skillsFor lists the skills of the needed plugins, without seo for a library or a CSR app, without onboard outside a Nuxt app', () => {
+  test('skillsFor lists the skills of the needed plugins, without seo for a library or a CSR app, without onboard outside an app with a design adapter', () => {
     const libSkills = skillsFor(pluginPlan(lib, { github: true }), lib);
     assert.ok(libSkills.includes('/sb-health:deps'));
     assert.ok(libSkills.includes('/sb-github:admin'));
@@ -106,6 +108,11 @@ describe('plugins and skills for a project', () => {
     assert.ok(nuxtSkills.includes('/sb-health:seo'));
     assert.ok(nuxtSkills.includes('/sb-core:onboard'));
     assert.ok(nuxtSkills.includes('/sb-design:align'));
+    const vueSkills = skillsFor(pluginPlan(vueApp), vueApp);
+    assert.ok(vueSkills.includes('/sb-core:onboard'));
+    assert.ok(vueSkills.includes('/sb-design:extract-ui'));
+    assert.equal(vueSkills.includes('/sb-health:seo'), false, 'a CSR app');
+    assert.equal(skillsFor(pluginPlan(vueWebpack), vueWebpack).includes('/sb-core:onboard'), false);
   });
 
   test('pluginIdError accepts only name@marketplace ids of the four plugins', () => {

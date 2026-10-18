@@ -1,6 +1,7 @@
 // Throwaway projects of each stack the detectors know, for the profile tests.
 
-import { makeProject } from './fixture.mjs';
+import { readFileSync } from 'node:fs';
+import { makeProject, withExampleStyle, EXAMPLE_VUE } from './fixture.mjs';
 
 /** A Nuxt 4 app with Tailwind 4, i18n, color-mode and fonts. */
 export const nuxtApp = (extra = {}) =>
@@ -26,6 +27,29 @@ export const vueApp = (extra = {}) =>
       ...extra,
     },
     { nuxtConfig: false },
+  );
+
+/** The dependencies of a Vue + Vite app aligned by sb-design (color mode and fonts included). */
+export const VUE_STYLED_DEPS = {
+  dependencies: { vue: '^3.5.0', '@vueuse/core': '^15.0.0', '@fontsource/inter': '^5.2.0', '@fontsource/poppins': '^5.2.0' },
+  devDependencies: { vite: '^7.0.0', '@vitejs/plugin-vue': '^6.0.0', tailwindcss: '^4.1.0', '@tailwindcss/vite': '^4.1.0' },
+};
+
+/** A Vue 3 + Vite app with the reference style aligned the vue-vite way (src/assets/css, main.ts, index.html, useTheme). */
+export const vueAppStyled = (extra = {}) =>
+  withExampleStyle(
+    makeProject(
+      {
+        'package.json': { name: 'dash', ...VUE_STYLED_DEPS },
+        ...Object.fromEntries(Object.entries(EXAMPLE_VUE).map(([to, from]) => [to, readFileSync(from, 'utf8')])),
+        'src/App.vue': "<script setup lang=\"ts\">\nimport { useTheme } from '@/composables/useTheme'\nuseTheme()\n</script>\n<template><RouterView /></template>\n",
+        'src/views/HomeView.vue': '<template><h1 class="sb-h1">Home</h1></template>\n',
+        'package-lock.json': '{}',
+        ...extra,
+      },
+      { nuxtConfig: false },
+    ),
+    'src/assets/css',
   );
 
 /** A Vue 3 library built with Vite's lib mode, wrapping Floating UI. */

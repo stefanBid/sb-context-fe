@@ -1,8 +1,8 @@
 # sb-design
 
-The global style of an app (Nuxt 4 + Tailwind 4 today). It normalizes the style into a fixed four-file structure, keeping the project's own values or taking them from a design made in Claude; it never chooses values itself. Part of the [sb-context-fe](../../README.md) marketplace; installs `sb-core` with it. Not meant for libraries.
+The global style of an app (Nuxt 4 or Vue 3 + Vite, with Tailwind 4). It normalizes the style into a fixed four-file structure, keeping the project's own values or taking them from a design made in Claude; it never chooses values itself. Part of the [sb-context-fe](../../README.md) marketplace; installs `sb-core` with it. Not meant for libraries.
 
-The rules live in three layers: [`standard/`](standard/README.md) (fixed on every stack), [`engines/tailwind4/`](engines/tailwind4/README.md) (how they become Tailwind 4 CSS) and [`frameworks/nuxt.md`](frameworks/nuxt.md) (what is specific to Nuxt). A new stack adds an engine or a framework file; the standard does not change.
+The rules live in three layers: [`standard/`](standard/README.md) (fixed on every stack), [`engines/tailwind4/`](engines/tailwind4/README.md) (how they become Tailwind 4 CSS) and the framework files [`frameworks/nuxt.md`](frameworks/nuxt.md) and [`frameworks/vue-vite.md`](frameworks/vue-vite.md) (what is specific to each stack). A new stack adds an engine, or a framework file with its script adapter (`scripts/lib/frameworks/`); the standard does not change.
 
 | Skill | What it does |
 | --- | --- |

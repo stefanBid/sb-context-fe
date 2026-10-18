@@ -8,7 +8,7 @@ What sb-design fixes in **every** project, whatever its styling engine and frame
 | **engine** | `engines/<name>/` | `styling.engine.name` of the project profile | how the standard becomes CSS in that engine (tokens, utilities, resets, the example files) |
 | **framework** | `frameworks/<adapter>.md` | `adapter` of the project profile | where the style lives, how it is registered, how color mode and fonts are loaded, how UI is written |
 
-Today there is one engine, `tailwind4` (`../engines/tailwind4/README.md`), and one framework, `nuxt` (`../frameworks/nuxt.md`). A project whose profile names another engine or adapter is **out of scope**: the skill says which one is missing and stops; it never improvises one. The profile: `node "<plugin>/core/scripts/profile.mjs" get` (format in `core/references/profile.md`).
+Today there is one engine, `tailwind4` (`../engines/tailwind4/README.md`), and two frameworks, `nuxt` (`../frameworks/nuxt.md`) and `vue-vite` (`../frameworks/vue-vite.md`). A project whose profile names another engine or adapter is **out of scope**: the skill says which one is missing and stops; it never improvises one. The profile: `node "<plugin>/core/scripts/profile.mjs" get` (format in `core/references/profile.md`).
 
 ## Structure and values
 

@@ -1,6 +1,6 @@
 ---
 name: migrate
-description: Reads Vue templates line by line, tag by tag, and proposes (then applies, after confirmation) the refactor of component classes and styles after a change to the global style of an app (today Nuxt 4 + Tailwind 4). Command only.
+description: Reads Vue templates line by line, tag by tag, and proposes (then applies, after confirmation) the refactor of component classes and styles after a change to the global style of an app (Nuxt 4 or Vue 3 + Vite, with Tailwind 4). Command only.
 disable-model-invocation: true
 argument-hint: "[files or folders to analyze]"
 ---
@@ -13,11 +13,11 @@ The reference is **the project's current global style**, not a fixed list: a cla
 
 **Language**: this file and its references are in English, but talk to the user in their language: questions, proposals and summary.
 
-Like every sb-design skill, it works on a Nuxt app only: `node "${CLAUDE_SKILL_DIR}/../../core/scripts/profile.mjs" get` must show `adapter: "nuxt"` and `kind: "app"`; otherwise say so and stop. What it reads and writes follows the engine (`${CLAUDE_SKILL_DIR}/../../engines/tailwind4/README.md`, section **Templates and components**) and the framework (`${CLAUDE_SKILL_DIR}/../../frameworks/nuxt.md`, section **migrate**).
+Like every sb-design skill, it works on an app with a framework adapter only: `node "${CLAUDE_SKILL_DIR}/../../core/scripts/profile.mjs" get` must show `adapter: "nuxt"` or `adapter: "vue-vite"`, and `kind: "app"`; otherwise say so and stop. What it reads and writes follows the engine (`${CLAUDE_SKILL_DIR}/../../engines/tailwind4/README.md`, section **Templates and components**) and the framework (`${CLAUDE_SKILL_DIR}/../../frameworks/nuxt.md`, section **migrate**).
 
 ## Requirements
 
-- The engine's and the framework's requirements (the script resolves `@tailwindcss/node`, `vue/compiler-sfc` and `postcss` from the project root, then from `@tailwindcss/vite` and `nuxt`, so it also works with pnpm). Otherwise stop and say so.
+- The engine's and the framework's requirements (the script resolves `@tailwindcss/node`, `vue/compiler-sfc` and `postcss` from the project root, then from `@tailwindcss/vite` and `nuxt` or `vite`, so it also works with pnpm). Otherwise stop and say so.
 - A global style with its tokens declared as the engine says; the entry point is the one the framework file's **migrate** section names (or `--css`).
 - The prefix of the typographic utilities is detected automatically (`{p}-h1`, `{p}-body`). If the script says "not detected", ask the user before proposing typographic classes.
 
@@ -95,5 +95,5 @@ Short: files modified, number of replacements by type, lines left as they were b
 | File | When |
 | --- | --- |
 | `${CLAUDE_SKILL_DIR}/../../engines/tailwind4/mapping.md` | before writing the proposal: how to choose the right role |
-| `${CLAUDE_SKILL_DIR}/../../frameworks/nuxt.md` | which file is the global style, which templates to read |
+| `${CLAUDE_SKILL_DIR}/../../frameworks/nuxt.md` / `${CLAUDE_SKILL_DIR}/../../frameworks/vue-vite.md` | the profile's `adapter`: which file is the global style, which templates to read |
 | `scripts/template.mjs` | summary (`--summary`) and line-by-line analysis |

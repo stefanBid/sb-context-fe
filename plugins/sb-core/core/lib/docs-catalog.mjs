@@ -15,6 +15,7 @@ const EXTRACT = 'sb-design:extract-ui';
 const ALIGN = 'sb-design:align';
 const SEO = 'sb-health:seo';
 const DEPS = 'sb-health:deps';
+const BUILD = 'sb-health:build';
 
 const NUXT = 'https://nuxt.com/docs/4.x';
 
@@ -68,7 +69,7 @@ export const CATALOG = [
     older: 'https://v{major}.vite.dev',
     links: [
       { topic: 'config', title: 'Configuring Vite', url: 'https://vite.dev/config/', usedBy: [ALIGN] },
-      { topic: 'library-mode', title: 'Library mode', url: 'https://vite.dev/guide/build.html#library-mode', when: { kind: 'library' } },
+      { topic: 'library-mode', title: 'Library mode', url: 'https://vite.dev/guide/build.html#library-mode', usedBy: [BUILD], when: { kind: 'library' } },
       { topic: 'build', title: 'Building for production', url: 'https://vite.dev/guide/build.html', when: { kind: 'app' } },
       { topic: 'features', title: 'Features (CSS, assets, TypeScript)', url: 'https://vite.dev/guide/features.html' },
       { topic: 'env', title: 'Env variables and modes', url: 'https://vite.dev/guide/env-and-mode.html' },
@@ -178,6 +179,24 @@ export const CATALOG = [
       { topic: 'auto-update', title: 'autoUpdate', url: 'https://floating-ui.com/docs/autoUpdate' },
     ],
   },
+  {
+    package: '@fontsource',
+    name: 'Fontsource',
+    major: 5,
+    older: null,
+    links: [{ topic: 'install', title: 'Installing fonts', url: 'https://fontsource.org/docs/getting-started/install', usedBy: [ALIGN], when: { 'framework.name': 'vue', kind: 'app' } }],
+  },
+  {
+    package: '@unhead/vue',
+    name: 'Unhead',
+    major: 3,
+    older: null,
+    links: [
+      { topic: 'install', title: 'Installing Unhead with Vue', url: 'https://unhead.unjs.io/docs/vue/head/guides/get-started/installation', usedBy: [EXTRACT] },
+      { topic: 'seo-meta', title: 'useSeoMeta()', url: 'https://unhead.unjs.io/docs/vue/head/api/composables/use-seo-meta', usedBy: [EXTRACT, SEO] },
+    ],
+  },
+  { package: '@iconify/vue', name: 'Iconify for Vue', major: 5, older: null, links: [{ topic: 'component', title: 'Iconify for Vue', url: 'https://iconify.design/docs/icon-components/vue/', usedBy: [EXTRACT] }] },
   { package: 'vite-plugin-dts', name: 'vite-plugin-dts', major: 5, older: null, links: [{ topic: 'readme', title: 'Options', url: 'https://github.com/qmhc/unplugin-dts#readme', when: { kind: 'library' } }] },
   { package: 'unplugin-vue-components', name: 'unplugin-vue-components', major: 32, older: null, links: [{ topic: 'readme', title: 'Options', url: 'https://github.com/unplugin/unplugin-vue-components#readme', usedBy: [EXTRACT] }] },
   { package: 'unplugin-icons', name: 'unplugin-icons', major: 24, older: null, links: [{ topic: 'readme', title: 'Usage', url: 'https://github.com/unplugin/unplugin-icons#readme', usedBy: [EXTRACT] }] },

@@ -1,6 +1,6 @@
 # Color roles, light and dark themes, shapes
 
-Part of the **standard**: fixed for every engine and framework. How the roles become CSS is the engine's file (`../engines/tailwind4/README.md`); how the theme is switched is the framework's (`../frameworks/nuxt.md`).
+Part of the **standard**: fixed for every engine and framework. How the roles become CSS is the engine's file (`../engines/tailwind4/README.md`); how the theme is switched is the framework's (`../frameworks/<adapter>.md`: `nuxt.md`, `vue-vite.md`).
 
 The skill applies the **structure**, not the values. Every project keeps its own palette, radii and shadows. What is fixed: the role names, where literal colors live, how light and dark work, the closed namespaces. What follows `design-source.md` (or, without it, the project's current values): the colors themselves, radii, shadow values, how roles are used on a page. Taste is Impeccable's job.
 

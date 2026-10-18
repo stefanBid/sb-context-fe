@@ -15,6 +15,10 @@ export const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..')
 export const EXAMPLE_CSS = join(REPO, 'plugins/sb-design/engines/tailwind4/example');
 /** The framework settings the example style needs (sb-design's Nuxt adapter). */
 export const EXAMPLE_NUXT_CONFIG = join(REPO, 'plugins/sb-design/frameworks/nuxt.config.ts');
+/** The framework files the example style needs in a Vue + Vite app (sb-design's vue-vite adapter). */
+export const EXAMPLE_VUE = Object.fromEntries(
+  [['vite.config.ts', 'vite.config.ts'], ['src/main.ts', 'main.ts'], ['index.html', 'index.html'], ['src/composables/useTheme.ts', 'use-theme.ts']].map(([to, from]) => [to, join(REPO, `plugins/sb-design/frameworks/vue-vite.${from}`)]),
+);
 
 export const SCRIPTS = {
   dependencyNotes: join(REPO, 'plugins/sb-health/scripts/dependency-notes.mjs'),
@@ -75,9 +79,9 @@ export function makeProject(files = {}, { git = true, modules = true, nuxtConfig
   };
 }
 
-/** The reference aligned style (prefix "sb") copied into <root>/app/assets/css. */
-export function withExampleStyle(project) {
-  cpSync(EXAMPLE_CSS, project.path('app/assets/css'), { recursive: true });
+/** The reference aligned style (prefix "sb") copied into <root>/<dir> (app/assets/css in Nuxt 4). */
+export function withExampleStyle(project, dir = 'app/assets/css') {
+  cpSync(EXAMPLE_CSS, project.path(dir), { recursive: true });
   return project;
 }
 

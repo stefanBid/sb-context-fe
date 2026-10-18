@@ -1,16 +1,16 @@
 ---
 name: onboard
-description: Modus operandi for joining a Nuxt 4 + Tailwind 4 project already in progress. Runs setup (stack, local folder, settings), aligns the global style, migrates the templates, builds, and recommends next steps. Command only. For a project already aligned, setup alone is enough.
+description: Modus operandi for joining a Tailwind 4 app already in progress (Nuxt 4, or Vue 3 + Vite). Runs setup (stack, local folder, settings), aligns the global style, migrates the templates, builds, and recommends next steps. Command only. For a project already aligned, setup alone is enough.
 disable-model-invocation: true
 ---
 
 # Onboard a project in progress
 
-The plugins' way of joining a Nuxt 4 + Tailwind 4 project that is already underway. This skill does no work itself: it runs the steps below in order and **stops at every confirmation** the called skills require.
+The plugins' way of joining a Tailwind 4 app (Nuxt 4, or Vue 3 + Vite) that is already underway. This skill does no work itself: it runs the steps below in order and **stops at every confirmation** the called skills require.
 
 The steps call skills of other plugins of the marketplace (sb-design, sb-health, sb-github). A step whose skill is not among the available skills is **skipped**, saying which plugin would run it (`/plugin install <plugin>@sb-context-fe`); onboarding goes on with the next step.
 
-Onboarding is for a **Nuxt app**: its steps align and migrate the global style, which `sb-design` does only there. For any other project (a library, a Vue + Vite app), `/sb-core:setup` is the way in: say so and run it instead.
+Onboarding is for an **app on a stack sb-design has an adapter for** (Nuxt, Vue + Vite): its steps align and migrate the global style, which `sb-design` does only there. For any other project (a library, another stack), `/sb-core:setup` is the way in: say so and run it instead.
 
 If the project is already aligned and the user only wants the plugins to know it, `/sb-core:setup` alone is enough: say so before starting.
 
@@ -20,7 +20,7 @@ The plugins align the style structure and then maintain the project. It does not
 
 ## 1. Set up: stack, local folder, project settings
 
-Run `/sb-core:setup`. It checks the stack (**stop** on Nuxt < 4), reads `CLAUDE.md` (follow its rules for the rest of the run), creates `.sb-context/`, asks **all** the missing project settings in one go (so the skills called next do not ask piecemeal) and reports what the plugins know. Tailwind < 4 stops step 2 (`/sb-design:align` refuses it). Format of the settings: `${CLAUDE_SKILL_DIR}/../../core/references/project-settings.md`.
+Run `/sb-core:setup`. It checks the stack (**stop** on Nuxt < 4 or Vue < 3), reads `CLAUDE.md` (follow its rules for the rest of the run), creates `.sb-context/`, asks **all** the missing project settings in one go (so the skills called next do not ask piecemeal) and reports what the plugins know. Tailwind < 4 stops step 2 (`/sb-design:align` refuses it). Format of the settings: `${CLAUDE_SKILL_DIR}/../../core/references/project-settings.md`.
 
 Keep its report; its list of next steps is replaced by the steps below. Missing color-mode or fonts is not a stop: `/sb-design:align` installs them.
 

@@ -18,7 +18,7 @@ The "Source" column says where the issue is found: `inv` = `inventory.mjs`, `con
 
 | Code | Issue | Severity | Source | Correction | Layer |
 | --- | --- | --- | --- | --- | --- |
-| P1 | The framework below the supported version (Nuxt < 4) | Blocking | inv | The skill stops: out of scope | framework |
+| P1 | The framework below the supported version (Nuxt < 4, Vue < 3, Vite < 5.2) | Blocking | inv | The skill stops: out of scope | framework |
 | P2 | The engine below the supported version: Tailwind 3 (`@nuxtjs/tailwindcss`, `@tailwind`, `@config`, `tailwind.config.*`) | Blocking | inv, read | Out of scope until the project uses Tailwind 4 | engine |
 | P3 | The framework's color-mode or font mechanism missing | Applied | inv | Installed and registered | framework |
 | P4 | Color mode not writing `data-theme` on `<html>` | Applied | inv | Configured to write `data-theme` | framework |

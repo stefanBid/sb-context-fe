@@ -1,6 +1,6 @@
 # Fonts: roles and procedure
 
-Part of the **standard**: fixed for every engine and framework. How the families are declared is the engine's file (`../engines/tailwind4/README.md`); how they are loaded is the framework's (`../frameworks/nuxt.md`).
+Part of the **standard**: fixed for every engine and framework. How the families are declared is the engine's file (`../engines/tailwind4/README.md`); how they are loaded is the framework's (`../frameworks/<adapter>.md`: `nuxt.md`, `vue-vite.md`).
 
 The skill does **not** judge font pairing and does not propose alternatives: choosing and pairing faces is Impeccable's `typeset`. It only normalizes how the families are declared and loaded.
 

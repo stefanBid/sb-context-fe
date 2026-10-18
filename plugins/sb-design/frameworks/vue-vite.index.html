@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>App</title>
+    <!-- Reference example: sets data-theme before the first paint, so a dark page never flashes light.
+         Same key and values as useTheme (src/composables/useTheme.ts). With a strict CSP, allow it by hash. -->
+    <script>
+      ;(() => {
+        let mode = 'auto'
+        try {
+          mode = localStorage.getItem('color-mode') || 'auto'
+        } catch {}
+        const dark = mode === 'dark' || (mode === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches)
+        document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light')
+      })()
+    </script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
