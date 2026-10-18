@@ -42,12 +42,15 @@ describe('flags', () => {
   test('every flag a doc line gives a script exists in that script', () => {
     const problems = [];
     for (const doc of DOCS) {
-      read(doc).split('\n').forEach((line, i) => {
-        const scripts = [...line.matchAll(/([a-z][a-z0-9-]*\.mjs)\b/g)].map((m) => m[1]).filter((s) => FLAGS[s]);
-        if (!scripts.length) return;
-        for (const flag of flagTokens(line)) {
-          if (/^--(?:[a-z]{2,4}-|text-|color-|font-|radius-|shadow-)/.test(flag) && !scripts.some((s) => FLAGS[s].has(flag))) continue; // a CSS variable, not a flag
-          if (!scripts.some((s) => FLAGS[s].has(flag))) problems.push(`${doc}:${i + 1}: ${flag} is not read by ${scripts.join(' / ')}`);
+      read(doc).split('\n').forEach((whole, i) => {
+        // a shell pipe (or a table cell) splits the line: the flags of `npm pack … | node x.mjs` before the pipe are npm's
+        for (const line of whole.split(/\s\|\s/)) {
+          const scripts = [...line.matchAll(/([a-z][a-z0-9-]*\.mjs)\b/g)].map((m) => m[1]).filter((s) => FLAGS[s]);
+          if (!scripts.length) continue;
+          for (const flag of flagTokens(line)) {
+            if (/^--(?:[a-z]{2,4}-|text-|color-|font-|radius-|shadow-)/.test(flag) && !scripts.some((s) => FLAGS[s].has(flag))) continue; // a CSS variable, not a flag
+            if (!scripts.some((s) => FLAGS[s].has(flag))) problems.push(`${doc}:${i + 1}: ${flag} is not read by ${scripts.join(' / ')}`);
+          }
         }
       });
     }

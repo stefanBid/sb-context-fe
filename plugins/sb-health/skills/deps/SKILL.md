@@ -16,7 +16,8 @@ Follow the install policy in the project's `CLAUDE.md` (e.g. `npm ci` only on `m
 - **Forward only.** Never downgrade a package or lower a version constraint, for any reason: not to install, not to remove a peer warning, not to make a build pass. If an update does not fit, postpone it and note it (step 7).
 - **No forcing.** Never `--force`, `--legacy-peer-deps`, `npm audit fix --force`, and never an `overrides`/`resolutions` entry that pins an old version of a package to make a new one fit. A conflict is reported, not hidden.
 - **Majors are migrations, not bumps.** Never update across a major without reading what changed (step 5), checking what the project uses and getting the user's approval of the plan.
-- **One major at a time**, core first (`nuxt`, `vue`, `vite`, `tailwindcss`, then the rest), verified before the next one, so a failure has one cause.
+- **One major at a time**, core first (`nuxt` or `vue`, `vite`, `tailwindcss`, then the rest), verified before the next one, so a failure has one cause.
+- **A library's peers are its public contract** (see *Libraries* below): their range changes what users of the library must install, so it is decided with the user, never bumped along with the rest.
 - **Notes are the memory.** Anything postponed, blocked or half-decided goes into the dependency notes. Nothing is left only in the chat.
 - **Say what was not verified**: a changelog that could not be found, a repo that could not be read, an issue not checked. Do not guess.
 
@@ -52,7 +53,7 @@ Run `dependency-notes.mjs list`. If there are open notes, show them (package, ta
 
 ### 1. Read the project
 
-`package.json`: `dependencies`, `devDependencies`, `overrides`/`resolutions`, `engines.node`, scripts; the lockfile; `nuxt.config.*`.
+`node "${CLAUDE_SKILL_DIR}/../../core/scripts/profile.mjs" get`: the stack (`adapter`), whether it is an app or a library (`kind`), the framework's config file (`entries.config`: `nuxt.config.*` or `vite.config.*`), the package manager. Then `package.json`: `dependencies`, `devDependencies`, `peerDependencies` (a library), `overrides`/`resolutions`, `engines.node`, scripts; the lockfile; the framework's config file.
 
 ### 2. List what is available, then ask only if there is a choice
 
@@ -115,7 +116,7 @@ Extract, for each: **breaking changes** (removed or renamed APIs, options and ex
 
 #### 5b. Find what the project uses
 
-For every breaking change and requirement, search the project (imports and `require`s, config keys in `nuxt.config.*`, the options passed to the module, template usage, composables, `package.json` scripts, CI files). Do not read only the headline: open the files that matter. Build a table:
+For every breaking change and requirement, search the project (imports and `require`s, config keys in the framework's config file, the options passed to the module or plugin, template usage, composables, `package.json` scripts, CI files). Do not read only the headline: open the files that matter. Build a table:
 
 | Change in the release | Used here? | Where | What has to change |
 | --- | --- | --- | --- |
@@ -161,6 +162,17 @@ After approval: edit `package.json` and the project files of the plan, install, 
 
 - Fixable inside the approved plan → fix and verify again.
 - Not fixable inside the plan, or the cause is unclear → **stop**, report the exact error and the files changed. Do not downgrade. Ask the user before discarding the attempt's changes with git (the package then stays at its current version, as before the attempt), and write a note with what was learned.
+
+### Libraries (`kind: "library"`)
+
+A library does not ship its peers: its users install them, so `peerDependencies` is a promise about which versions it works with.
+
+- **A peer with a new major** (e.g. `@floating-ui/vue` 2): the `devDependency` is updated to build and test against it, following steps 5a–5e. Then the **peer range** is a decision for the user, with the trade-off spelled out:
+  - **widen** it (`^1.1.0 || ^2.0.0`): users on either major can install the library; possible only if the library's code works with both (tested on both, or the breaking changes do not touch what it uses). A minor release of the library;
+  - **move** it (`^2.0.0`): users must upgrade the peer to get the new version of the library. A **major** release of the library.
+- **Never move a peer into `dependencies`** to silence a warning: the app would get two copies (two Vue runtimes, two Floating UI instances). And never narrow a peer range without the user's decision: it breaks installs for their users.
+- `vue` itself follows the same rule: it stays a peer (and a `devDependency`), never a dependency.
+- After the update, run `/sb-health:build`: for a library it also runs the package check (`lib-check.mjs`), which catches a dev version outside the peer range (L7), an open range (L8) and a peer bundled into the output (L9).
 
 ### 6. Vulnerabilities
 

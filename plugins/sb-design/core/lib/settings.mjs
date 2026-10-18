@@ -41,6 +41,30 @@ export function parseI18nConfig(cfg) {
   };
 }
 
+/**
+ * The vue-i18n setup of a Vue app, from the code that calls createI18n: default locale (`locale`), the locales of
+ * `messages` (keys of the object, or the names of its shorthand properties). Same shape as parseI18nConfig.
+ */
+export function parseVueI18n(code) {
+  const at = code.search(/createI18n\s*\(/);
+  if (at === -1) return { defaultLocale: null, locales: [], langDir: null };
+  const call = code.slice(at);
+  // the top level of `messages: { … }`, nested objects skipped by counting braces
+  const start = call.search(/\bmessages\s*:\s*\{/);
+  let top = '';
+  if (start !== -1) {
+    let depth = 0;
+    for (const ch of call.slice(call.indexOf('{', start))) {
+      if (ch === '{') depth++;
+      else if (ch === '}') depth--;
+      if (depth === 0) break;
+      if (depth === 1 && ch !== '{') top += ch;
+    }
+  }
+  const locales = [...top.matchAll(/(?:^|,)\s*['"]?([a-z]{2}(?:-[A-Za-z]{2})?)['"]?\s*(?=[:,]|$)/g)].map((m) => m[1]);
+  return { defaultLocale: call.match(/\blocale\s*:\s*['"]([\w-]+)['"]/)?.[1] ?? null, locales, langDir: null };
+}
+
 /** Naming of components (paths relative to the components folder, / or \\ separators): name prefixes and subfolders. */
 export function componentNaming(paths) {
   paths = paths.map((c) => c.replaceAll('\\', '/'));
@@ -54,8 +78,9 @@ export function componentNaming(paths) {
   return { prefixes, subfolders };
 }
 
-/** The production URL, if nuxt.config declares one. */
-export const siteUrlOf = (cfg) => cfg.match(/(?:siteUrl|baseUrl|site\.url|url)\s*:\s*['"](https?:\/\/[^'"]+)['"]/)?.[1] ?? null;
+/** The production URL, if the framework's config declares one (or an env file: SITE_URL=, VITE_SITE_URL=, NUXT_PUBLIC_SITE_URL=). */
+export const siteUrlOf = (cfg) =>
+  cfg.match(/(?:siteUrl|baseUrl|site\.url|url)\s*:\s*['"](https?:\/\/[^'"]+)['"]/)?.[1] ?? cfg.match(/^\s*(?:[A-Z_]*_)?SITE_URL\s*=\s*['"]?(https?:\/\/[^'"\s]+)/m)?.[1] ?? null;
 
 /** The style prefix of an aligned theme.css (`--sb-bg:`), or null. */
 export const themePrefixOf = (css) => css.match(/--([a-z]{2,4})-bg\s*:/)?.[1] ?? null;

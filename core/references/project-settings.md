@@ -22,17 +22,17 @@ Questions are about the **project**, not about taste: the design decides how thi
 
 | Key | Meaning | Detected from |
 | --- | --- | --- |
-| `i18n.enabled` | all user-visible text goes through i18n (default stance of the plugin: always) | `@nuxtjs/i18n` in modules/deps |
-| `i18n.defaultLocale` | language of the design's text and of the default locale file | `defaultLocale` in `nuxt.config` |
-| `i18n.locales` | supported locales (`["it","en"]`) | `locales` in `nuxt.config`, locale files |
+| `i18n.enabled` | all user-visible text goes through i18n (default stance of the plugin: always) | `@nuxtjs/i18n` (Nuxt) or `vue-i18n` (Vue) in modules/deps |
+| `i18n.defaultLocale` | language of the design's text and of the default locale file | `defaultLocale` in `nuxt.config`, or `locale` of `createI18n` |
+| `i18n.locales` | supported locales (`["it","en"]`) | `locales` in `nuxt.config`, the keys of `messages` in `createI18n`, locale files |
 | `i18n.otherLocales` | for locales other than the default: `"translate"` (the skill writes a translation, marked to review) or `"fallback"` (empty, falls back to the default) | not detectable: ask |
-| `i18n.messagesDir` | where the locale files live | `i18n/locales`, `locales`, `langDir` |
+| `i18n.messagesDir` | where the locale files live | `i18n/locales`, `locales`, `<src>/locales`, `<src>/i18n/locales`, `langDir` |
 | `i18n.keyStyle` | how message keys are organized, e.g. `"area.name.element"` (`pages.home.hero.title`, `components.button.loading`) | existing locale files |
 | `i18n.untranslated` | words that stay as they are (brand names, proper nouns), also passed to `check-i18n.mjs --allow` | not detectable: ask when the design has them |
-| `icons.module` | `"@nuxt/icon"` or `null` (inline SVG) | modules |
+| `icons.module` | `"@nuxt/icon"`, `"unplugin-icons"`, `"@iconify/vue"` or `null` (inline SVG) | modules, dependencies |
 | `images.module` | `"@nuxt/image"` or `null` | modules |
 | `style.prefix` | prefix of the global style tokens and utilities (`--{p}-bg`, `{p}-h1`): asked once by `/sb-design:align`, then reused | `--<p>-bg` in `theme.css` |
-| `seo.siteUrl` | production URL for robots, sitemap, canonical | `siteUrl`/`baseUrl` in `nuxt.config` |
+| `seo.siteUrl` | production URL for robots, sitemap, canonical | `siteUrl`/`baseUrl` in the framework's config, or `SITE_URL` in `.env.production` / `.env` (`VITE_SITE_URL`, `NUXT_PUBLIC_SITE_URL`) |
 | `stack.packageManager` | only when there is no lockfile | lockfile |
 | `naming.componentPrefix` | prefix of shared/base components: `"Base"`, `"App"`, `"Ui"`, `"none"` | most common prefix in `components/` |
 
@@ -42,7 +42,7 @@ Keys are added as skills need them: a missing key means "unknown", not "no".
 
 The plugin **never leaves user-visible text inline**. Text belongs in locale files, read through `$t` / `useI18n`; templates, `alt`, `aria-label`, `placeholder`, `title` and SEO meta included. What the project has decides how:
 
-- `@nuxtjs/i18n` installed → use it, with the saved locales and key style.
-- Not installed → ask to set it up (default locale, other locales, messages folder). Installing a module and creating `i18n/locales/*.json` are writes: show the exact command and files and wait for the go-ahead. If the user declines, save `i18n.enabled: false`; text then still stays **out of the templates**, in one typed content module (`app/content/<name>.ts`) read by the component, so it can be moved into i18n later without touching markup.
+- `@nuxtjs/i18n` (Nuxt) or `vue-i18n` (Vue) installed → use it, with the saved locales and key style.
+- Not installed → ask to set it up (default locale, other locales, messages folder). Installing the package and creating the locale files are writes: show the exact command and files and wait for the go-ahead. If the user declines, save `i18n.enabled: false`; text then still stays **out of the templates**, in one typed content module (`<src>/content/<name>.ts`: `app/content/` in Nuxt 4, `src/content/` in Vue) read by the component, so it can be moved into i18n later without touching markup.
 - Example data in a design (names, dates in a preview) is not copy: it becomes props, slots or sample data, not message keys.
 - Checked by `scripts/check-i18n.mjs`.

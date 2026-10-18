@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { dig, parseValue, setPath, parseI18nConfig, componentNaming, siteUrlOf, themePrefixOf } from '../../core/lib/settings.mjs';
+import { dig, parseValue, setPath, parseI18nConfig, parseVueI18n, componentNaming, siteUrlOf, themePrefixOf } from '../../core/lib/settings.mjs';
 
 describe('dotted paths', () => {
   test('dig', () => {
@@ -68,10 +68,23 @@ test('componentNaming counts prefixes only before a capital letter', () => {
   assert.deepEqual(subfolders, ['ui']);
 });
 
+describe('parseVueI18n', () => {
+  test('locale and the locales of messages: quoted keys, shorthand, imports', () => {
+    const code = "import it from './locales/it.json'\nimport en from './locales/en.json'\nexport const i18n = createI18n({\n  legacy: false,\n  locale: 'it',\n  fallbackLocale: 'en',\n  messages: { it, en, 'pt-BR': pt },\n})\n";
+    assert.deepEqual(parseVueI18n(code), { defaultLocale: 'it', locales: ['it', 'en', 'pt-BR'], langDir: null });
+  });
+
+  test('no createI18n call: nothing known', () => {
+    assert.deepEqual(parseVueI18n('export const x = 1'), { defaultLocale: null, locales: [], langDir: null });
+  });
+});
+
 test('siteUrlOf and themePrefixOf', () => {
   assert.equal(siteUrlOf("site: { url: 'https://a.dev' }"), 'https://a.dev');
   assert.equal(siteUrlOf('runtimeConfig: { public: { siteUrl: "http://b.dev/x" } }'), 'http://b.dev/x');
   assert.equal(siteUrlOf("url: '/relative'"), null);
+  assert.equal(siteUrlOf('VITE_SITE_URL=https://c.dev\nOTHER=1'), 'https://c.dev');
+  assert.equal(siteUrlOf('NUXT_PUBLIC_SITE_URL="https://d.dev"'), 'https://d.dev');
   assert.equal(themePrefixOf(':root {\n  --ps-bg: #fff;'), 'ps');
   assert.equal(themePrefixOf(':root { --color-bg: #fff; }'), null);
 });

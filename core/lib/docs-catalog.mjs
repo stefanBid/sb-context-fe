@@ -197,7 +197,7 @@ export const CATALOG = [
     ],
   },
   { package: '@iconify/vue', name: 'Iconify for Vue', major: 5, older: null, links: [{ topic: 'component', title: 'Iconify for Vue', url: 'https://iconify.design/docs/icon-components/vue/', usedBy: [EXTRACT] }] },
-  { package: 'vite-plugin-dts', name: 'vite-plugin-dts', major: 5, older: null, links: [{ topic: 'readme', title: 'Options', url: 'https://github.com/qmhc/unplugin-dts#readme', when: { kind: 'library' } }] },
+  { package: 'vite-plugin-dts', name: 'vite-plugin-dts', major: 5, older: null, links: [{ topic: 'readme', title: 'Options', url: 'https://github.com/qmhc/unplugin-dts#readme', usedBy: [BUILD], when: { kind: 'library' } }] },
   { package: 'unplugin-vue-components', name: 'unplugin-vue-components', major: 32, older: null, links: [{ topic: 'readme', title: 'Options', url: 'https://github.com/unplugin/unplugin-vue-components#readme', usedBy: [EXTRACT] }] },
   { package: 'unplugin-icons', name: 'unplugin-icons', major: 24, older: null, links: [{ topic: 'readme', title: 'Usage', url: 'https://github.com/unplugin/unplugin-icons#readme', usedBy: [EXTRACT] }] },
 ];
