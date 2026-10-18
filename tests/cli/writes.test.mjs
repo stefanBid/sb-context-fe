@@ -6,6 +6,7 @@ import { join, relative } from 'node:path';
 import { createHash } from 'node:crypto';
 import { makeProject, withExampleStyle, run, SCRIPTS, EXAMPLE_CSS } from '../helpers/fixture.mjs';
 import { extract, tokens } from '../helpers/design.mjs';
+import { vueLibraryBuilt, vueAppStyled } from '../helpers/stacks.mjs';
 
 // Every file of the project (node_modules link excluded) with a hash of its content.
 function tree(root) {
@@ -67,6 +68,19 @@ describe('what the scripts write', () => {
       [SCRIPTS.docs, ['render']],
     ];
     for (const [script, args] of commands) assert.deepEqual(changed(p, () => p.run(script, args)), [], `${script.split('/').pop()} ${args.join(' ')}`);
+  });
+
+  test('read-only commands change nothing in a Vue library and a Vue + Vite app either', () => {
+    const lib = vueLibraryBuilt();
+    const app = vueAppStyled();
+    try {
+      for (const args of [[], ['--json']]) assert.deepEqual(changed(lib, () => lib.run(SCRIPTS.libCheck, args)), [], `lib-check ${args.join(' ')}`);
+      for (const [script, args] of [[SCRIPTS.inventory, []], [SCRIPTS.template, ['--summary']], [SCRIPTS.renamePrefix, ['--to', 'ps']]])
+        assert.deepEqual(changed(app, () => app.run(script, args)), [], `${script.split('/').pop()} on a Vue app`);
+    } finally {
+      lib.cleanup();
+      app.cleanup();
+    }
   });
 
   test('--out writes only the file it names', () => {

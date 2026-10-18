@@ -1,6 +1,6 @@
 # Engine: Tailwind 4
 
-How the standard (`../../standard/`) becomes CSS with **Tailwind 4**. Used when the project profile says `styling.engine.name: "tailwind4"`. Where the files live and how Tailwind is plugged into the build is the framework's file (`../../frameworks/nuxt.md`).
+How the standard (`../../standard/`) becomes CSS with **Tailwind 4**. Used when the project profile says `styling.engine.name: "tailwind4"`. Where the files live and how Tailwind is plugged into the build is the framework's file (`../../frameworks/<adapter>.md`: `nuxt.md`, `vue-vite.md`).
 
 `example/` is the `sb` template written with this engine: **the structure to replicate file by file** (same sections, same order, same resets). Its values are never copied into another project.
 

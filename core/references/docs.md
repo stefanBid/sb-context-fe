@@ -53,7 +53,7 @@ The links are the source of truth for how each framework and library is meant to
 
 ## The catalog
 
-`core/lib/docs-catalog.mjs` lists the official docs the plugins know, one entry per package (Nuxt, Vue, Vite, Tailwind CSS, Vue Router, the i18n libraries, the Nuxt modules, VueUse, Pinia, Vitest, Floating UI…): the links, the **major** they document (the latest when the entry was written), the skills that use each, and when a link applies (`when: { kind: 'library' }`). `detect` matches it with the project's profile and dependencies.
+`core/lib/docs-catalog.mjs` lists the official docs the plugins know, one entry per package (Nuxt, Vue, Vite, Tailwind CSS, Vue Router, the i18n libraries, the Nuxt modules, VueUse, Pinia, Vitest, Fontsource, Unhead, Iconify, Floating UI…): the links, the **major** they document (the latest when the entry was written), the skills that use each, and when a link applies (`when: { kind: 'library' }`). `detect` matches it with the project's profile and dependencies.
 
 - **status** of a package: `current` (the project uses the major the docs document), `behind` (the project is on an older major: ask which version to follow; `older` is where the docs of the project's major live, when known), `ahead` (the project is newer than the catalog: the catalog is out of date, open the docs of the project's major instead), `unknown` (not installed and no range to read).
 - The catalog is the seed and the fallback, never the project's choice: once `docs.json` exists, only its links count.

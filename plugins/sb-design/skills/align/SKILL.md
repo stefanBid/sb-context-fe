@@ -1,6 +1,6 @@
 ---
 name: align
-description: Normalizes any global style setup of an app (today Nuxt 4 + Tailwind 4) into the fixed four-file structure (main.css, theme.css, typography.css, animation.css in the project's style folder), keeping the project's own values; renames the token prefix; syncs the values with a Claude design snapshot. Use it when asked to align, normalize, unify or reorganize an app's global theme, palette, type scale, dark mode or global CSS.
+description: Normalizes any global style setup of an app (Nuxt 4 or Vue 3 + Vite, with Tailwind 4) into the fixed four-file structure (main.css, theme.css, typography.css, animation.css in the project's style folder), keeping the project's own values; renames the token prefix; syncs the values with a Claude design snapshot. Use it when asked to align, normalize, unify or reorganize an app's global theme, palette, type scale, dark mode or global CSS.
 ---
 
 # Align the global style
@@ -19,13 +19,13 @@ What this skill enforces is written in three places. Read them before the report
 | --- | --- | --- |
 | **standard** | `${CLAUDE_SKILL_DIR}/../../standard/README.md` (and the files it lists) | structure vs values and their precedence, the scope, the four files, the prefix, the fixed rules, how values are treated, specific cases |
 | **engine** | `${CLAUDE_SKILL_DIR}/../../engines/tailwind4/README.md`, `example/` | how all of it is written with Tailwind 4: resets, `@theme` / `@theme inline`, utilities, the dark variant, the example files to replicate |
-| **framework** | `${CLAUDE_SKILL_DIR}/../../frameworks/nuxt.md`, sections **Requirements**, **Where things are**, **align** | where the style lives, what this skill may change in the framework's config, color mode, fonts, modules to install, build |
+| **framework** | `${CLAUDE_SKILL_DIR}/../../frameworks/nuxt.md` or `${CLAUDE_SKILL_DIR}/../../frameworks/vue-vite.md` (the profile's `adapter`), sections **Requirements**, **Where things are**, **align** | where the style lives, what this skill may change in the framework's config, color mode, fonts, modules to install, build |
 
-The engine is the profile's `styling.engine.name` and the framework the profile's `adapter`. Today only `tailwind4` and `nuxt` exist: any other value means the project is out of scope (say which layer is missing and stop).
+The engine is the profile's `styling.engine.name` and the framework the profile's `adapter`. Today only the `tailwind4` engine and the `nuxt` and `vue-vite` frameworks exist: any other value means the project is out of scope (say which layer is missing and stop).
 
 ## Requirements (blocking)
 
-- **An app on a stack sb-design has an adapter for** (today Nuxt): `node "${CLAUDE_SKILL_DIR}/../../core/scripts/profile.mjs" get` must show `adapter: "nuxt"` and `kind: "app"`. A library, or a Vue + Vite app, is out of scope for now: say so and stop (the scripts refuse it too). Format: `${CLAUDE_SKILL_DIR}/../../core/references/profile.md`.
+- **An app on a stack sb-design has an adapter for** (Nuxt, Vue + Vite): `node "${CLAUDE_SKILL_DIR}/../../core/scripts/profile.mjs" get` must show `adapter: "nuxt"` or `adapter: "vue-vite"`, and `kind: "app"`. A library, or another stack, is out of scope: say so and stop (the scripts refuse it too). Format: `${CLAUDE_SKILL_DIR}/../../core/references/profile.md`.
 - The engine's and the framework's **Requirements**: an unsupported version stops the skill (P1, P2, P5). No adaptation.
 - What the framework file says is required (color mode, fonts) is installed by this skill during the write phase if missing, with the project's package manager (`packageManager` of the profile).
 
@@ -163,12 +163,12 @@ Write the report in the format of "Report format". Every item has a code from `$
 
 ### 5. Writing
 
-1. Install what the framework file requires and register the style as its **align** section says (with Nuxt: the modules, `css` with only `main.css`, `colorMode`, `fonts.families` with the weights in use, as in `frameworks/nuxt.config.ts`). Nothing else of the framework's config changes.
+1. Install what the framework file requires and register the style as its **align** section says (with Nuxt: the modules, `css` with only `main.css`, `colorMode`, `fonts.families` with the weights in use, as in `frameworks/nuxt.config.ts`; with Vue + Vite: the packages, the only style import and the Fontsource imports in `src/main.ts`, the theme composable and the inline script of `index.html`, as in the `frameworks/vue-vite.*` files). Nothing else of the framework's config changes.
 2. Write `theme.css`, `typography.css`, `animation.css`, `main.css` in the style folder (`paths.styles` of the profile) following **the structure of the engine's `example/` file by file**: same sections, same order, same resets.
    - the structure, naming, utilities, breakpoints and reduced-motion block: identical to the example, with the project's prefix (plus the `hero` role if any);
    - the values (palette, shadows, sizes, line heights, weights, tracking, radii, durations): the project's, or `design-source.md`'s, as approved in the report.
 3. Save the prefix in the project settings: `node "${CLAUDE_SKILL_DIR}/../../core/scripts/project-settings.mjs" set style.prefix '"{p}"'`. If a snapshot was used, record it: `node "${CLAUDE_SKILL_DIR}/scripts/sync-values.mjs" --record` (writes `.sb-context/design-applied.json`: artifact version, prefix, css dir).
-4. Old global files are not deleted: they are unregistered (with Nuxt: removed from `css`) and listed in the summary. Global `<style>` blocks in `.vue` files are moved only if the user approved it (P8).
+4. Old global files are not deleted: they are unregistered (with Nuxt: removed from `css`; with Vue + Vite: their `import` removed from `src/main.ts`) and listed in the summary. Global `<style>` blocks in `.vue` files are moved only if the user approved it (P8).
 
 ### 6. Verification
 
@@ -248,9 +248,9 @@ List of everything derived, with the Impeccable command that refines it.
 | `${CLAUDE_SKILL_DIR}/../../standard/issues.md` | for the code, severity and layer of each item |
 | `${CLAUDE_SKILL_DIR}/../../engines/tailwind4/README.md` | how each part is written with Tailwind 4, the engine's corrections and verification |
 | `${CLAUDE_SKILL_DIR}/../../engines/tailwind4/example/` | before writing the files: the structure to replicate (values are the `sb` template's) |
-| `${CLAUDE_SKILL_DIR}/../../frameworks/nuxt.md` | requirements, where the style lives, what may change in `nuxt.config.ts`, color mode, fonts, build; the framework's corrections |
-| `${CLAUDE_SKILL_DIR}/../../frameworks/nuxt.config.ts` | the framework settings the style needs |
-| `node "${CLAUDE_SKILL_DIR}/../../core/scripts/docs.mjs" get --for sb-design:align` | the project's links to the maintainers' guides for Tailwind theme, `@nuxt/fonts`, `@nuxtjs/color-mode`, `nuxt.config.ts` (`${CLAUDE_SKILL_DIR}/../../core/references/docs.md`); open them when module options or Tailwind v4 behavior are in doubt |
+| `${CLAUDE_SKILL_DIR}/../../frameworks/nuxt.md` / `${CLAUDE_SKILL_DIR}/../../frameworks/vue-vite.md` | the profile's `adapter`: requirements, where the style lives, what may change in the framework's files, color mode, fonts, build; the framework's corrections |
+| `${CLAUDE_SKILL_DIR}/../../frameworks/nuxt.config.ts`, or the `frameworks/vue-vite.*` files (`vite.config.ts`, `main.ts`, `index.html`, `use-theme.ts`) | the framework settings the style needs |
+| `node "${CLAUDE_SKILL_DIR}/../../core/scripts/docs.mjs" get --for sb-design:align` | the project's links to the maintainers' guides for Tailwind theme and, per stack, `@nuxt/fonts`, `@nuxtjs/color-mode`, `nuxt.config.ts` or `vite.config.ts`, VueUse `useColorMode`, Fontsource (`${CLAUDE_SKILL_DIR}/../../core/references/docs.md`); open them when module options or Tailwind v4 behavior are in doubt |
 | `scripts/inventory.mjs` | global style inventory (+ impact with `--classes`) |
 | `scripts/contrast.mjs` | contrast and OKLCH lightness, light and dark |
 | `scripts/sync-values.mjs` | values of the project vs the design snapshot: `--check`, table, `--apply`, `--record` |

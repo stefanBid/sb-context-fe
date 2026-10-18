@@ -4,7 +4,7 @@
 // that is not ours) is written here with what to verify next time. Stored in
 // `.sb-context/dependency-notes.json`, in the project (the folder can be committed).
 //
-// Usage (from anywhere inside a Nuxt project):
+// Usage (from anywhere inside a Nuxt or Vue project):
 //   node dependency-notes.mjs list [--all]            open notes (deferred, watching); --all adds the resolved ones (JSON)
 //   node dependency-notes.mjs add <package> --target <version> --summary "<why it waits>" --recheck "<what to verify next time>"
 //        [--current <version>] [--blocked-by <package>@<range>:<upstream|project>]... [--link <url>]... [--status deferred|watching]

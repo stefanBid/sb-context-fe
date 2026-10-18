@@ -7,7 +7,7 @@ description: Sets up the sb-context-fe plugins on a project (Nuxt, or Vue with V
 
 The entry point of the plugins on any project: it learns **what the project is** (the profile), tailors which plugins and skills are on for it, and settles the project settings. It **does no style, template, build or GitHub work**, and it can be run again at any time: it asks only what is still unknown, or what the project now contradicts.
 
-For a Nuxt app in progress whose style still has to be aligned, `/sb-core:onboard` runs this skill and then the alignment.
+For an app in progress (Nuxt, or Vue + Vite) whose style still has to be aligned, `/sb-core:onboard` runs this skill and then the alignment.
 
 Writes, all shown before they happen:
 

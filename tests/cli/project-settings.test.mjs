@@ -1,6 +1,7 @@
 import { test, describe, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { makeProject, SCRIPTS } from '../helpers/fixture.mjs';
+import { vueApp } from '../helpers/stacks.mjs';
 
 const today = new Date().toISOString().slice(0, 10);
 const FILE = '.sb-context/settings.json';
@@ -23,6 +24,25 @@ describe('project-settings.mjs', () => {
   let p;
   const settings = (...args) => p.run(SCRIPTS.projectSettings, args);
   afterEach(() => p?.cleanup());
+
+  test('detect on a Vue + Vite app: vue-i18n from createI18n, its locale folder, views, the Vue packages', () => {
+    p = vueApp({
+      'src/i18n.ts': "import { createI18n } from 'vue-i18n'\nexport default createI18n({ legacy: false, locale: 'it', messages: { it: {}, en: {} } })\n",
+      'src/i18n/locales/it.json': '{}',
+      '.env.production': 'VITE_SITE_URL=https://dash.example.com\n',
+    });
+    const { facts, missing } = settings('detect').json();
+    assert.equal(facts.i18n.package, 'vue-i18n');
+    assert.equal(facts.i18n.setup, 'src/i18n.ts');
+    assert.equal(facts.i18n.defaultLocale, 'it');
+    assert.deepEqual(facts.i18n.locales, ['it', 'en']);
+    assert.deepEqual(facts.i18n.localeDirs, ['src/i18n/locales', 'src/i18n']);
+    assert.equal(facts.pagesDir, 'src/views');
+    assert.equal(facts.pages, true);
+    assert.equal(facts.packages.colorMode, '@vueuse/core');
+    assert.equal(facts.seo.siteUrl, 'https://dash.example.com');
+    assert.match(missing.find((m) => m.key === 'i18n.enabled').why, /vue-i18n is installed/);
+  });
 
   test('get without a file returns the empty settings', () => {
     p = makeProject();

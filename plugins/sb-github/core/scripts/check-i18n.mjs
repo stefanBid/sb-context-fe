@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Finds user-visible text that is NOT internationalized in Vue files, and message keys that do not exist.
 //
-// Usage (from anywhere inside a Nuxt project):
+// Usage (from anywhere inside a Nuxt or Vue project; @nuxtjs/i18n and vue-i18n use the same t / $t / <i18n-t>):
 //   node check-i18n.mjs <files or folders> [--allow "Brand,Other"] [--locales <dir>] [--json]
 //
 // Inline text it reports, per file and line:
@@ -17,7 +17,7 @@
 //
 // Keys: every `t('a.b')` / `$t('a.b')` / `<i18n-t keypath="a.b">` with a literal key is looked up in the locale files
 // (JSON) of --locales, default `i18n.messagesDir` of .sb-context/settings.json, else i18n/locales,
-// locales, i18n/lang, lang. A key missing from the default locale is an error; missing from another locale is
+// locales, i18n/lang, lang, <srcDir>/locales, <srcDir>/i18n/locales. A key missing from the default locale is an error; missing from another locale is
 // reported separately. Dynamic keys (`t(`a.${x}`)`) cannot be checked and are counted.
 //
 // A .vue file that does not parse is reported and counts as a failure: it cannot be checked.
@@ -146,7 +146,8 @@ if (!messagesDir) {
     if (st.i18n?.messagesDir) messagesDir = resolve(root, st.i18n.messagesDir);
   } catch {}
 }
-if (!messagesDir) messagesDir = ['i18n/locales', 'locales', 'i18n/lang', 'lang', `${relative(root, srcDirOf(root)) || '.'}/locales`].map((d) => join(root, d)).find((d) => existsSync(d) && statSync(d).isDirectory()) ?? null;
+const srcRel = relative(root, srcDirOf(root)) || '.';
+if (!messagesDir) messagesDir = ['i18n/locales', 'locales', 'i18n/lang', 'lang', `${srcRel}/locales`, `${srcRel}/i18n/locales`].map((d) => join(root, d)).find((d) => existsSync(d) && statSync(d).isDirectory()) ?? null;
 
 const missingKeys = [];
 let keyNote = null;

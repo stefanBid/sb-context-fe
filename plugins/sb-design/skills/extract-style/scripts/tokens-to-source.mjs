@@ -13,7 +13,7 @@
 //        [--source <artifact url>] [--version <artifact version>] [--kind design-system|design] \
 //        [--design <url of the Design the user pointed to>] [--name <design name>] [--out <path>]
 //
-// Runs from anywhere inside a Nuxt project: the snapshot goes to <project root>/.sb-context/design-source.md.
+// Runs from anywhere inside a Nuxt or Vue project: the snapshot goes to <project root>/.sb-context/design-source.md.
 // --name is the artifact's title; use it when tokens.json has no `name` (the suggested prefix comes from it).
 //
 // Deterministic: no interpretation. It normalizes values, resolves color aliases, derives a

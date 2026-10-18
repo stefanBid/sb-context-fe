@@ -2,7 +2,7 @@
 // What the plugin already knows about this project, and what to run next. Used by the setup skill
 // on a project that is already in progress (or already aligned), where onboard would do too much.
 //
-// Usage (from anywhere inside a Nuxt project):
+// Usage (from anywhere inside a Nuxt or Vue project):
 //   node setup-state.mjs           the state as JSON: the project profile (saved or not, confirmed values that drifted),
 //                                  the .sb-context folder and its files, the four
 //                                  global style files, the design snapshot, the documentation links (docs.json and the

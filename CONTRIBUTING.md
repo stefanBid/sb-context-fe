@@ -12,12 +12,13 @@ plugins/<plugin>/core/            generated copy of core/ (node scripts/sync-cor
 plugins/sb-context-fe/            the bundle: only a manifest whose dependencies are the four plugins
 plugins/sb-design/standard/       the style rules fixed on every stack
 plugins/sb-design/engines/<name>/ how the rules become CSS in one engine (tailwind4)
-plugins/sb-design/frameworks/     what is specific to one framework (nuxt.md)
+plugins/sb-design/frameworks/     what is specific to one framework, for the model (nuxt.md, vue-vite.md + reference files)
+plugins/sb-design/scripts/lib/frameworks/  the same for the scripts: one adapter per framework
 scripts/sync-core.mjs             copies core/ into every plugin; --check fails on a stale copy
 tests/                            unit, cli and contract tests for all the plugins
 ```
 
-In sb-design, a rule goes in the layer it belongs to, and `tests/contract/rules.test.mjs` lists every rule with its layer: moving or dropping one makes the suite fail, so the change is a decision.
+In sb-design, a rule goes in the layer it belongs to, and `tests/contract/rules.test.mjs` lists every rule with its layer: moving or dropping one makes the suite fail, so the change is a decision. Each framework is a layer of its own: a new one adds `frameworks/<name>.md` (correcting every framework issue code), its script adapter in `scripts/lib/frameworks/` (listed in its `index.mjs`), its rules in the test, and its name in `DESIGN_ADAPTERS` of `plugins/sb-core/scripts/lib/setup.mjs` (a unit test checks the two lists match).
 
 A plugin is installed alone into Claude Code's cache, so nothing in it may point outside its own folder: a skill reaches shared code through its plugin's copy (`${CLAUDE_SKILL_DIR}/../../core/…`), and a step that needs another plugin calls that plugin's **skill** by name (`/sb-design:check`), never its files. The contract tests enforce both.
 
@@ -80,7 +81,7 @@ A skill's outcome depends on the model that runs it; its scripts must not. The s
 npm ci
 npm test               # everything
 npm run test:unit      # pure functions (tests/unit)
-npm run test:cli       # each script run on a throwaway Nuxt project (tests/cli)
+npm run test:cli       # each script run on a throwaway project: Nuxt app, Vue + Vite app, Vue library (tests/cli)
 npm run test:contract  # SKILL.md paths, cross-skill references, manifests, docs (tests/contract)
 npm run test:coverage
 npm run test:coverage:lcov  # same, and writes lcov.info (used for the README badges)

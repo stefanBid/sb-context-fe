@@ -6,7 +6,7 @@
 //   node "${CLAUDE_SKILL_DIR}/scripts/rename-prefix.mjs" --to ps            dry run
 //   node "${CLAUDE_SKILL_DIR}/scripts/rename-prefix.mjs" --to ps --apply    write the changes
 //   --from sb      current prefix (default: detected from `@utility <p>-h1` / `<p>-body`)
-//   --root <dir>   project root (default: the Nuxt project found from the current folder upward)
+//   --root <dir>   project root (default: the project found from the current folder upward)
 //
 // What it renames, and only this:
 //   - raw variables:  --sb-primary        → --ps-primary
@@ -18,7 +18,8 @@
 
 import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { join, resolve, relative, extname } from 'node:path';
-import { projectRoot, srcDirOf, requireStack } from '../../../core/lib/project.mjs';
+import { projectRoot, srcDirOf, cssDirOf, requireStack } from '../../../core/lib/project.mjs';
+import { ADAPTER_NAMES, adapterFor } from '../../../scripts/lib/frameworks/index.mjs';
 import { prefixError } from '../../../scripts/lib/prefix.mjs';
 import { detectPrefix, prefixInUse, utilityNames, renamer } from './lib/rename.mjs';
 
@@ -28,7 +29,7 @@ const get = (n) => {
   return i === -1 ? null : argv[i + 1];
 };
 const root = projectRoot(get('--root'));
-requireStack(root, { adapters: ['nuxt'], kinds: ['app'], what: 'The prefix rename of /sb-design:align' });
+const fw = adapterFor(requireStack(root, { adapters: ADAPTER_NAMES, kinds: ['app'], what: 'The prefix rename of /sb-design:align' }));
 const to = get('--to');
 const apply = argv.includes('--apply');
 
@@ -40,7 +41,7 @@ const fail = (msg) => {
 if (!to) fail('Pass the new prefix: --to <prefix>.');
 if (prefixError(to)) fail(prefixError(to));
 
-const IGNORE = new Set(['node_modules', '.nuxt', '.output', '.git', 'dist', '.data', 'coverage']);
+const IGNORE = fw.IGNORE;
 function walk(dir, exts, out = []) {
   if (!existsSync(dir)) return out;
   for (const name of readdirSync(dir)) {
@@ -55,7 +56,7 @@ function walk(dir, exts, out = []) {
 const srcDir = srcDirOf(root);
 
 // CSS files of the global style
-const cssFiles = walk(join(srcDir, 'assets'), ['.css']);
+const cssFiles = [...new Set([...walk(join(srcDir, 'assets'), ['.css']), ...walk(cssDirOf(root), ['.css'])])];
 if (!cssFiles.length) fail(`No CSS found in ${relative(root, join(srcDir, 'assets')) || '.'}. Run it from the project root.`);
 const cssText = cssFiles.map((f) => readFileSync(f, 'utf8')).join('\n');
 
@@ -73,7 +74,7 @@ const { rename, others: othersIn } = renamer(from, to, utilNames);
 const targets = [
   ...cssFiles,
   ...walk(srcDir, ['.vue', '.ts', '.tsx', '.js', '.jsx', '.mjs', '.html', '.md']).filter((f) => !cssFiles.includes(f)),
-  ...['nuxt.config.ts', 'nuxt.config.js', 'nuxt.config.mjs', 'app.config.ts'].map((f) => join(root, f)).filter(existsSync),
+  ...fw.configTargets(root),
 ];
 
 let total = 0;

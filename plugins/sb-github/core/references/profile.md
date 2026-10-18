@@ -52,7 +52,7 @@ Skills reach it with `${CLAUDE_SKILL_DIR}/../../core/scripts/profile.mjs` (`dete
 | --- | --- |
 | every script | the project root (a folder a detector recognizes), `paths.src`, `paths.styles` |
 | `/sb-core:setup` | the whole profile: it confirms the type, recommends plugins and skills for it |
-| `sb-design` scripts | `adapter` and `kind`: they refuse a stack without an adapter (today only `nuxt`) and libraries |
+| `sb-design` scripts | `adapter` and `kind`: they refuse a stack without an adapter (`nuxt`, `vue-vite`) and libraries |
 
 ## Adding a stack
 

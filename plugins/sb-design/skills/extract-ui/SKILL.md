@@ -1,6 +1,6 @@
 ---
 name: extract-ui
-description: Extracts UI from a design made in Claude (a Design or Design System artifact of the connected account) and builds it as code for the project's framework (today Nuxt 4) with Tailwind 4 and the project's global style. It decides what to build from the request — a component, a section, a layout, a page, or a whole set of screens — checks what the project already has, and asks before replacing or naming anything. Use it when the user says "extract the Button component", "bring the Home page from the design", "build the main layout", or asks to turn a Claude design into code.
+description: Extracts UI from a design made in Claude (a Design or Design System artifact of the connected account) and builds it as code for the project's framework (Nuxt 4, or Vue 3 + Vite) with Tailwind 4 and the project's global style. It decides what to build from the request — a component, a section, a layout, a page, or a whole set of screens — checks what the project already has, and asks before replacing or naming anything. Use it when the user says "extract the Button component", "bring the Home page from the design", "build the main layout", or asks to turn a Claude design into code.
 argument-hint: "[what to extract: the Button component | the Home page | the main layout | …] [optional artifact link]"
 ---
 
@@ -12,7 +12,7 @@ What this skill writes is shaped by three files, read before the plan:
 
 - the standard's rules (`${CLAUDE_SKILL_DIR}/../../standard/README.md`): roles, breakpoints, no eyebrows;
 - the engine (`${CLAUDE_SKILL_DIR}/../../engines/tailwind4/README.md`, section **Templates and components**, and `mapping.md`): which classes exist and how an old value becomes a role;
-- the framework (`${CLAUDE_SKILL_DIR}/../../frameworks/nuxt.md`, section **extract-ui**): destinations, naming, assets, how components, layouts and pages are written, icons, images, links, i18n helpers, SEO.
+- the framework (`${CLAUDE_SKILL_DIR}/../../frameworks/nuxt.md` or `${CLAUDE_SKILL_DIR}/../../frameworks/vue-vite.md` (the profile's `adapter`), section **extract-ui**): destinations, naming, assets, how components, layouts and pages are written, icons, images, links, i18n helpers, SEO.
 
 ```
 request → what is it? (component / layout / page / several) → find it in the design → plan with what the project already has → ask → build → verify
@@ -38,7 +38,7 @@ If the request is ambiguous ("Home" may be a component or a page), ask which. If
 
 ## Requirements
 
-- **An app on a stack sb-design has an adapter for** (today Nuxt): `node "${CLAUDE_SKILL_DIR}/../../core/scripts/profile.mjs" get` must show `adapter: "nuxt"` and `kind: "app"`. A library, or a Vue + Vite app, is out of scope for now: say so and stop (the scripts refuse it too). Format: `${CLAUDE_SKILL_DIR}/../../core/references/profile.md`.
+- **An app on a stack sb-design has an adapter for** (Nuxt, Vue + Vite): `node "${CLAUDE_SKILL_DIR}/../../core/scripts/profile.mjs" get` must show `adapter: "nuxt"` or `adapter: "vue-vite"`, and `kind: "app"`. A library, or another stack, is out of scope: say so and stop (the scripts refuse it too). Format: `${CLAUDE_SKILL_DIR}/../../core/references/profile.md`.
 - The engine's and the framework's requirements, and a global style already aligned **and in sync with the design** (`/sb-design:align`: the four files in the style folder, `{p}-<role>` utilities; step 0 checks the sync). Without it, stop and run `/sb-design:extract-style`, which realigns the style. Do not build against the engine's default values.
 - The `Artifact` tool, connected to the Claude account that owns the design. Read-only: never publish, edit or delete an artifact from this skill.
 
