@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/stefanBid/sb-context-fe/compare/sb-design-v1.3.0...sb-design-v1.4.0) (2026-10-18)
+
+
+### Features
+
+* support Vue + Vite apps and libraries ([#54](https://github.com/stefanBid/sb-context-fe/issues/54)) ([411f7b5](https://github.com/stefanBid/sb-context-fe/commit/411f7b511fe3d414583de79881fe4c0d43b3919b))
+
 ## [1.3.0](https://github.com/stefanBid/sb-context-fe/compare/sb-design-v1.2.0...sb-design-v1.3.0) (2026-10-17)
 
 

@@ -1,6 +1,6 @@
 {
   "name": "sb-design",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Global style of an app: normalizes it into a fixed four-file Tailwind 4 structure, migrates templates, and extracts style and UI from a Claude design.",
   "author": {
     "name": "stefanBid"
