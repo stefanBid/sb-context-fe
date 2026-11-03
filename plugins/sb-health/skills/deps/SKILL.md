@@ -14,13 +14,14 @@ Follow the install policy in the project's `CLAUDE.md` (e.g. `npm ci` only on `m
 ## Rules
 
 - **Forward only.** Never downgrade a package or lower a version constraint, for any reason: not to install, not to remove a peer warning, not to make a build pass. If an update does not fit, postpone it and note it (step 7).
-- **No forcing.** Never `--force`, `--legacy-peer-deps`, `npm audit fix --force`, and never an `overrides`/`resolutions` entry that pins an old version of a package to make a new one fit. A conflict is reported, not hidden.
+- **No forcing.** Never `--force`, `--legacy-peer-deps`, `npm audit fix --force`, and never an `overrides`/`resolutions` entry that pins an old version of a package to make a new one fit. A conflict is reported, not hidden. The one `--force` the skill runs is `npm cache clean --force` (step 4): npm requires it to empty its own cache, and it changes nothing in the project.
+- **Clean cache before every install.** A stale package-manager cache can install broken or mismatched files that look like a bug of the new version (a dev server that crashes at start, a build that fails on code nobody touched). Clean it first, so a failure after the install belongs to the update, not to the cache.
 - **The lockfile follows `package.json`, never the other way.** The only way a version changes is a constraint edited in `package.json` followed by the project's install. Never edit the lockfile by hand, never `npm update <pkg>`, never `npm audit fix` (in any form: it rewrites the lockfile on its own), never delete and regenerate the lockfile to pull in newer versions. These change what is installed without a declared constraint anyone can review, and nothing guarantees the project still works. A version that can only be reached that way (a transitive dependency, an advisory fixed only deeper in the tree) is not worth forcing: it waits (step 7).
 - **Every wait is visible in `package.json`.** A dependency that waits, or is held at a precise version, gets a line in `_comment_dependencies` (see below) as well as a note, so the reason sits next to the version.
 - **Majors are migrations, not bumps.** Never update across a major without reading what changed (step 5), checking what the project uses and getting the user's approval of the plan.
 - **One major at a time**, core first (`nuxt` or `vue`, `vite`, `tailwindcss`, then the rest), verified before the next one, so a failure has one cause.
 - **A library's peers are its public contract** (see *Libraries* below): their range changes what users of the library must install, so it is decided with the user, never bumped along with the rest.
-- **Notes are the memory.** Anything postponed, blocked or half-decided goes into the dependency notes. Nothing is left only in the chat.
+- **Notes are the memory.** Anything postponed, blocked or half-decided goes into `.sb-context/dependency-notes.json` **and** into `_comment_dependencies` in `package.json`, always both, in the same step. Nothing is left only in the chat, in a commit message or in a PR description.
 - **Say what was not verified**: a changelog that could not be found, a repo that could not be read, an issue not checked. Do not guess.
 
 ## Dependency notes
@@ -113,11 +114,20 @@ Majors the user leaves out are not noted as blocked: they were not blocked, just
 
 ### 4. Minor and patch
 
-Edit `package.json` constraints directly, then install via the project's install script (e.g. `npm run si`) or `npm install`. That install is the only thing that writes the lockfile (Rules): no `npm update`, no hand edits. A package that is newer only inside the lockfile (a transitive dependency, or a version inside a range nobody declares) is not updated on its own: it moves when a declared dependency's constraint moves, otherwise it waits.
+Edit `package.json` constraints directly, then clean the package manager's cache and install:
 
-If the install fails, run the same command once more (a resolver crash can be transient). If it fails again, stop and report the error: never delete or edit the lockfile, never add `--force` or `--legacy-peer-deps` to get past it.
+| Package manager | Clean the cache | Install |
+| --- | --- | --- |
+| npm | `npm cache clean --force` | the project's install script (e.g. `npm run si`) or `npm install` |
+| pnpm | `pnpm store prune` | `pnpm install` |
+| yarn | `yarn cache clean` | `yarn install` |
+| bun | `bun pm cache rm` | `bun install` |
 
-Run `/sb-health:build` and `/sb-health:lint` after.
+That install is the only thing that writes the lockfile (Rules): no `npm update`, no hand edits. A package that is newer only inside the lockfile (a transitive dependency, or a version inside a range nobody declares) is not updated on its own: it moves when a declared dependency's constraint moves, otherwise it waits.
+
+If the install fails, clean the cache again and run the same install once more. If it fails again, stop and report the error: never delete or edit the lockfile, never add `--force` or `--legacy-peer-deps` to get past it.
+
+Run `/sb-health:build` and `/sb-health:lint` after, and start the dev server once (`npm run dev`), checking that the home page answers: a broken dev server does not always break the build. If any of them fails on something the update did not change, clean the cache and reinstall before blaming the new version; only a failure that survives a clean install is a finding.
 
 ### 5. Major: act as the migration manager
 
@@ -177,7 +187,7 @@ Then **stop and wait** for the user's approval. They may approve all, part of it
 
 #### 5e. Apply and verify
 
-After approval: edit `package.json` and the project files of the plan, install, then run `/sb-health:build` and `/sb-health:lint` (and the tests, if the project has a script for them). Compare with the baseline taken before: only **new** failures count.
+After approval: edit `package.json` and the project files of the plan, clean the cache and install (step 4), then run `/sb-health:build`, `/sb-health:lint`, the dev server check of step 4 (and the tests, if the project has a script for them). Compare with the baseline taken before: only **new** failures count.
 
 - Fixable inside the approved plan → fix and verify again.
 - Not fixable inside the plan, or the cause is unclear → **stop**, report the exact error and the files changed. Do not downgrade. Ask the user before discarding the attempt's changes with git (the package then stays at its current version, as before the attempt), and write a note with what was learned.
@@ -207,7 +217,7 @@ Re-run `npm audit` after the constraint changes to confirm what is left.
 
 ### 7. Write the notes
 
-Before the report, make sure everything left pending is in the notes: each postponed or blocked major, each accepted conflict, each part of a plan the user postponed, each vulnerability that waits, each version that could only be reached through the lockfile. For each, `add` with a `summary` that a stranger would understand, the `blockedBy` entries with owner, the links to the issue or release, and a `recheck` that can be verified in one command; then write its `_comment_dependencies` line in `package.json`. Notes resolved in this run lose their line.
+Before the report, make sure everything left pending is in `.sb-context/dependency-notes.json` and, for the same items, in `_comment_dependencies`: the two are written together and must list the same packages. A problem that a cache clean and reinstall solved is not a dependency problem: it goes in the report, not in the notes. Pending items: each postponed or blocked major, each accepted conflict, each part of a plan the user postponed, each vulnerability that waits, each version that could only be reached through the lockfile. For each, `add` with a `summary` that a stranger would understand, the `blockedBy` entries with owner, the links to the issue or release, and a `recheck` that can be verified in one command; then write its `_comment_dependencies` line in `package.json`. Notes resolved in this run lose their line.
 
 Example:
 

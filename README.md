@@ -596,6 +596,7 @@ Rules:
 
 - **Forward only.** Never downgrades a package, never lowers a constraint, never `--force` / `--legacy-peer-deps` / `npm audit fix --force`, never an `overrides` entry that pins an old version to make a new one fit. What does not fit **waits**, and is noted.
 - **The lockfile follows `package.json`.** A version changes only through a constraint edited in `package.json` and the project's install: never a hand edit of the lockfile, `npm update <pkg>`, `npm audit fix` (any form) or a regenerated lockfile. A version reachable only that way (a transitive dependency, an advisory fixed only deeper in the tree) waits.
+- **Clean cache, then install.** Before every install the package manager's cache is cleaned (`npm cache clean --force`, `pnpm store prune`, `yarn cache clean`, `bun pm cache rm`); a failed install is retried once after another clean, then reported. After the install: build, lint and one dev-server start. A failure that disappears after a clean reinstall was the cache, not the update, and is not noted.
 - `0.y.z` → `0.(y+1).z` counts as a major.
 - One major at a time, core first (`nuxt` or `vue`, `vite`, `tailwindcss`), verified before the next.
 - A library's **peer ranges** are its public contract: a peer with a new major is tested through the `devDependency`, then you choose to **widen** the range (`^1 || ^2`, a minor release of the library) or **move** it (`^2`, a major release). A peer is never moved into `dependencies`.
@@ -613,7 +614,7 @@ Major, per package:
 | **Propose** | release notes in short, exact edits (file, line, before → after), conflicts, order, what is postponed. **Stops** for your approval (all, part, or postpone) |
 | **Apply and verify** | edits, install, `/sb-health:build`, `/sb-health:lint` (and tests if any); only new failures count. If it cannot be fixed inside the plan it stops, does not downgrade, and asks before discarding the attempt |
 
-Dependency notes (`.sb-context/dependency-notes.json`): everything postponed or blocked is written there, so the next run remembers. Each open note also gets a line in `package.json` under `_comment_dependencies` (keyed by package: why it waits or why the version is held, and the note id), removed when the note is resolved.
+Dependency notes (`.sb-context/dependency-notes.json`): everything postponed or blocked is written there, so the next run remembers. Each open note also gets a line in `package.json` under `_comment_dependencies` — always written together with the note, so the two list the same packages (keyed by package: why it waits or why the version is held, and the note id), removed when the note is resolved.
 
 | Field | Meaning |
 | --- | --- |
