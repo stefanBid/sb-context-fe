@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.1](https://github.com/stefanBid/sb-context-fe/compare/sb-health-v1.3.0...sb-health-v1.3.1) (2026-11-03)
+
+
+### Bug Fixes
+
+* **sb-health:** clean installs and no lockfile-only changes in deps ([#56](https://github.com/stefanBid/sb-context-fe/issues/56)) ([fdc752e](https://github.com/stefanBid/sb-context-fe/commit/fdc752e03a33110241f2ee1c3637d3b1f93da475))
+
 ## [1.3.0](https://github.com/stefanBid/sb-context-fe/compare/sb-health-v1.2.0...sb-health-v1.3.0) (2026-10-18)
 
 
