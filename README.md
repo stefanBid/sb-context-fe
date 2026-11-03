@@ -590,11 +590,12 @@ Report: per check, blockers vs warnings vs OK.
 | **Lists first** | scans and shows **every** available update **grouped** into Major / Minor / Patch, one table per group: package, **current** (installed) → **new**, and dependency type |
 | **Asks only if there is a choice** | nothing outdated: no question. Only minor/patch: no question, it updates. Majors **and** minor/patch: everything, only minor/patch (default), or pick the majors. Only majors: all, pick, or leave them. Skipped if your request already says it |
 | **Branch** | follows the install policy of the project's `CLAUDE.md`; otherwise a dedicated `chore/deps-<date>` branch, never `main` |
-| **Writes** | `package.json`, lockfile, project files of an approved migration plan, `.sb-context/dependency-notes.json` |
+| **Writes** | `package.json` (constraints, and `_comment_dependencies` for what waits), the lockfile **only through the project's install**, project files of an approved migration plan, `.sb-context/dependency-notes.json` |
 
 Rules:
 
 - **Forward only.** Never downgrades a package, never lowers a constraint, never `--force` / `--legacy-peer-deps` / `npm audit fix --force`, never an `overrides` entry that pins an old version to make a new one fit. What does not fit **waits**, and is noted.
+- **The lockfile follows `package.json`.** A version changes only through a constraint edited in `package.json` and the project's install: never a hand edit of the lockfile, `npm update <pkg>`, `npm audit fix` (any form) or a regenerated lockfile. A version reachable only that way (a transitive dependency, an advisory fixed only deeper in the tree) waits.
 - `0.y.z` → `0.(y+1).z` counts as a major.
 - One major at a time, core first (`nuxt` or `vue`, `vite`, `tailwindcss`), verified before the next.
 - A library's **peer ranges** are its public contract: a peer with a new major is tested through the `devDependency`, then you choose to **widen** the range (`^1 || ^2`, a minor release of the library) or **move** it (`^2`, a major release). A peer is never moved into `dependencies`.
@@ -612,7 +613,7 @@ Major, per package:
 | **Propose** | release notes in short, exact edits (file, line, before → after), conflicts, order, what is postponed. **Stops** for your approval (all, part, or postpone) |
 | **Apply and verify** | edits, install, `/sb-health:build`, `/sb-health:lint` (and tests if any); only new failures count. If it cannot be fixed inside the plan it stops, does not downgrade, and asks before discarding the attempt |
 
-Dependency notes (`.sb-context/dependency-notes.json`): everything postponed or blocked is written there, so the next run remembers.
+Dependency notes (`.sb-context/dependency-notes.json`): everything postponed or blocked is written there, so the next run remembers. Each open note also gets a line in `package.json` under `_comment_dependencies` (keyed by package: why it waits or why the version is held, and the note id), removed when the note is resolved.
 
 | Field | Meaning |
 | --- | --- |
@@ -622,7 +623,7 @@ Dependency notes (`.sb-context/dependency-notes.json`): everything postponed or 
 
 At the start of every run the skill lists the open notes and re-verifies each one before scanning: blocker gone → offers the migration; still blocked → notes what it checked; `project`-owned → reminds you. `/sb-health:checkup` runs minor/patch only and reports the open notes.
 
-Vulnerabilities: `npm audit`, `npm audit fix` for what is in range; a fix that needs a major is handled as a major, and if it cannot be done now it is noted with advisory, severity and owner.
+Vulnerabilities: `npm audit` reports, never `npm audit fix`. A fix in a newer version of a declared dependency is applied by raising its constraint (a major is handled as a migration); a fix that is only transitive, or needs a downgrade or a force, is noted with advisory, severity, path and owner, plus its `_comment_dependencies` line.
 
 ### docs
 
