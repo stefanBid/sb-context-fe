@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.1](https://github.com/stefanBid/sb-context-fe/compare/sb-github-v1.4.0...sb-github-v1.4.1) (2026-11-26)
+
+
+### Bug Fixes
+
+* **sb-github:** use the latest major of every action in the CI templates ([#63](https://github.com/stefanBid/sb-context-fe/issues/63)) ([6821602](https://github.com/stefanBid/sb-context-fe/commit/682160201f228f45656e1a2467fccc7342da4539))
+
 ## [1.4.0](https://github.com/stefanBid/sb-context-fe/compare/sb-github-v1.3.0...sb-github-v1.4.0) (2026-11-26)
 
 
