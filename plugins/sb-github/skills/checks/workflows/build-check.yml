@@ -37,12 +37,12 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       # `every`: a file counts only if it matches all the patterns, i.e. it is not one of the excluded ones.
       - name: Detect build-relevant changes
         id: filter
-        uses: dorny/paths-filter@v3
+        uses: dorny/paths-filter@v4
         with:
           predicate-quantifier: 'every'
           filters: |
@@ -59,11 +59,11 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       # Stack block: Node + npm. Other package managers and stacks: references/stacks.md of /sb-github:checks.
       - name: Setup Node
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v7
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'

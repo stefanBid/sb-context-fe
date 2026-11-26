@@ -18,6 +18,7 @@ Compare the project's workflows with this table during the analysis; every row f
 | `npm install` / `--if-present` | Non-reproducible install / renamed scripts passing silently | `npm ci`, scripts by their exact name |
 | `upload-artifact` of a build nobody downloads | Wasted minutes and storage | **Ask**, then remove it if unused |
 | `docker build` never run in CI while the deploy uses the `Dockerfile` | Broken image found only at deploy | `docker-image` job (`stacks.md`) |
+| An action on an older major than its latest (`actions/checkout@v4`) | Old runtime, deprecation warnings, fixes missed | Latest major after reading its release notes, unless it drops the project's Node (S7b) |
 | `env: FORCE_JAVASCRIPT_ACTIONS_TO_NODE24` or similar | Temporary workaround for old actions | Keep it only if an action still needs it; otherwise remove it and say so |
 | Ruleset without required status checks | Merge possible with a red CI | S9, `ruleset.md` |
 | File/job names different from repo to repo (`ci.yml`, `pr-title-lint.yml`, `lint-pr-title`) | Different rulesets and habits per repo | Standard names (S1); renaming a job = updating the ruleset in the same work |

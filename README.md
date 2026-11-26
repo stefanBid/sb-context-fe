@@ -730,6 +730,7 @@ The standard, three workflows with one task each (file and job names are fixed: 
 - **No `paths-ignore`**: the `changes` job (`dorny/paths-filter`) skips `build` when only docs (`*.md`, `LICENSE`, `.claude/**`) changed, and a skipped job counts as passed, so a required check always reports.
 - **Drafts and bot PRs** (release-please, dependabot) are skipped once, on the first job; `ready_for_review` re-runs a draft made ready; `concurrency` cancels older runs of the same PR.
 - **Minimal permissions** in every workflow, toolchain cache, one command per step, comments that say why.
+- **Every action at its latest major**, after reading its release notes, unless the new major drops the Node version the project uses.
 - **Any stack**: Node (npm, pnpm, yarn), Maven, Gradle. Every command the CI runs today stays; deploys and other workflows are not touched.
 - **`0.x` projects**: checks that `bump-minor-pre-major` is on in the release-please config (asks before adding it).
 
