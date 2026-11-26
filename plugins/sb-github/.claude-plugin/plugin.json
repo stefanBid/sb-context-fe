@@ -1,6 +1,6 @@
 {
   "name": "sb-github",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "description": "GitHub side of a project with the GitHub CLI: repo audit and settings, rulesets, labels, pull requests, release-please, and the standard CI workflows with their required checks.",
   "author": {
     "name": "stefanBid"
