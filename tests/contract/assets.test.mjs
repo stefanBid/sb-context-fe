@@ -1,6 +1,6 @@
 // Files the skills apply to OTHER projects as they are: gh-admin's labels and ruleset, gh-checks'
 // workflows. A mistake here does not fail in this repo, it fails in the user's repo.
-// The workflows themselves are linted with actionlint in CI (Tests workflow, plugin validate job).
+// The workflows themselves are linted with actionlint in CI (Build Check workflow, plugin validate job).
 
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';

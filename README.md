@@ -1,6 +1,6 @@
 # sb-context-fe
 
-[![Tests](https://github.com/stefanBid/sb-context-fe/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/stefanBid/sb-context-fe/actions/workflows/tests.yml?query=branch%3Amain)
+[![Build Check](https://github.com/stefanBid/sb-context-fe/actions/workflows/build-check.yml/badge.svg?branch=main)](https://github.com/stefanBid/sb-context-fe/actions/workflows/build-check.yml?query=branch%3Amain)
 [![Coverage](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2FstefanBid%2Fsb-context-fe%2Fbadges%2Fcoverage.json)](#reliability)
 [![Branch coverage](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2FstefanBid%2Fsb-context-fe%2Fbadges%2Fcoverage-branches.json)](#reliability)
 
@@ -954,4 +954,4 @@ Run it locally with `npm ci && npm test`; [CONTRIBUTING.md](CONTRIBUTING.md#test
 
 ## Contributing and releases
 
-`main` is protected: every change goes through a pull request, merged with **squash**. The PR title is a conventional-commit title (`feat`, `fix`, `docs`, …) and release-please reads it to choose the next version, the tag and the changelog; the `lint-pr-title` check blocks the merge when it is wrong, and `tests-gate` blocks a releasing PR whose tests fail. A change to what a skill **does** (`plugins/**`, `core/**`) is a `feat` or a `fix`. Each plugin is released on its own, with its own version, changelog and tag (`sb-design-v1.2.0`). Full rules: [CONTRIBUTING.md](CONTRIBUTING.md).
+`main` is protected: every change goes through a pull request, merged with **squash**. The PR title is a conventional-commit title (`feat`, `fix`, `docs`, …) and release-please reads it to choose the next version, the tag and the changelog; the `commitlint` check blocks the merge when it is wrong, and `build` blocks a PR whose tests or plugin validation fail. A change to what a skill **does** (`plugins/**`, `core/**`) is a `feat` or a `fix`. Each plugin is released on its own, with its own version, changelog and tag (`sb-design-v1.2.0`). Full rules: [CONTRIBUTING.md](CONTRIBUTING.md).

@@ -1,6 +1,6 @@
 # Contributing
 
-`main` is protected: every change goes through a pull request, merged with **squash**. The PR title becomes the commit on `main`, and [release-please](https://github.com/googleapis/release-please) reads it to decide the next version, the tag and the changelog of **each plugin the commit touches**. A title outside the format means a missing or wrong release, so the `lint-pr-title` check blocks the merge.
+`main` is protected: every change goes through a pull request, merged with **squash**. The PR title becomes the commit on `main`, and [release-please](https://github.com/googleapis/release-please) reads it to decide the next version, the tag and the changelog of **each plugin the commit touches**. A title outside the format means a missing or wrong release, so the `commitlint` check blocks the merge.
 
 ## Layout
 
@@ -105,22 +105,22 @@ What the plugin promises about the user's machine is tested too: no script impor
 
 A known gap is written as a test with `{ todo: '<what is wrong>' }`: it runs and is reported, but does not fail the suite until it is fixed (then the `todo` is removed).
 
-The `Tests` workflow decides from the PR title whether the suite is required, with the same rule release-please uses to cut a release:
+The CI is the standard structure of `/sb-github:checks`. The ruleset of `main` requires two checks, `build` and `commitlint`:
 
-| PR | Suite | `tests-gate` (required check) |
-| --- | --- | --- |
-| `feat`, `fix`, `perf`, `revert`, or any type with `!` / a `BREAKING CHANGE:` footer | runs on Node 22 and 24, with `claude plugin validate --strict` | passes only if the suite and the validation pass: a red one blocks the merge |
-| everything else (`docs`, `chore`, `ci`, `test`, `refactor`…, and the `chore(main): release` PRs) | skipped | passes |
+| Workflow | Runs on | What it does | Required check |
+| --- | --- | --- | --- |
+| `build-check.yml` | every PR into `main` (opened, synchronize, reopened, ready for review) and every push to `main` | `changes` decides from the files: when only root `*.md`, `LICENSE` or `.claude/**` changed, the tests are skipped. Otherwise `test` (Ubuntu with Node 20, 22, 24; macOS and Windows with Node 24) and `plugin validate` (`claude plugin validate --strict`, actionlint, token cost) run in parallel | `build`: the gate of the two, red if either fails, green if they were skipped |
+| `commitlint.yml` | every PR into `main`, also when the title is edited | the PR title matches the format above (bash regex) | `commitlint` |
+| `release-please.yml` | push to `main` | the release PR, tags and GitHub Releases | — |
+| `coverage-badge.yml` | push to `main` | measures line and branch coverage and publishes them as shields.io endpoint files (`coverage.json`, `coverage-branches.json`) on the `badges` branch, which the README badges read. The branch holds nothing else; never merge it | — |
 
-The workflow also runs when the title is edited, so renaming a `chore` PR to `fix` runs the suite before the merge. Every push to `main` runs it anyway.
-
-On every push to `main` the `coverage badge` job measures line and branch coverage and publishes them as shields.io endpoint files (`coverage.json`, `coverage-branches.json`) on the `badges` branch, which the README badges read. The branch holds nothing else; never merge it.
+The skills' `SKILL.md` and references are the product: a change to them runs the tests like a change to a script. Drafts and PRs opened by bots (release-please, dependabot) skip the jobs, and a skipped job counts as passed.
 
 ## Workflow
 
 1. Branch from `main`: `feat/<topic>`, `fix/<topic>`, `chore/<topic>`.
 2. Commit as you like on the branch; only the **PR title** has to follow the format, because the squash commit takes it.
-3. Run `npm test`, open the PR into `main` and wait for `lint-pr-title` and `tests-gate`.
+3. Run `npm test`, open the PR into `main` and wait for `commitlint` and `build`.
 4. Squash and merge. The branch is deleted automatically.
 
 ## Releases
@@ -136,4 +136,4 @@ Other projects receive a release with:
 /reload-plugins
 ```
 
-If the release PR shows `lint-pr-title` and `tests-gate` as pending forever, edit its title and put it back: pull requests opened by `GITHUB_TOKEN` do not trigger other workflows, and an edit from a user does. On a release PR `tests-gate` passes without running the suite.
+If the release PR shows `build` and `commitlint` as "Expected — waiting", **close it and reopen it**: pull requests opened by `GITHUB_TOKEN` do not trigger other workflows, and a reopen by a user triggers both (editing the title re-runs only `commitlint`).
