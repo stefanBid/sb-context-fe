@@ -1,0 +1,57 @@
+name: Coverage Badge
+
+# Not a check: on every push to main it measures line and branch coverage and publishes them as shields.io
+# endpoint files on the `badges` branch, which the README badges read. That branch holds nothing else and is
+# not protected by the main ruleset. Kept out of build-check.yml, which only reads the repo.
+on:
+  push:
+    branches: [ "main" ]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: coverage-badge-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  coverage:
+    name: coverage badge
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Measure coverage
+        run: npm run test:coverage:lcov
+
+      - name: Build the badges
+        run: node .github/scripts/coverage-badge.mjs lcov.info "$RUNNER_TEMP/badges-out"
+
+      - name: Publish on the badges branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          dir="$RUNNER_TEMP/badges"
+          git init -q "$dir" && cd "$dir"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git"
+          if git fetch -q --depth 1 origin badges; then git checkout -q -b badges FETCH_HEAD; else git checkout -q --orphan badges; fi
+          cp "$RUNNER_TEMP"/badges-out/*.json .
+          git add -A
+          if git diff --cached --quiet; then echo "Badges unchanged."; exit 0; fi
+          git commit -q -m "coverage of ${SHA::7}"
+          git push -q origin badges

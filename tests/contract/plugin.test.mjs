@@ -184,9 +184,9 @@ describe('manifests', () => {
 describe('docs agree with the code', () => {
   test('the PR title types of CONTRIBUTING are the ones the lint accepts', () => {
     const table = [...read('CONTRIBUTING.md').matchAll(/^\| `([a-z]+)` \|/gm)].map((m) => m[1]).sort();
-    // this repo's own lint lists them for amannn/action-semantic-pull-request; the template has them in its bash regex
-    const typesOf = (text) => (text.match(/types: \|\n((?:\s+[a-z]+\n)+)/)?.[1].trim().split(/\s+/) ?? text.match(/pattern='\^\(([a-z|]+)\)/)[1].split('|')).sort();
-    for (const wf of ['.github/workflows/pr-title-lint.yml', 'plugins/sb-github/skills/checks/workflows/commitlint.yml']) {
+    // the types are the alternatives of the bash regex
+    const typesOf = (text) => text.match(/pattern='\^\(([a-z|]+)\)/)[1].split('|').sort();
+    for (const wf of ['.github/workflows/commitlint.yml', 'plugins/sb-github/skills/checks/workflows/commitlint.yml']) {
       const types = typesOf(read(wf));
       assert.deepEqual(types, table, wf);
     }
