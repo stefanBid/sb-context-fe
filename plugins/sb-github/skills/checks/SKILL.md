@@ -47,6 +47,8 @@ Templates in `${CLAUDE_SKILL_DIR}/workflows/`. Replace only what the project nee
 
 **S7 — Toolchain cache, no useless step.** Cache from the toolchain setup (`setup-node` `cache:`, `setup-java` `cache:`), Docker layers with `type=gha`. Version from a project file (`.nvmrc`, `package.json`; Java from the build file, written in the comment). No steps that only print versions, no artifact uploads nobody downloads (**ask** if one exists). One command per step, named after what it checks (`Lint`, `Type check`, `Test`, `Build`). Stack blocks: `references/stacks.md`.
 
+**S7b — Every action at its latest major.** The templates' versions are a floor, not the target. Before writing, read each action's latest release (`gh api repos/<owner>/<action>/releases/latest --jq .tag_name`) and use its major (`@v7`), after reading the release notes of every major in between for breaking changes that touch the workflow. The one reason to stay on an older major: the new one does not run on the project's Node (the action's `runs.using`, e.g. `node24`, must be supported by the runners in use) or, for `setup-node`, no longer installs a Node version the project tests on. Then keep the newest major that does, and say why in the report and in a comment above the step. Same for tools pinned in a workflow (`actionlint`, a CLI version): the latest release. A workflow with write permissions does not cache dependencies (`package-manager-cache: false` on `setup-node`), against cache poisoning.
+
 **S8 — Title lint in bash, no external action.** A regex, the title passed through `env` (never `${{ … }}` inside `run:`: script injection). Replaces `amannn/action-semantic-pull-request` and similar. Optional lowercase scope, `!` allowed. The types are release-please's (`feat fix docs style refactor perf test build ci chore revert`); if `release-please-config.json` has `changelog-sections` with other types, add them to the regex and to the error message. **A `0.x` project with `1.0.0` reserved for the go-live**: the protection is in the release-please config, not in the lint. Check the package has `"bump-minor-pre-major": true` (a `feat!:` in `0.x` then bumps the minor, not to `1.0.0`); if missing, **ask** whether to add it. A major on purpose: `references/ruleset.md` § Making a major on purpose.
 
 **S9 — Required checks on the ruleset of `main`**: `build`, `docker-image` (if any) and `commitlint`, bound to GitHub Actions (`integration_id: 15368`), `strict_required_status_checks_policy: false` (release-please moves `main` at every merge). Added **after** the checks ran green once on the alignment PR.
@@ -68,7 +70,7 @@ From the updated `main`, with the project's naming (default `chore/ci-alignment`
 
 ### 3. Workflows
 
-- Write the three files from the templates, with the project's commands (stack block: `references/stacks.md`; `docker-image` job only with a production `Dockerfile`).
+- Write the three files from the templates, with the latest major of every action (S7b) and the project's commands (stack block: `references/stacks.md`; `docker-image` job only with a production `Dockerfile`).
 - Rename existing files with `git mv` (`ci.yml` → `build-check.yml`, `pr-title-lint.yml` → `commitlint.yml`, `release.yml` → `release-please.yml`), so the history stays readable.
 - Check the YAML of each file (`ruby -ryaml -e 'YAML.load_file(ARGV[0])' <file>`, or `actionlint` when installed).
 - Test the title regex locally on valid and invalid titles, including real titles from `git log origin/main --format=%s`.
@@ -100,6 +102,7 @@ Report: PR, checks and durations, ruleset updated, what was not touched (deploys
 - [ ] `build-check.yml`: no `paths-ignore` in `on:`, `changes` job with the only draft/bot `if`, `build` (and `docker-image`) with `needs: changes`
 - [ ] No `push` trigger outside `main`; `ready_for_review` in `types`; `concurrency` per PR
 - [ ] `permissions` declared in every workflow
+- [ ] Every action at its latest major (or the newest one the project's Node supports, with the reason in a comment)
 - [ ] Every check command of before still there (or dropped by the user)
 - [ ] `commitlint.yml` in bash, title through `env`
 - [ ] `0.x` project: `bump-minor-pre-major` in `release-please-config.json` (or the user chose not to)

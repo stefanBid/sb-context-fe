@@ -10,8 +10,8 @@ Toolchain version from a project file: `node-version-file: '.nvmrc'` (or `.node-
 
 | Lockfile | Package manager | Setup | Install | Run |
 |---|---|---|---|---|
-| `package-lock.json` | npm | `actions/setup-node@v5` with `cache: 'npm'` | `npm ci` | `npm run <script>` |
-| `pnpm-lock.yaml` | pnpm | `pnpm/action-setup@v4` **before** `setup-node`, then `cache: 'pnpm'` | `pnpm install --frozen-lockfile` | `pnpm run <script>` |
+| `package-lock.json` | npm | `actions/setup-node@v7` with `cache: 'npm'` | `npm ci` | `npm run <script>` |
+| `pnpm-lock.yaml` | pnpm | `pnpm/action-setup@v6` **before** `setup-node`, then `cache: 'pnpm'` | `pnpm install --frozen-lockfile` | `pnpm run <script>` |
 | `yarn.lock` | yarn | `setup-node` with `cache: 'yarn'` (Yarn berry: `corepack enable` first) | `yarn install --immutable` | `yarn <script>` |
 
 Nuxt: `nuxt prepare` usually runs in `postinstall`; if the project has no `postinstall`, the type check needs it first (`npx nuxi prepare` step, named `Prepare Nuxt`). A Vue + Vite library: the build is what produces `dist/`, keep it last.
@@ -23,7 +23,7 @@ Long independent commands (e2e tests, Storybook build): **ask** whether they go 
 ```yaml
       # Install JDK <version> (matches java.version in pom.xml)
       - name: Setup JDK <version>
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           java-version: '<version>'
           distribution: 'temurin'
@@ -40,7 +40,7 @@ With the Maven wrapper use `./mvnw`. Integration tests on Testcontainers need no
 
 ```yaml
       - name: Setup JDK <version>
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           java-version: '<version>'
           distribution: 'temurin'
@@ -65,14 +65,14 @@ Only when the repo has a `Dockerfile` that goes to production. A job next to `bu
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       # Layers cached in the GitHub Actions cache: the dependency layer is reused until the build file changes.
       - name: Build the Docker image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           push: false
