@@ -1,17 +1,22 @@
 // Files the skills apply to OTHER projects as they are: gh-admin's labels and ruleset, gh-checks'
-// workflow. A mistake here does not fail in this repo, it fails in the user's repo.
+// workflows. A mistake here does not fail in this repo, it fails in the user's repo.
 // The workflows themselves are linted with actionlint in CI (Tests workflow, plugin validate job).
 
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { REPO } from '../helpers/fixture.mjs';
 
 // LF even where git checks files out with CRLF (Windows)
 const read = (p) => readFileSync(join(REPO, p), 'utf8').replaceAll('\r\n', '\n');
-const LINT = read('plugins/sb-github/skills/checks/workflows/pr-title-lint.yml');
-const LINT_TYPES = LINT.match(/types: \|\n((?:\s+[a-z]+\n)+)/)[1].trim().split(/\s+/);
+const WF = (f) => read(`plugins/sb-github/skills/checks/workflows/${f}`);
+const LINT = WF('commitlint.yml');
+const LINT_TYPES = LINT.match(/pattern='\^\(([a-z|]+)\)/)[1].split('|');
+const SKILL = read('plugins/sb-github/skills/checks/SKILL.md');
+// the draft/bot condition of the standard (S3), on one job per workflow
+const SKIP_IF = /if: >-\n\s+github\.event\.pull_request\.draft != true &&\n\s+github\.actor != 'github-actions\[bot\]' &&\n\s+github\.actor != 'dependabot\[bot\]'\n/;
+const jobsOf = (text) => [...text.slice(text.indexOf('\njobs:\n')).matchAll(/^ {2}([a-z][a-z0-9-]*):\n/gm)].map((m) => m[1]);
 
 describe('gh-admin labels', () => {
   const labels = JSON.parse(read('plugins/sb-github/skills/admin/labels/labels.json'));
@@ -77,16 +82,60 @@ describe('gh-admin ruleset template', () => {
   });
 });
 
-describe('gh-checks title lint template', () => {
-  test('job name, triggers and permissions are the ones gh-checks relies on', () => {
-    assert.match(LINT, /^jobs:\n {2}lint-pr-title:\n/m, 'the job name is the status check the ruleset requires');
-    for (const t of ['opened', 'reopened', 'edited', 'synchronize']) assert.match(LINT, new RegExp(`^\\s+- ${t}$`, 'm'), `trigger ${t}`);
-    assert.match(LINT, /^permissions:\n {2}pull-requests: read$/m);
-    assert.match(LINT, /uses: amannn\/action-semantic-pull-request@v\d+/);
-    assert.match(read('plugins/sb-github/skills/checks/SKILL.md'), /job name `lint-pr-title`/);
+describe('gh-checks standard workflows', () => {
+  test('exactly the three workflows of the standard, with the job names the ruleset requires', () => {
+    assert.deepEqual(readdirSync(join(REPO, 'plugins/sb-github/skills/checks/workflows')).sort(), ['build-check.yml', 'commitlint.yml', 'release-please.yml']);
+    assert.deepEqual(jobsOf(WF('build-check.yml')), ['changes', 'build']);
+    assert.deepEqual(jobsOf(LINT), ['commitlint']);
+    assert.deepEqual(jobsOf(WF('release-please.yml')), ['release-please']);
+    for (const j of ['build-check.yml', 'commitlint.yml', 'release-please.yml', '`changes`', '`build`', '`commitlint`', '`docker-image`']) assert.ok(SKILL.includes(j), j);
+  });
+
+  test('build-check: always triggered on main only, filters paths in a job, skips drafts and bots once', () => {
+    const b = WF('build-check.yml');
+    const on = b.slice(b.indexOf('\non:\n'), b.indexOf('\npermissions:'));
+    assert.doesNotMatch(on, /paths(-ignore)?:/, 'paths filters in on: leave required checks waiting forever');
+    assert.equal([...on.matchAll(/branches: \[ "main" \]/g)].length, 2, 'pull_request and push on main, nothing else');
+    assert.match(on, /types: \[ opened, synchronize, reopened, ready_for_review \]/);
+    assert.match(b, /^permissions:\n {2}contents: read\n {2}pull-requests: read\n/m);
+    assert.match(b, /group: build-check-\$\{\{ github\.workflow \}\}-\$\{\{ github\.event\.pull_request\.number \|\| github\.ref \}\}\n\s+cancel-in-progress: true/);
+    assert.equal(b.split(SKIP_IF).length, 2, 'one draft/bot condition, on the changes job');
+    assert.match(b, /uses: dorny\/paths-filter@v\d+\n\s+with:\n\s+predicate-quantifier: 'every'/);
+    assert.match(b, /^ {2}build:\n {4}needs: changes\n {4}if: needs\.changes\.outputs\.code == 'true'\n/m);
+    assert.doesNotMatch(b, /--if-present|npm install\b|node -v/);
+  });
+
+  test('commitlint: bash regex on the title read from env, no token, no third-party action', () => {
+    assert.match(LINT, /types: \[ opened, synchronize, reopened, ready_for_review, edited \]/);
+    assert.match(LINT, /^permissions: \{\}$/m);
+    assert.match(LINT, SKIP_IF);
+    assert.doesNotMatch(LINT, /uses:/);
+    assert.match(LINT, /env:\n\s+PR_TITLE: \$\{\{ github\.event\.pull_request\.title \}\}/);
+    const run = LINT.slice(LINT.indexOf('run: |'));
+    assert.doesNotMatch(run, /\$\{\{/, 'an expression inside run: is a script injection');
+  });
+
+  test('the title regex accepts conventional titles and refuses the rest', () => {
+    const re = new RegExp(LINT.match(/pattern='([^']+)'/)[1]);
+    for (const t of ['feat: add x', 'fix(sb-github): y', 'feat!: drop z', 'chore(main): release main', 'ci(build.check): a_b']) assert.match(t, re, t);
+    for (const t of ['update stuff', 'Feat: x', 'feat(Auth): x', 'feat:x', 'feat: ', 'wip: x', `feat: ${'a'.repeat(101)}`]) assert.doesNotMatch(t, re, t);
   });
 
   test('it accepts exactly the types release-please understands', () => {
     assert.deepEqual([...LINT_TYPES].sort(), ['build', 'chore', 'ci', 'docs', 'feat', 'fix', 'perf', 'refactor', 'revert', 'style', 'test']);
+    assert.ok(LINT.includes(`type: ${LINT_TYPES.join('|')}`), 'the error message lists the same types');
+  });
+
+  test('release-please: write permissions, manifest mode, not skipped for bots', () => {
+    const r = WF('release-please.yml');
+    assert.match(r, /^permissions:\n {2}contents: write\n {2}pull-requests: write\n/m);
+    assert.match(r, /uses: googleapis\/release-please-action@v\d+\n\s+with:\n\s+config-file: release-please-config\.json\n\s+manifest-file: \.release-please-manifest\.json/);
+    assert.doesNotMatch(r, /\n {4}if:/);
+  });
+
+  test('the ruleset recipe requires the standard checks on GitHub Actions, strict off', () => {
+    const rs = read('plugins/sb-github/skills/checks/references/ruleset.md');
+    for (const c of ['build', 'docker-image', 'commitlint']) assert.match(rs, new RegExp(`\\{"context": "${c}",\\s+"integration_id": 15368\\}`), c);
+    assert.match(rs, /"strict_required_status_checks_policy": false/);
   });
 });

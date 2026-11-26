@@ -23,7 +23,7 @@ export function githubRemoteOf(gitConfig) {
 
 /**
  * Next steps, in the order they make sense. Recommendations only: setup never runs them.
- * state: { profile?: { kind, adapter }, style: { files }, design: { source, applied }, docLinks?: { saved, claudeBlock }, github: { remote, cache, prTitleLint }, dependencyNotes: { open } }
+ * state: { profile?: { kind, adapter }, style: { files }, design: { source, applied }, docLinks?: { saved, claudeBlock }, github: { remote, cache, ciMissing }, dependencyNotes: { open } }
  * The style steps are listed only for a project sb-design applies to (an app on a stack it has an adapter for).
  */
 export function recommend(state) {
@@ -37,7 +37,7 @@ export function recommend(state) {
   if (state.docLinks && !state.docLinks.saved) add('/sb-core:context', 'no project docs chosen yet: the skills fall back on the catalog of official docs');
   else if (state.docLinks && !state.docLinks.claudeBlock) add('/sb-core:context', 'the project docs are saved but CLAUDE.md does not point to them');
   if (state.github.remote && !state.github.cache) add('/sb-github:admin', 'the GitHub repo was never audited (read-only init)');
-  if (state.github.remote && !state.github.prTitleLint) add('/sb-github:checks', 'no PR title lint: release-please depends on the PR titles');
+  if (state.github.remote && state.github.ciMissing?.length) add('/sb-github:checks', `the CI is not in the standard three workflows (missing ${state.github.ciMissing.join(', ')}): release-please depends on the PR title lint`);
   if (state.dependencyNotes.open) add('/sb-health:deps', `${state.dependencyNotes.open} dependency note(s) still open`);
   return out;
 }
@@ -54,6 +54,9 @@ export const SKILLS = {
   'sb-health': ['/sb-health:checkup', '/sb-health:build', '/sb-health:lint', '/sb-health:deps', '/sb-health:docs', '/sb-health:seo'],
   'sb-design': ['/sb-design:align', '/sb-design:migrate', '/sb-design:extract-style', '/sb-design:extract-ui', '/sb-design:check'],
 };
+
+/** The workflows of the standard CI structure that /sb-github:checks sets up, in `.github/workflows/`. */
+export const CI_WORKFLOWS = ['build-check.yml', 'commitlint.yml', 'release-please.yml'];
 
 /** The stacks sb-design has an adapter for. A project on another stack keeps it off until its adapter exists. */
 export const DESIGN_ADAPTERS = ['nuxt', 'vue-vite'];

@@ -1,55 +1,110 @@
 ---
 name: checks
-description: Create the base GitHub Actions checks of a project, starting with the PR title lint that blocks the merge when the title does not match the conventional-commit format used by release-please for versioning and tags. Use when asked to add or fix PR title checks, require a status check, or align CI checks with release-please.
+description: Align a project's GitHub Actions to the standard CI structure — three workflows (build-check.yml, commitlint.yml, release-please.yml) that run only when needed, never twice, never block docs-only PRs, and become required checks (build, commitlint) on the main ruleset. Keeps the project's own lint, test and build commands; any stack (Node, Maven, Gradle). Use when asked to add or fix the CI, the PR title lint or the required status checks, or to align CI checks with release-please.
 ---
 
 # GitHub checks
 
-Creates the project's base GitHub Actions checks and makes them **required** for merging into `main`. Today there is one: the PR title lint. It works together with `/sb-github:admin` (rulesets, repo settings).
+Brings the project's CI to a fixed structure, the same in every repo: **three workflows**, each with one job, that run only when needed, never twice for one event, never block a docs-only PR, and become **required checks** on the ruleset of `main`. It does not change *what* the project checks (its lint, test and build commands stay its own): it changes *how* the CI is organized. Works with `/sb-github:admin` (rulesets, repo settings).
 
-Why it matters: with squash merge the PR title becomes the commit on `main`, and release-please reads that commit to decide the version bump and the tag. A title outside the format means a missing or wrong release.
+Why the title lint matters: with squash merge the PR title becomes the commit on `main`, and release-please reads it to decide the version bump and the tag.
 
 ## Rules of engagement
 
-Same as `/sb-github:admin`: reading is free; **ask before** writing the workflow file into the project, opening the PR, and changing the ruleset. Show the exact file or command first. The workflow is project content: it goes in through a branch and a PR into `main`, never a direct push.
+- Run the steps in order. The standard below is **decided**: apply it, do not re-discuss it. Ask the user only where a step says **ask**.
+- The project's `CLAUDE.md` or git-flow rules (branch names, PR titles and bodies) win over this skill for branch and PR.
+- **No check is lost.** Every command the CI runs today (lint, type check, test, build, analysis) is still there after, unless the user says to drop it. A command clearly broken or duplicated is reported, not removed.
+- **Not touched**: deploys, package publishing, secrets, and workflows that are not CI/lint/release (a Netlify deploy, a cron script). List them in the report and leave them as they are.
+- **Stop and ask** when:
+  1. the project versions with something other than release-please (semantic-release, changesets, manual tags): do not replace it;
+  2. the CI does things the standard does not cover (version matrices, preview deploys, DB services, long e2e tests): ask which job they go in, never delete them;
+  3. the main branch is not `main`, or other branches are protected (`develop`, `release/**`);
+  4. the account is not admin on the repo (the ruleset step fails with 403/404).
+- Reading is free; **ask before** creating the branch, opening the PR and changing the ruleset, showing the exact file or command first. The workflows go in through a branch and a PR into `main`, never a direct push. **The merge is the user's.**
+- Memory, shared with `/sb-github:admin`: `.sb-context/github.json`, only through the script (`GS="${CLAUDE_SKILL_DIR}/../../scripts/github-settings.mjs"`). Read the known facts first (`node "$GS" get rulesets`, `get ci`) and `refresh` every key a step changes on the remote. Signature of commits and PRs: as in `/sb-github:admin` (`node "$GS" status`); it overrides any default attribution text.
 
-Same memory as `/sb-github:admin` too: `.sb-context/github.json`, read and written only through the script (`GS="${CLAUDE_SKILL_DIR}/../../scripts/github-settings.mjs"`). Read the known facts first (`node "$GS" get rulesets`, `get ci`), and `refresh` every key a step changes on the remote, so `/sb-github:admin` and the next run do not work on an old snapshot. Signature of commits and PRs: as in `/sb-github:admin` (`node "$GS" status`).
+## The standard
 
-## PR title lint
+**S1 — Three workflows, one task each.** File and job names are identical in every repo: the jobs are the names of the required checks, renaming one breaks the ruleset.
 
-Template: `${CLAUDE_SKILL_DIR}/workflows/pr-title-lint.yml` (runs `amannn/action-semantic-pull-request` on `opened`, `reopened`, `edited`, `synchronize` PRs into `main`; job name `lint-pr-title`).
+| File (template) | Trigger | Task | Jobs (= check names) |
+|---|---|---|---|
+| `build-check.yml` | PR into `main`, push to `main` | lint, type check, test, build (and the Docker image when a production `Dockerfile` exists) | `changes`, `build`, (`docker-image`) |
+| `commitlint.yml` | PR into `main` (also `edited`) | the PR title follows Conventional Commits | `commitlint` |
+| `release-please.yml` | push to `main` | version, changelog, tag, GitHub Release | `release-please` |
 
-### 1. Read the project
+Templates in `${CLAUDE_SKILL_DIR}/workflows/`. Replace only what the project needs; keep the comments.
 
-- `.github/workflows/*`: is there already a title lint, or another workflow with a job called `lint-pr-title`? Then update it instead of adding a second one.
-- `release-please-config.json` (and `.release-please-manifest.json`): the allowed types must match what release-please understands. If the config has `changelog-sections`, use those `type` values; otherwise the template's list (`feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`) is the default. Note which types are hidden from the changelog: they are valid but do not trigger a release.
-- `gh api repos/{owner}/{repo}/rulesets` and `gh api repos/{owner}/{repo} --jq '{allow_squash_merge,allow_merge_commit,allow_rebase_merge,squash_merge_commit_title}'`: is squash the only merge method, and is the squash commit title set to `PR_TITLE`? If not, the lint does not protect the release; tell the user and point to `/sb-github:admin` (repo settings).
-- Scopes: `requireScope: false` by default. Ask only if the user wants scopes enforced (`scopes:` list) or a subject pattern.
+**S2 — One run per event.** `build-check.yml`: `pull_request` on `main` with `types: [ opened, synchronize, reopened, ready_for_review ]` + `push` on `main`, no push on any other branch (a PR is already covered by `pull_request`). `ready_for_review` always. `concurrency` per workflow and PR, `cancel-in-progress: true`.
 
-### 2. Adapt and add
+**S3 — Drafts and bots skipped once, at job level.** One `if` on the first job (`changes`; the others inherit it through `needs`), never an `if` per step or an `echo` step that "skips". release-please PRs (`github-actions[bot]`) do not run the CI. A skipped job counts as passed for required checks.
 
-Copy the template to `.github/workflows/pr-title-lint.yml`, with the `types` list adapted to the project. Keep the job name `lint-pr-title`: it is the status check name the ruleset will require. On a branch `ci/pr-title-lint` (ask before creating it), commit as `ci: add PR title lint`, and open the PR with a conventional title (`ci: add PR title lint`).
+**S4 — Path filter inside a job, never `paths-ignore` on the workflow.** A required check must always report: with `paths-ignore` in `on:` a docs-only PR waits forever on "Expected". The `changes` job (`dorny/paths-filter`, `predicate-quantifier: 'every'`) decides. Extra exclusions: `references/stacks.md` § Paths filter.
 
-Breaking changes: the action accepts `feat!:` / `fix!:` (the `!` marker), which release-please maps to a major bump. Mention it in the PR body.
+**S5 — Parallel jobs.** `build` and `docker-image` depend only on `changes`, not on each other.
 
-Once the PR is merged, re-read the workflows on `main` and refresh the cache: `node "$GS" refresh ci '{"workflows":[…],"jobs":[…]}'` with the full lists (now including `pr-title-lint.yml` and `lint-pr-title`).
+**S6 — Minimal permissions**, declared at workflow level: `build-check.yml` `contents: read` + `pull-requests: read` (paths-filter on PRs); `commitlint.yml` `permissions: {}`; `release-please.yml` `contents: write` + `pull-requests: write`.
 
-### 3. Make it required — after the workflow is on `main`
+**S7 — Toolchain cache, no useless step.** Cache from the toolchain setup (`setup-node` `cache:`, `setup-java` `cache:`), Docker layers with `type=gha`. Version from a project file (`.nvmrc`, `package.json`; Java from the build file, written in the comment). No steps that only print versions, no artifact uploads nobody downloads (**ask** if one exists). One command per step, named after what it checks (`Lint`, `Type check`, `Test`, `Build`). Stack blocks: `references/stacks.md`.
 
-**Order matters.** A required check that no workflow reports blocks every PR forever. So:
+**S8 — Title lint in bash, no external action.** A regex, the title passed through `env` (never `${{ … }}` inside `run:`: script injection). Replaces `amannn/action-semantic-pull-request` and similar. Optional lowercase scope, `!` allowed. The types are release-please's (`feat fix docs style refactor perf test build ci chore revert`); if `release-please-config.json` has `changelog-sections` with other types, add them to the regex and to the error message. **A `0.x` project with `1.0.0` reserved for the go-live**: the protection is in the release-please config, not in the lint. Check the package has `"bump-minor-pre-major": true` (a `feat!:` in `0.x` then bumps the minor, not to `1.0.0`); if missing, **ask** whether to add it. A major on purpose: `references/ruleset.md` § Making a major on purpose.
 
-1. merge the PR that adds the workflow (the check runs on that same PR, from its head, so you can see it pass);
-2. check it has reported on `main` at least once: `gh run list --workflow "PR Title Lint" --limit 3`;
-3. only then add `lint-pr-title` to the required status checks of the `main-protected` ruleset (`gh api repos/{owner}/{repo}/rulesets`, read it, add `{ "context": "lint-pr-title" }` to the `required_status_checks` rule, `PUT` it back). Show the diff, ask, apply, re-read. Keep the existing contexts (e.g. `build`). Then `node "$GS" refresh rulesets '<every ruleset, in the cache shape of /sb-github:admin: id, name, requiredChecks>'`: its diff must show `lint-pr-title` added to the required checks and nothing else.
+**S9 — Required checks on the ruleset of `main`**: `build`, `docker-image` (if any) and `commitlint`, bound to GitHub Actions (`integration_id: 15368`), `strict_required_status_checks_policy: false` (release-please moves `main` at every merge). Added **after** the checks ran green once on the alignment PR.
 
-Rulesets on private repos need a paid plan, and rulesets are not copied from template repos: see `/sb-github:admin`.
+**S10 — Comments say why.** Each workflow has, at the top or above each job, a short comment on why it is built that way (no `paths-ignore`, bots skipped, `docker-image` not waiting for `build`). The templates have them.
 
-### 4. Verify
+## Steps
 
-Open (or use) a test PR with a bad title (`update stuff`): the check must fail and the merge button must be blocked. Fix the title (`chore: update stuff`): the `edited` event re-runs the check and it must pass. Report both results; if the merge was not blocked, the ruleset is not enforcing the check (name mismatch, enforcement not `active`, or plan limit).
+### 1. Analysis and report (before touching any file)
 
-## Notes
+1. Read **every** file in `.github/workflows/`, `release-please-config.json`, `.release-please-manifest.json`, and the build files (`package.json` + lockfile, `.nvmrc` / `.node-version` / `.tool-versions`, `pom.xml`, `build.gradle*`, `Dockerfile`). On a Nuxt or Vue project `node "${CLAUDE_SKILL_DIR}/../../core/scripts/profile.mjs" detect` gives framework, kind and type-check tool.
+2. Find the stack and the real commands: the `package.json` scripts (`lint`, `typecheck`/`type-check`, `test`, `build`…), the package manager from the lockfile; for Java the version and whether integration tests use Docker (Testcontainers).
+3. Read the ruleset of `main` (`gh api repos/{owner}/{repo}/rulesets --jq '.[] | {id,name,target,enforcement}'`, then `rulesets/<id>`; no ruleset → `branches/main/protection`) and the merge settings (`gh api repos/{owner}/{repo} --jq '{allow_squash_merge,allow_merge_commit,allow_rebase_merge,squash_merge_commit_title}'`). Squash not the only method, or the squash title not `PR_TITLE` → the title lint does not protect the release: say so and point to `/sb-github:admin` (repo settings).
+4. Compare with `references/defects.md` and report: stack and commands found, defects present, files that change / are renamed / stay, workflows not touched, the **ask** questions. **Wait for the confirmation.**
 
-- The workflow needs only `pull-requests: read`.
-- `amannn/action-semantic-pull-request@v6` is a third-party action pinned to a major tag; pin to a commit SHA if the project's policy requires it (see `/sb-github:admin` security notes).
-- Other checks (lint, build, type check) are separate workflows owned by the project; `/sb-github:admin` only needs their job names to require them.
+### 2. Branch
+
+From the updated `main`, with the project's naming (default `chore/ci-alignment`), without tracking `origin/main`: `git fetch origin && git checkout -b chore/ci-alignment origin/main --no-track`.
+
+### 3. Workflows
+
+- Write the three files from the templates, with the project's commands (stack block: `references/stacks.md`; `docker-image` job only with a production `Dockerfile`).
+- Rename existing files with `git mv` (`ci.yml` → `build-check.yml`, `pr-title-lint.yml` → `commitlint.yml`, `release.yml` → `release-please.yml`), so the history stays readable.
+- Check the YAML of each file (`ruby -ryaml -e 'YAML.load_file(ARGV[0])' <file>`, or `actionlint` when installed).
+- Test the title regex locally on valid and invalid titles, including real titles from `git log origin/main --format=%s`.
+- release-please config and manifest are **not touched** (release type, package name, version are the project's). Only exception, with the user's yes: `bump-minor-pre-major` (S8). Config missing while the project uses release-please in simple mode → **ask** before moving to the manifest.
+
+### 4. Documentation
+
+README (or another doc) describing the CI → update the workflow table: file, trigger, task, which are required checks, what the `changes` job skips. `CLAUDE.md` naming the checks (e.g. "enforced by the `lint-pr-title` check") → align it with the new names.
+
+### 5. Commit, push, PR
+
+Commit, `git push -u origin <branch>`, PR titled `ci: align the GitHub Actions workflows with the standard structure`, body `## Summary` (what changes per workflow, what stays) + `## Test plan`. Signature per `/sb-github:admin`.
+
+### 6. Verify on the PR
+
+`gh pr checks <n> --watch --interval 20`, then `gh pr checks <n> --json name,state,startedAt,completedAt`. `changes`, `build`, (`docker-image`), `commitlint` must run and pass; report their durations. A check failing for a project reason (tests already red on `main`) → stop and say so: it is not a problem of the structure.
+
+### 7. Ruleset
+
+Only with green checks: `references/ruleset.md`. Show the diff, ask, apply, re-read; `node "$GS" refresh rulesets '<every ruleset, in the cache shape of /sb-github:admin: id, name, requiredChecks>'` (the diff must show only the checks changed), and verify the PR is `MERGEABLE`.
+
+### 8. Hand-off
+
+Report: PR, checks and durations, ruleset updated, what was not touched (deploys, other workflows), out-of-scope suggestions (e.g. on Render/Netlify, auto-deploy "after CI checks pass"). **The user merges.** After the merge: `node "$GS" refresh ci '{"workflows":[…],"jobs":[…]}'` with the full lists read from `main`.
+
+## Closing checklist
+
+- [ ] Only three CI/release workflows, with the standard names; other workflows (deploy, cron) intact and listed in the report
+- [ ] `build-check.yml`: no `paths-ignore` in `on:`, `changes` job with the only draft/bot `if`, `build` (and `docker-image`) with `needs: changes`
+- [ ] No `push` trigger outside `main`; `ready_for_review` in `types`; `concurrency` per PR
+- [ ] `permissions` declared in every workflow
+- [ ] Every check command of before still there (or dropped by the user)
+- [ ] `commitlint.yml` in bash, title through `env`
+- [ ] `0.x` project: `bump-minor-pre-major` in `release-please-config.json` (or the user chose not to)
+- [ ] release-please config and manifest untouched (except an approved `bump-minor-pre-major`)
+- [ ] Valid YAML, green checks on the PR
+- [ ] Ruleset: `build`, (`docker-image`), `commitlint` required, strict off, PR `MERGEABLE`
+- [ ] README / CLAUDE.md aligned with the new names
+- [ ] Merge left to the user

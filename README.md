@@ -659,10 +659,10 @@ What "set up" means:
 | --- | --- |
 | Repo settings | squash merge only, PR title + body as squash message, delete branch on merge, auto-merge optional |
 | Branch rules | ruleset `main-protected` |
-| Required checks | the real CI job names, including `lint-pr-title` once `/sb-github:checks` is applied |
+| Required checks | `build`, `commitlint` (and `docker-image` when there is one), set by `/sb-github:checks` with the standard CI |
 | Labels | the set in `labels/labels.json`, including the release-please `autorelease:*` labels |
 | Security | secret scanning + push protection, Dependabot alerts and security updates, no secrets in workflows |
-| Release | `release-please` workflow and config present, PR titles linted |
+| CI and release | the three standard workflows (`build-check.yml`, `commitlint.yml`, `release-please.yml`) and the release-please config: `/sb-github:checks` |
 
 Recipes: **Init** (connect and audit, read only), **Inspect**, **Repo settings**, **Rulesets**, **Labels**, **Branch and repo security**, **Open PRs**, **Release check**.
 
@@ -681,13 +681,27 @@ Rules of engagement:
 | | |
 | --- | --- |
 | **Command** | `/sb-github:checks` |
-| **Does** | Creates the base GitHub Actions checks and makes them **required** for merging into `main`. Today: the PR title lint |
-| **Why** | with squash merge the PR title becomes the commit on `main`, and release-please reads it to choose the version bump and the tag |
-| **Job name** | `lint-pr-title` (`amannn/action-semantic-pull-request`, on `opened`, `reopened`, `edited`, `synchronize` PRs into `main`) |
+| **Does** | Aligns the project's GitHub Actions to the standard CI structure, the same in every repo, and makes its checks **required** for merging into `main` |
+| **Why** | the CI runs only when needed, never twice, never blocks a docs-only PR; with squash merge the PR title becomes the commit on `main`, and release-please reads it to choose the version bump and the tag |
+| **Say** | "align the CI", "add the PR title lint", "make the build a required check" |
 
-Flow: read the project → adapt and add the workflow (through a branch and a PR, never a direct push) → make it required **after the workflow is on `main`** → verify.
+The standard, three workflows with one task each (file and job names are fixed: the jobs are the required checks):
 
-It shares `github.json` with `/sb-github:admin`: once the workflow is merged and the check is required, it refreshes `ci` and `rulesets` in the cache.
+| File | Trigger | Task | Jobs |
+| --- | --- | --- | --- |
+| `build-check.yml` | PR into `main`, push to `main` | the project's own lint, type check, test, build (and the Docker image when a production `Dockerfile` exists) | `changes`, `build`, (`docker-image`) |
+| `commitlint.yml` | PR into `main`, also on `edited` | the PR title follows Conventional Commits (a bash regex, no third-party action) | `commitlint` |
+| `release-please.yml` | push to `main` | version, changelog, tag, GitHub Release | `release-please` |
+
+- **No `paths-ignore`**: the `changes` job (`dorny/paths-filter`) skips `build` when only docs (`*.md`, `LICENSE`, `.claude/**`) changed, and a skipped job counts as passed, so a required check always reports.
+- **Drafts and bot PRs** (release-please, dependabot) are skipped once, on the first job; `ready_for_review` re-runs a draft made ready; `concurrency` cancels older runs of the same PR.
+- **Minimal permissions** in every workflow, toolchain cache, one command per step, comments that say why.
+- **Any stack**: Node (npm, pnpm, yarn), Maven, Gradle. Every command the CI runs today stays; deploys and other workflows are not touched.
+- **`0.x` projects**: checks that `bump-minor-pre-major` is on in the release-please config (asks before adding it).
+
+Flow: analysis and report (waits for your yes) → branch → workflows, renamed with `git mv` → docs → PR → checks green on the PR → `build`, `commitlint` (and `docker-image`) required on the `main` ruleset, strict off → hand-off. **You merge.**
+
+It shares `github.json` with `/sb-github:admin`: it refreshes `rulesets` after the ruleset change and `ci` after the merge.
 
 ---
 
