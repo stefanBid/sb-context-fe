@@ -1,0 +1,16 @@
+{
+  "description": "Lockfiles are written only by the package manager's install: any hand edit, script write or deletion is blocked.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/lockfile-guard.mjs\""
+          }
+        ]
+      }
+    ]
+  }
+}

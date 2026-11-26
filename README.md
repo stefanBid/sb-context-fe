@@ -30,6 +30,7 @@ They do **not** judge or improve the design. That is the job of [Impeccable](#im
   - [Language](#language)
   - [Confirmation stops](#confirmation-stops)
   - [Where things live](#where-things-live)
+  - [Lockfile guard](#lockfile-guard)
   - [Requirements](#requirements)
 - [Skills at a glance](#skills-at-a-glance)
   - [Which skill do I need?](#which-skill-do-i-need)
@@ -114,12 +115,34 @@ Or only what a project needs (each one brings `sb-core` along):
 
 ### Update
 
+Each plugin has its own version and changelog (`plugins/<plugin>/CHANGELOG.md`). First refresh the marketplace, so Claude Code sees the new versions, then update.
+
+**All the plugins**, inside Claude Code:
+
 ```
 /plugin marketplace update sb-context-fe
 /reload-plugins
 ```
 
-Each plugin has its own version and changelog (`plugins/<plugin>/CHANGELOG.md`).
+**One plugin at a time**, from the terminal (restart Claude Code, or run `/reload-plugins`, to apply):
+
+```
+claude plugin marketplace update sb-context-fe
+claude plugin update sb-core@sb-context-fe
+claude plugin update sb-github@sb-context-fe
+claude plugin update sb-health@sb-context-fe
+claude plugin update sb-design@sb-context-fe
+claude plugin update sb-context-fe@sb-context-fe   # the bundle
+```
+
+**All of them from the terminal**:
+
+```
+claude plugin marketplace update sb-context-fe
+for p in sb-core sb-github sb-health sb-design; do claude plugin update "$p@sb-context-fe"; done
+```
+
+A plugin installed with `--scope local` or `--scope project` is updated with the same scope: `claude plugin update sb-design@sb-context-fe --scope local`. To see what is installed and at which version: `claude plugin list`.
 
 ### First run on a project
 
@@ -211,6 +234,17 @@ Reading is free; writing asks first.
 | Which docs Claude follows | `.sb-context/docs.json`, and a managed block of `CLAUDE.md`. See [/sb-core:context](#context) |
 
 The plugins never commit anything themselves. Outside a Nuxt or Vue project their scripts refuse to run.
+
+### Lockfile guard
+
+The lockfile (`package-lock.json`, `npm-shrinkwrap.json`, `pnpm-lock.yaml`, `yarn.lock`, `bun.lock`, `bun.lockb`, `deno.lock`) is written **only** by the package manager's install, after a constraint changed in `package.json`. It is never written by hand, and the rule has no exception, not even when you ask.
+
+`sb-core` enforces it with a `PreToolUse` hook (`hooks/lockfile-guard.mjs`), active in every project where the plugins are installed, during any task and not only `/sb-health:deps`. It blocks:
+
+- `Write`, `Edit`, `MultiEdit` on a lockfile;
+- shell commands that write it: a redirection into it (`> package-lock.json`), `sed -i`/`perl -i`, `cp`/`mv` over it, `rm`, a `node -e`/`python` script that names it.
+
+It lets through the install itself (`npm install`, `npm ci`, `pnpm install`, `yarn install`, `bun install`), reading it (`cat`, `grep`, `jq`, `git diff`), and git putting back a version an install wrote (`git add`, `git checkout --theirs/--ours`, `git restore`). A merge conflict on the lockfile is resolved by taking one side and running the install.
 
 ### Requirements
 
@@ -590,7 +624,7 @@ Report: per check, blockers vs warnings vs OK.
 | **Lists first** | scans and shows **every** available update **grouped** into Major / Minor / Patch, one table per group: package, **current** (installed) → **new**, and dependency type |
 | **Asks only if there is a choice** | nothing outdated: no question. Only minor/patch: no question, it updates. Majors **and** minor/patch: everything, only minor/patch (default), or pick the majors. Only majors: all, pick, or leave them. Skipped if your request already says it |
 | **Branch** | follows the install policy of the project's `CLAUDE.md`; otherwise a dedicated `chore/deps-<date>` branch, never `main` |
-| **Writes** | `package.json` (constraints, and `_comment_dependencies` for what waits), the lockfile **only through the project's install**, project files of an approved migration plan, `.sb-context/dependency-notes.json` |
+| **Writes** | `package.json` (constraints, and `_comment_dependencies` for what waits), the lockfile **only through the project's install** (never by hand: see *Lockfile guard*), project files of an approved migration plan, `.sb-context/dependency-notes.json` |
 
 Rules:
 
