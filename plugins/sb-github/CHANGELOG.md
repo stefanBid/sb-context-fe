@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/stefanBid/sb-context-fe/compare/sb-github-v1.3.0...sb-github-v1.4.0) (2026-11-26)
+
+
+### Features
+
+* **sb-github:** align checks with the standard three-workflow CI ([#58](https://github.com/stefanBid/sb-context-fe/issues/58)) ([bf79e21](https://github.com/stefanBid/sb-context-fe/commit/bf79e214a024b148a9cee0c47775732410f6ddda))
+
 ## [1.3.0](https://github.com/stefanBid/sb-context-fe/compare/sb-github-v1.2.0...sb-github-v1.3.0) (2026-10-18)
 
 
