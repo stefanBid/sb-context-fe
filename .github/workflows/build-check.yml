@@ -1,0 +1,163 @@
+name: Build Check
+
+# `build` is a required status check of the main ruleset (with `commitlint`). A required check must always
+# report, so the workflow runs on every PR and push to main (no paths-ignore at this level, which would leave
+# the check "Expected — waiting" forever on a docs-only PR): the `changes` job decides, and the test jobs are
+# skipped when nothing that affects the plugins changed. A skipped job counts as passed.
+#
+# `build` is the gate of the other jobs instead of doing the work itself: the suite runs on a matrix (three OSes,
+# every supported Node), and a matrix job cannot be required safely (when it is skipped GitHub reports it under
+# its unexpanded name, so a required matrix context waits forever). `build` always reports one result.
+on:
+  pull_request:
+    branches: [ "main" ]
+    types: [ opened, synchronize, reopened, ready_for_review ]
+  push:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+# If a new commit arrives while a previous run (on the same branch/PR)
+# is still in progress, cancel the older run: only the latest code matters.
+concurrency:
+  group: build-check-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Whether the change touches anything besides docs and the Claude files.
+  # Also skips drafts, to save CI minutes, and PRs opened by automation (release-please, dependabot, ...).
+  # These conditions only apply to pull_request events; for push events github.event.pull_request is null,
+  # so both checks evaluate to true. The jobs that need this one are skipped with it.
+  changes:
+    runs-on: ubuntu-latest
+    if: >-
+      github.event.pull_request.draft != true &&
+      github.actor != 'github-actions[bot]' &&
+      github.actor != 'dependabot[bot]'
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      # `every`: a file counts only if it matches all the patterns, i.e. it is not one of the excluded ones.
+      # The skills' *.md files are the product, not docs: they must not be excluded.
+      - name: Detect build-relevant changes
+        id: filter
+        uses: dorny/paths-filter@v4
+        with:
+          predicate-quantifier: 'every'
+          filters: |
+            code:
+              - '**'
+              - '!*.md'
+              - '!LICENSE'
+              - '!.claude/**'
+
+  # The scripts run on the user's machine: every Node version the plugins support, and the three OSes.
+  # The copies of core/ inside the plugins must match core/ (tests/contract checks it with sync-core --check).
+  test:
+    name: test (${{ matrix.os }}, node ${{ matrix.node }})
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+        node:
+          - 20
+          - 22
+          - 24
+        include:
+          - os: macos-latest
+            node: 24
+          - os: windows-latest
+            node: 24
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup Node ${{ matrix.node }}
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test
+        run: npm test
+
+  # Claude Code's own schema check of the marketplace, every plugin manifest and every skill
+  # (frontmatter, unknown fields), actionlint on every workflow (ours and the /sb-github:checks templates),
+  # plus each plugin's projected token cost in the job summary. No model call, no credentials.
+  # Runs next to `test`, not after it.
+  plugin-validate:
+    name: plugin validate
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    env:
+      CLAUDE_CODE_VERSION: 2.1.332
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Install Claude Code
+        run: npm install --global "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}"
+
+      - name: Validate the plugins
+        run: npm run validate
+
+      - name: Lint the workflows
+        env:
+          ACTIONLINT_VERSION: 1.7.12
+        run: |
+          bash <(curl -sSfL "https://raw.githubusercontent.com/rhysd/actionlint/v${ACTIONLINT_VERSION}/scripts/download-actionlint.bash") "$ACTIONLINT_VERSION" "$RUNNER_TEMP"
+          "$RUNNER_TEMP/actionlint" -color .github/workflows/*.yml plugins/sb-github/skills/checks/workflows/*.yml
+
+      - name: Token cost
+        run: |
+          {
+            echo '### Plugin token cost'
+            for p in sb-core sb-github sb-health sb-design; do
+              echo "#### $p"
+              echo '```'
+              claude --plugin-dir "plugins/$p" plugin details "$p"
+              echo '```'
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # The required check. Runs unless the run was cancelled: it fails when `changes` failed or when the tests ran
+  # and did not pass; it passes when they were skipped (docs-only change, draft, bot PR).
+  build:
+    needs: [ changes, test, plugin-validate ]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Gate on the test jobs
+        env:
+          CHANGES: ${{ needs.changes.result }}
+          CODE: ${{ needs.changes.outputs.code }}
+          TEST: ${{ needs.test.result }}
+          PLUGIN: ${{ needs.plugin-validate.result }}
+        run: |
+          echo "changes: $CHANGES · code: $CODE · test: $TEST · plugin validate: $PLUGIN"
+          [ "$CHANGES" = success ] || [ "$CHANGES" = skipped ] || exit 1
+          [ "$CODE" = true ] || exit 0
+          [ "$TEST" = success ] && [ "$PLUGIN" = success ]
