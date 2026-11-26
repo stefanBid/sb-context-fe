@@ -21,13 +21,15 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
+      # No dependency cache in a workflow that can write to the repo: a poisoned cache entry would run with
+      # contents: write (setup-node's own recommendation). The install is small.
       - name: Setup Node
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v7
         with:
           node-version-file: '.nvmrc'
-          cache: 'npm'
+          package-manager-cache: false
 
       - name: Install dependencies
         run: npm ci
