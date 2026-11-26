@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/stefanBid/sb-context-fe/compare/sb-github-v1.4.1...sb-github-v1.5.0) (2026-11-26)
+
+
+### Features
+
+* **sb-github:** Dependabot alerts only and CI docs for template repos ([#65](https://github.com/stefanBid/sb-context-fe/issues/65)) ([fb3215d](https://github.com/stefanBid/sb-context-fe/commit/fb3215d14e1741d04ef6b74383dd925a4fabdee4))
+
 ## [1.4.1](https://github.com/stefanBid/sb-context-fe/compare/sb-github-v1.4.0...sb-github-v1.4.1) (2026-11-26)
 
 
