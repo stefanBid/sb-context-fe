@@ -19,7 +19,7 @@ import { projectRoot, cssDirOf, contextDirOf, ensureContextDir, relPath, CONTEXT
 import { themePrefixOf } from '../core/lib/settings.mjs';
 import { loadProfile } from '../core/lib/profile.mjs';
 import { START as DOCS_START } from '../core/lib/docs.mjs';
-import { LOCAL_FILES, STYLE_FILES, githubRemoteOf, recommend } from './lib/setup.mjs';
+import { CI_WORKFLOWS, LOCAL_FILES, STYLE_FILES, githubRemoteOf, recommend } from './lib/setup.mjs';
 
 const root = projectRoot();
 const dir = contextDirOf(root);
@@ -84,7 +84,7 @@ const state = {
     remote: git ? githubRemoteOf(read(join(root, '.git', 'config'))) : null,
     cache: files['github.json'],
     signatureAsked: Boolean(github?.signature),
-    prTitleLint: workflows.some((f) => read(join(workflowsDir, f)).includes('lint-pr-title')),
+    ciMissing: CI_WORKFLOWS.filter((f) => !workflows.includes(f)),
     releasePlease: existsSync(join(root, 'release-please-config.json')),
   },
   dependencyNotes: { open: Array.isArray(notes?.notes) ? notes.notes.filter((n) => n.status !== 'resolved').length : 0 },

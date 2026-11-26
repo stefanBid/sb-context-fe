@@ -78,8 +78,8 @@ The same file also holds what is already known about the repo, so `gh` is not qu
     "mergeStrategy": "squash"
   },
   "labels": ["feat", "fix", "chore", "autorelease: pending", "autorelease: tagged"],
-  "rulesets": [{ "id": 0, "name": "main-protected", "requiredChecks": ["build", "lint-pr-title"] }],
-  "ci": { "workflows": ["ci.yml", "pr-title-lint.yml"], "jobs": ["build", "lint-pr-title"] },
+  "rulesets": [{ "id": 0, "name": "main-protected", "requiredChecks": ["build", "commitlint"] }],
+  "ci": { "workflows": ["build-check.yml", "commitlint.yml", "release-please.yml"], "jobs": ["changes", "build", "commitlint", "release-please"] },
   "release": { "releasePlease": true, "tagFormat": "vX.Y.Z" },
   "security": { "secretScanning": true, "pushProtection": true, "dependabotAlerts": true },
   "checked": { "repo": "2026-10-13", "labels": "2026-10-13", "rulesets": "2026-10-13" },
@@ -117,10 +117,10 @@ Run this first on a project, and whenever the user says "connect to the repo". I
 |---|---|
 | Repo settings | squash merge only, PR title + body as squash message, delete branch on merge, auto-merge optional |
 | Branch rules | ruleset `main-protected` (this skill's `rulesets/main.json`) |
-| Required checks | the real CI job names, including `lint-pr-title` once `/sb-github:checks` is applied |
+| Required checks | `build`, `commitlint` (and `docker-image` when there is one), set by `/sb-github:checks` with the standard CI |
 | Labels | the set in `labels/labels.json`, including the release-please `autorelease:*` labels |
 | Security | secret scanning + push protection, Dependabot alerts (and security updates), no secrets in workflows |
-| Release | `release-please` workflow and config present, PR titles linted |
+| CI and release | the three standard workflows (`build-check.yml`, `commitlint.yml`, `release-please.yml`) and the release-please config: `/sb-github:checks` |
 
 ## Recipes
 
@@ -157,7 +157,7 @@ gh api -X POST repos/{owner}/{repo}/rulesets --input "${CLAUDE_SKILL_DIR}/rulese
 
 Notes:
 
-- **The required status check must match the CI job name.** `build` in `rulesets/main.json` is only right if the workflow job is called `build`. Read `.github/workflows/*`, adapt the `context` in the JSON before applying (or ask the user). A name that no job reports blocks every PR forever.
+- **The required status check must match the CI job name.** With the standard CI of `/sb-github:checks` it is `build` (plus `commitlint`, added by that skill once the checks have run). `build` in `rulesets/main.json` is only right if the workflow job is called `build`. Read `.github/workflows/*`, adapt the `context` in the JSON before applying (or ask the user). A name that no job reports blocks every PR forever.
 - **Add a required check only after its workflow is on `main`.** Otherwise the check never reports and nothing can merge.
 - **Rulesets are not copied when a repo is created from a template.** Apply them on every new project.
 - **On private repositories rulesets require a paid GitHub plan.** Check `gh repo view --json visibility` first and tell the user if the repo is private.

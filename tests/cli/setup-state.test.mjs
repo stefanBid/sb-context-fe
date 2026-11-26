@@ -55,7 +55,9 @@ describe('setup-state.mjs', () => {
 
   test('an aligned project with GitHub, snapshot and checks: style read, next steps only for what is missing', () => {
     p = withExampleStyle(makeProject({
-      '.github/workflows/pr-title-lint.yml': 'jobs:\n  lint-pr-title:\n    runs-on: ubuntu-latest\n',
+      '.github/workflows/build-check.yml': 'jobs:\n  build:\n    runs-on: ubuntu-latest\n',
+      '.github/workflows/commitlint.yml': 'jobs:\n  commitlint:\n    runs-on: ubuntu-latest\n',
+      '.github/workflows/release-please.yml': 'jobs:\n  release-please:\n    runs-on: ubuntu-latest\n',
       'release-please-config.json': '{}',
       'CLAUDE.md': '# rules',
     }));
@@ -69,7 +71,7 @@ describe('setup-state.mjs', () => {
     assert.equal(s.style.prefix, 'sb');
     assert.equal(s.github.remote, 'git@github.com:a/b.git');
     assert.equal(s.github.signatureAsked, true);
-    assert.equal(s.github.prTitleLint, true);
+    assert.deepEqual(s.github.ciMissing, []);
     assert.equal(s.github.releasePlease, true);
     assert.equal(s.dependencyNotes.open, 1);
     assert.equal(s.docs['CLAUDE.md'], true);

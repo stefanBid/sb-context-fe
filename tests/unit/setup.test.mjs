@@ -6,7 +6,7 @@ const allStyle = Object.fromEntries(STYLE_FILES.map((f) => [f, true]));
 const base = () => ({
   style: { files: { ...allStyle } },
   design: { source: true, applied: true },
-  github: { remote: 'git@github.com:a/b.git', cache: true, prTitleLint: true },
+  github: { remote: 'git@github.com:a/b.git', cache: true, ciMissing: [] },
   dependencyNotes: { open: 0 },
 });
 const skills = (s) => recommend(s).map((r) => r.skill);
@@ -35,8 +35,9 @@ describe('recommend', () => {
 
   test('GitHub steps only with a GitHub remote', () => {
     const s = base();
-    s.github = { remote: 'https://github.com/a/b.git', cache: false, prTitleLint: false };
+    s.github = { remote: 'https://github.com/a/b.git', cache: false, ciMissing: ['commitlint.yml'] };
     assert.deepEqual(skills(s), ['/sb-github:admin', '/sb-github:checks']);
+    assert.match(recommend(s)[1].why, /missing commitlint\.yml/);
     s.github.remote = null;
     assert.deepEqual(skills(s), []);
   });
@@ -58,7 +59,7 @@ describe('recommend', () => {
   });
 
   test('order: style first, then design, GitHub, dependencies', () => {
-    const s = { style: { files: {} }, design: { source: false, applied: false }, github: { remote: 'x', cache: false, prTitleLint: false }, dependencyNotes: { open: 1 } };
+    const s = { style: { files: {} }, design: { source: false, applied: false }, github: { remote: 'x', cache: false, ciMissing: ['build-check.yml'] }, dependencyNotes: { open: 1 } };
     assert.deepEqual(skills(s), ['/sb-design:align', '/sb-design:extract-style', '/sb-github:admin', '/sb-github:checks', '/sb-health:deps']);
   });
 });

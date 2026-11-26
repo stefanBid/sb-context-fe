@@ -59,10 +59,10 @@ gh api repos/{owner}/{repo}/actions/secrets --jq '.secrets[].name'   # names onl
 | Access | account, scopes, permission | admin | … |
 | Settings | … | squash only, delete branch on merge | PATCH |
 | Rulesets | … | main-protected | POST/PUT |
-| Required checks | … | CI job names, lint-pr-title | adapt JSON |
+| Required checks | … | build, commitlint (docker-image) | /sb-github:checks |
 | Labels | N present, M missing | labels.json | sync |
 | Security | alerts/secret scanning/push protection | all on | PATCH |
-| Release | release-please files, PR title lint | present | /sb-github:checks |
+| CI | workflow files and job names | build-check.yml, commitlint.yml, release-please.yml | /sb-github:checks |
 ```
 
 State clearly what the current account cannot read or change, and what needs the user (login, plan upgrade for private repos).
