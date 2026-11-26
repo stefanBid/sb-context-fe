@@ -46,7 +46,8 @@ Read each workflow's job names (they are the status-check contexts the ruleset c
 
 ```bash
 gh api repos/{owner}/{repo}/vulnerability-alerts -i            # 204 = Dependabot alerts on, 404 = off
-gh api repos/{owner}/{repo}/automated-security-fixes           # security updates
+gh api repos/{owner}/{repo}/automated-security-fixes           # security updates: target enabled=false (no automatic PRs)
+gh pr list --author "app/dependabot" --state open               # Dependabot PRs still open
 gh api repos/{owner}/{repo}/secret-scanning/alerts --jq 'length' 2>/dev/null
 gh api repos/{owner}/{repo}/actions/permissions                # which actions are allowed
 gh api repos/{owner}/{repo}/actions/secrets --jq '.secrets[].name'   # names only
@@ -61,7 +62,7 @@ gh api repos/{owner}/{repo}/actions/secrets --jq '.secrets[].name'   # names onl
 | Rulesets | … | main-protected | POST/PUT |
 | Required checks | … | build, commitlint (docker-image) | /sb-github:checks |
 | Labels | N present, M missing | labels.json | sync |
-| Security | alerts/secret scanning/push protection | all on | PATCH |
+| Security | alerts/security updates/secret scanning/push protection, dependabot.yml | alerts, secret scanning, push protection on; security updates off; no version updates | PUT/DELETE/PATCH |
 | CI | workflow files and job names | build-check.yml, commitlint.yml, release-please.yml | /sb-github:checks |
 ```
 

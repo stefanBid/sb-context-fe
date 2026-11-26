@@ -81,7 +81,7 @@ The same file also holds what is already known about the repo, so `gh` is not qu
   "rulesets": [{ "id": 0, "name": "main-protected", "requiredChecks": ["build", "commitlint"] }],
   "ci": { "workflows": ["build-check.yml", "commitlint.yml", "release-please.yml"], "jobs": ["changes", "build", "commitlint", "release-please"] },
   "release": { "releasePlease": true, "tagFormat": "vX.Y.Z" },
-  "security": { "secretScanning": true, "pushProtection": true, "dependabotAlerts": true },
+  "security": { "secretScanning": true, "pushProtection": true, "dependabotAlerts": true, "dependabotSecurityUpdates": false },
   "checked": { "repo": "2026-10-13", "labels": "2026-10-13", "rulesets": "2026-10-13" },
   "checkedAt": "2026-10-13"
 }
@@ -119,7 +119,7 @@ Run this first on a project, and whenever the user says "connect to the repo". I
 | Branch rules | ruleset `main-protected` (this skill's `rulesets/main.json`) |
 | Required checks | `build`, `commitlint` (and `docker-image` when there is one), set by `/sb-github:checks` with the standard CI |
 | Labels | the set in `labels/labels.json`, including the release-please `autorelease:*` labels |
-| Security | secret scanning + push protection, Dependabot alerts (and security updates), no secrets in workflows |
+| Security | secret scanning + push protection, Dependabot **alerts only** (security updates off, no `dependabot.yml` version updates: notifications, never automatic PRs), no secrets in workflows |
 | CI and release | the three standard workflows (`build-check.yml`, `commitlint.yml`, `release-please.yml`) and the release-please config: `/sb-github:checks` |
 
 ## Recipes

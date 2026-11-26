@@ -695,7 +695,7 @@ What "set up" means:
 | Branch rules | ruleset `main-protected` |
 | Required checks | `build`, `commitlint` (and `docker-image` when there is one), set by `/sb-github:checks` with the standard CI |
 | Labels | the set in `labels/labels.json`, including the release-please `autorelease:*` labels |
-| Security | secret scanning + push protection, Dependabot alerts and security updates, no secrets in workflows |
+| Security | secret scanning + push protection, Dependabot **alerts only** (security updates off, no `dependabot.yml` version updates: you get notified, no bot opens PRs), no secrets in workflows |
 | CI and release | the three standard workflows (`build-check.yml`, `commitlint.yml`, `release-please.yml`) and the release-please config: `/sb-github:checks` |
 
 Recipes: **Init** (connect and audit, read only), **Inspect**, **Repo settings**, **Rulesets**, **Labels**, **Branch and repo security**, **Open PRs**, **Release check**.
@@ -733,6 +733,7 @@ The standard, three workflows with one task each (file and job names are fixed: 
 - **Every action at its latest major**, after reading its release notes, unless the new major drops the Node version the project uses.
 - **Any stack**: Node (npm, pnpm, yarn), Maven, Gradle. Every command the CI runs today stays; deploys and other workflows are not touched.
 - **`0.x` projects**: checks that `bump-minor-pre-major` is on in the release-please config (asks before adding it).
+- **Template repos**: the README always gets a "CI and repository rules" section, read from the remote: the workflows that come with the template, and what GitHub does **not** copy to a new repo (the `main-protected` ruleset rule by rule, on or off; merge settings; security features), with the command to apply each one and how to customize it. The ruleset is exported to `.github/rulesets/main-protected.json`.
 
 Flow: analysis and report (waits for your yes) → branch → workflows, renamed with `git mv` → docs → PR → checks green on the PR → `build`, `commitlint` (and `docker-image`) required on the `main` ruleset, strict off → hand-off. **You merge.**
 

@@ -80,6 +80,8 @@ From the updated `main`, with the project's naming (default `chore/ci-alignment`
 
 README (or another doc) describing the CI → update the workflow table: file, trigger, task, which are required checks, what the `changes` job skips. `CLAUDE.md` naming the checks (e.g. "enforced by the `lint-pr-title` check") → align it with the new names.
 
+**Template repo** (`gh repo view --json isTemplate`, or `repo.isTemplate` in the cache) → the README **always** gets the section "CI and repository rules", even if it did not describe the CI before: whoever creates a project from the template must know which workflows come with it, which rules GitHub does **not** copy (rulesets, security features, merge settings) and how to turn each one on, off or change it. Structure and content: `references/template-docs.md`. Values read from the remote (ruleset, settings, security), never assumed; the section is rewritten in full at every run, so it never drifts. The ruleset is also exported to `.github/rulesets/main-protected.json`, so a new project applies it in one command. The required checks change at step 7: write (or rewrite) the section and the JSON **after** step 7, as the last commit of the same PR.
+
 ### 5. Commit, push, PR
 
 Commit, `git push -u origin <branch>`, PR titled `ci: align the GitHub Actions workflows with the standard structure`, body `## Summary` (what changes per workflow, what stays) + `## Test plan`. Signature per `/sb-github:admin`.
@@ -110,4 +112,5 @@ Report: PR, checks and durations, ruleset updated, what was not touched (deploys
 - [ ] Valid YAML, green checks on the PR
 - [ ] Ruleset: `build`, (`docker-image`), `commitlint` required, strict off, PR `MERGEABLE`
 - [ ] README / CLAUDE.md aligned with the new names
+- [ ] Template repo: README section "CI and repository rules" written from the remote state (`references/template-docs.md`)
 - [ ] Merge left to the user
