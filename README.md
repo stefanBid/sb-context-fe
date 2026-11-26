@@ -635,7 +635,7 @@ Rules:
 - One major at a time, core first (`nuxt` or `vue`, `vite`, `tailwindcss`), verified before the next.
 - A library's **peer ranges** are its public contract: a peer with a new major is tested through the `devDependency`, then you choose to **widen** the range (`^1 || ^2`, a minor release of the library) or **move** it (`^2`, a major release). A peer is never moved into `dependencies`.
 
-Minor and patch: same major as the declared constraint. The changelog is checked first; if a concern shows up, the package is handled as a major.
+Minor and patch: same major as the declared constraint. What changed is read first, for minors as for majors: the notes of **every** release in between, **in full** (the *Heads-up* / *Upgrade* sections included, never a keyword filter), and the **manifest diff** of the package between the two versions: a dependency it no longer installs, but the project uses (a dev tool turned on in the config, a module), is added to the project's own dependencies in the same update. If a concern shows up, the package is handled as a major. After the install, besides build, lint and dev server, `npm ls --all` is compared with the tree before: a new `invalid` or `missing` entry is a finding.
 
 Major, per package:
 

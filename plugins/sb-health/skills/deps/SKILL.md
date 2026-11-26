@@ -55,6 +55,25 @@ Every open note also has a line in `package.json`, under a top-level `_comment_d
 
 Add or update the line together with `add`/`touch`, remove it together with `resolve` (and remove the object when it is empty). An existing project comment that explains a pin, such as `_comment_overrides`, is kept in sync the same way.
 
+## Reading what changed
+
+Used by step 3 (minor and patch) and step 5a (major). The release notes and the package's own manifest are read the same way for every bump; only the depth of the plan changes.
+
+1. **Every release between the current version and the target**, not only the last one: 10.6.0 → 10.8.1 means the 10.7.0, 10.8.0 and 10.8.1 notes. Sources: step 5a.
+2. **The whole text, read in full.** Never through a keyword filter, `grep` or `head`: what matters to the project is often worded as plain news ("X is no longer installed with Y"). Read with care the sections named *Heads-up*, *Upgrade*, *Migration*, *Notes*, *Important*, *⚠️* and the end of the notes, where they usually sit.
+3. **The manifest diff.** Compare what the package declares in the two versions, because the notes do not always say it:
+
+   ```bash
+   for v in <current> <target>; do npm view <pkg>@$v dependencies peerDependencies optionalDependencies engines --json > "$TMP/<pkg>-$v.json"; done   # $TMP = the session scratchpad
+   diff <(jq -S . "$TMP/<pkg>-<current>.json") <(jq -S . "$TMP/<pkg>-<target>.json")
+   ```
+
+   - **A dependency removed** (or moved to an optional peer): the project may have used it without declaring it, because it came with the package (a dev tool turned on in the framework config, a module, an import, a CLI in a script). Search the project for it (config keys, imports, scripts, CI). Used → add it to the project's own `dependencies`/`devDependencies` at the version that was installed before, in the same update; a newer major of it is a separate migration for the user to choose. Not used → say so in the report.
+   - **A new peer, or a peer range raised**: is it satisfied by what is installed or by an update in this run (step 5c)?
+   - **`engines` raised**: compare with the project's and the CI's Node.
+
+Report each finding in the table of 5b ("Used here?"), for a minor too. A finding that needs a decision or project changes turns the minor into a major (step 3).
+
 ## Flow
 
 ### 0. Open notes first
@@ -71,6 +90,8 @@ Run `dependency-notes.mjs list`. If there are open notes, show them (package, ta
 ### 1. Read the project
 
 `node "${CLAUDE_SKILL_DIR}/../../core/scripts/profile.mjs" get`: the stack (`adapter`), whether it is an app or a library (`kind`), the framework's config file (`entries.config`: `nuxt.config.*` or `vite.config.*`), the package manager. Then `package.json`: `dependencies`, `devDependencies`, `peerDependencies` (a library), `overrides`/`resolutions`, `engines.node`, scripts; the lockfile; the framework's config file.
+
+Before changing anything, save the baseline of the installed tree: the `invalid` and `missing` entries of `npm ls --all` (step 4 compares with it).
 
 ### 2. List what is available, then ask only if there is a choice
 
@@ -110,8 +131,8 @@ Majors the user leaves out are not noted as blocked: they were not blocked, just
 
 ### 3. Classify
 
-- **Safe to auto-update**: same major as the declared constraint (and, below `1.0.0`, same minor). Check the changelog/release notes first for new required config, renamed/removed APIs used here, or peer-dependency changes (especially `nuxt`, `vue`, `vite`, `tailwindcss`); if a concern surfaces, treat it as a major.
-- **Major**: different major, or a concern found in the changelog of a minor.
+- **Safe to auto-update**: same major as the declared constraint (and, below `1.0.0`, same minor). Before updating, read what changed (*Reading what changed*: every release in between, in full, and the manifest diff), looking for new required config, renamed/removed APIs used here, dependencies removed that the project relied on, and peer-dependency changes. Always for the core (`nuxt`, `vue`, `vite`, `tailwindcss`) and the framework's modules; for the other packages at least the notes of each minor. If a concern surfaces, treat it as a major.
+- **Major**: different major, or a concern found in what changed in a minor.
 
 ### 4. Minor and patch
 
@@ -130,6 +151,8 @@ If the install fails, clean the cache again and run the same install once more. 
 
 Run `/sb-health:build` and `/sb-health:lint` after, and start the dev server once (`npm run dev`), checking that the home page answers: a broken dev server does not always break the build. If any of them fails on something the update did not change, clean the cache and reinstall before blaming the new version; only a failure that survives a clean install is a finding.
 
+Then check the installed tree, which the build does not: `npm ls --all` (pnpm: `pnpm ls --depth Infinity`; yarn: `yarn why <pkg>`), compared with the same command run **before** the install (take it as the baseline in step 1). Only new `invalid` (a version outside a range someone asks, peers included) and `missing` entries are findings; `extraneous` and `deduped` are not. Each new one gets the four questions of 5c: owner, impact, already fixed?, way forward. And for each dependency the manifest diff showed as removed and the project uses: is it installed now (`npm ls <pkg>`), and does the feature that needs it still load (a dev tool, a module, a CLI)? A dev server that answers is not enough: a missing dev tool does not break it.
+
 ### 5. Major: act as the migration manager
 
 Per package, in order. Do not start the next before the previous is verified.
@@ -142,7 +165,7 @@ Find the release information for **every major between the current version and t
 2. `CHANGELOG.md` / `HISTORY.md` in the repo (`gh api repos/<owner>/<repo>/contents/CHANGELOG.md`) or in the package;
 3. the library's migration or upgrade guide in its docs (the project's upgrade guides: `node "${CLAUDE_SKILL_DIR}/../../core/scripts/docs.mjs" get --for sb-health:deps`), and the `BREAKING CHANGE` commits as a last resort.
 
-Extract, for each: **breaking changes** (removed or renamed APIs, options and exports, changed defaults and behavior), **new requirements** (minimum Node, peer dependencies, required config or module changes), **deprecations that become removals**, and **new features worth knowing** (one line each, not the point of the task). If no release information can be found, say so and treat the update as unverified: propose, do not apply.
+Read them as in *Reading what changed* (in full, every release in between, plus the manifest diff). Extract, for each: **breaking changes** (removed or renamed APIs, options and exports, changed defaults and behavior), **new requirements** (minimum Node, peer dependencies, required config or module changes), **deprecations that become removals**, and **new features worth knowing** (one line each, not the point of the task). If no release information can be found, say so and treat the update as unverified: propose, do not apply.
 
 #### 5b. Find what the project uses
 
