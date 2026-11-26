@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/stefanBid/sb-context-fe/compare/sb-core-v1.4.0...sb-core-v1.5.0) (2026-11-26)
+
+
+### Features
+
+* block hand writes of the lockfile and document plugin updates ([#59](https://github.com/stefanBid/sb-context-fe/issues/59)) ([e9126cd](https://github.com/stefanBid/sb-context-fe/commit/e9126cdef35e169509a6e2fd12541cc1cbb39614))
+
 ## [1.4.0](https://github.com/stefanBid/sb-context-fe/compare/sb-core-v1.3.0...sb-core-v1.4.0) (2026-11-26)
 
 
