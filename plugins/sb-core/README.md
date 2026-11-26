@@ -9,6 +9,8 @@ The core of the [sb-context-fe](../../README.md) marketplace. The other plugins 
 | `/sb-core:onboard` | Joins an app in progress (Nuxt, or Vue + Vite): setup, then align, migrate, build and next steps through the other plugins (command only) |
 | `/sb-core:migration` | Moves a project set up with sb-context-nuxt 0.x to 1.0: `.sb-context-nuxt/` → `.sb-context/`, renamed files, old commands in your docs |
 
+It also ships a hook, **lockfile guard**: in every project where it is installed, any hand write of a lockfile (`package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`, `bun.lock`…) is blocked, whatever the task. Only the package manager's install writes it. Details: [Lockfile guard](../../README.md#lockfile-guard).
+
 ```
 /plugin install sb-core@sb-context-fe
 ```
