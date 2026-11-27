@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.2](https://github.com/stefanBid/sb-context-fe/compare/sb-health-v1.4.1...sb-health-v1.4.2) (2026-11-27)
+
+
+### Bug Fixes
+
+* **sb-health:** deps asks every choice and reads the package docs in full ([#69](https://github.com/stefanBid/sb-context-fe/issues/69)) ([8ff8c09](https://github.com/stefanBid/sb-context-fe/commit/8ff8c09525be79dbfbe6a08e82e043dd8ee9affd))
+
 ## [1.4.1](https://github.com/stefanBid/sb-context-fe/compare/sb-health-v1.4.0...sb-health-v1.4.1) (2026-11-27)
 
 
