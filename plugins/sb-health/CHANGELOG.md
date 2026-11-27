@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.1](https://github.com/stefanBid/sb-context-fe/compare/sb-health-v1.4.0...sb-health-v1.4.1) (2026-11-27)
+
+
+### Bug Fixes
+
+* **sb-health:** read release notes in full and diff the manifest in deps ([#67](https://github.com/stefanBid/sb-context-fe/issues/67)) ([5ac9638](https://github.com/stefanBid/sb-context-fe/commit/5ac9638d2ad9260b74326ca61461de686c3b9bc5))
+
 ## [1.4.0](https://github.com/stefanBid/sb-context-fe/compare/sb-health-v1.3.1...sb-health-v1.4.0) (2026-11-26)
 
 
