@@ -23,6 +23,8 @@ Follow the install policy in the project's `CLAUDE.md` (e.g. `npm ci` only on `m
 - **One major at a time**, core first (`nuxt` or `vue`, `vite`, `tailwindcss`, then the rest), verified before the next one, so a failure has one cause.
 - **A library's peers are its public contract** (see *Libraries* below): their range changes what users of the library must install, so it is decided with the user, never bumped along with the rest.
 - **Notes are the memory.** Anything postponed, blocked or half-decided goes into `.sb-context/dependency-notes.json` **and** into `_comment_dependencies` in `package.json`, always both, in the same step. Nothing is left only in the chat, in a commit message or in a PR description.
+- **Every choice is the user's.** Wherever there is more than one reasonable way forward, the skill does not pick one silently, not even the "safe" one: it lists the options with what each one changes and costs, says which it recommends and why, and waits. Typical cases: the version of a dependency the project must now declare (the one installed before or the latest major), turning an exact pin into a range or back, moving or renaming project comments (`_comment_*`), accepting a peer warning, removing a config entry, a test or lint fix the update made necessary. Only a minor/patch bump inside the declared range, with nothing found in *Reading what changed*, goes ahead without a question.
+- **Proposals rest on the documentation, read in full** (*Reading what changed*): every option shown cites what it is based on (release notes, upgrade guide, the docs of the feature), so the user decides on facts, not on a guess.
 - **Say what was not verified**: a changelog that could not be found, a repo that could not be read, an issue not checked. Do not guess.
 
 ## Dependency notes
@@ -68,9 +70,11 @@ Used by step 3 (minor and patch) and step 5a (major). The release notes and the 
    diff <(jq -S . "$TMP/<pkg>-<current>.json") <(jq -S . "$TMP/<pkg>-<target>.json")
    ```
 
-   - **A dependency removed** (or moved to an optional peer): the project may have used it without declaring it, because it came with the package (a dev tool turned on in the framework config, a module, an import, a CLI in a script). Search the project for it (config keys, imports, scripts, CI). Used → add it to the project's own `dependencies`/`devDependencies` at the version that was installed before, in the same update; a newer major of it is a separate migration for the user to choose. Not used → say so in the report.
+   - **A dependency removed** (or moved to an optional peer): the project may have used it without declaring it, because it came with the package (a dev tool turned on in the framework config, a module, an import, a CLI in a script). Search the project for it (config keys, imports, scripts, CI). Used → the project must now declare it: **ask** which version (the one installed before, or its latest major), showing what each changes for the project from its notes and docs (step 5a for a new major), then add it in the same update. Not used → say so in the report.
    - **A new peer, or a peer range raised**: is it satisfied by what is installed or by an update in this run (step 5c)?
    - **`engines` raised**: compare with the project's and the CI's Node.
+
+4. **The package's own documentation**, beyond the notes: its upgrade or migration guide, and the docs pages of every feature, option or module the project uses from it (`docs.mjs get --for sb-health:deps` gives the project's links). Read them in full too: they say what the notes leave out (a default that changed, an option renamed, a companion package now needed).
 
 Report each finding in the table of 5b ("Used here?"), for a minor too. A finding that needs a decision or project changes turns the minor into a major (step 3).
 
